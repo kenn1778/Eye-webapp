@@ -1,0 +1,5 @@
+# Keep project Markdown documentation local and out of commits.
+**/*.md
+**/*.MD
+.opencode/debug.port
+.opencode/debug.log

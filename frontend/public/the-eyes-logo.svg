@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 100" role="img" aria-labelledby="title desc">
+  <title id="title">The EYEs logo</title>
+  <desc id="desc">A hand-drawn eye mark with a centered iris</desc>
+  <path d="M12 51 C38 18 62 10 80 10 C101 10 126 23 148 51 C126 78 102 90 80 90 C58 90 34 79 12 51Z" fill="#6c9a70" fill-opacity=".12" stroke="#4f7b57" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+  <ellipse cx="80" cy="51" rx="28" ry="31" fill="#4f7b57"/>
+  <ellipse cx="80" cy="51" rx="12" ry="15" fill="#e9efbd"/>
+  <circle cx="84" cy="45" r="4" fill="#f8f9f4"/>
+  <path d="M17 46 C37 22 60 14 80 14 C103 14 124 24 143 48" fill="none" stroke="#6c9a70" stroke-width="3" stroke-linecap="round" opacity=".8"/>
+  <path d="M21 58 C40 77 60 86 80 86 C101 86 121 77 140 56" fill="none" stroke="#6c9a70" stroke-width="3" stroke-linecap="round" opacity=".65"/>
+</svg>
