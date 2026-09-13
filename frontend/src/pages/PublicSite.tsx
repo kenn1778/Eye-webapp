@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import type { Story } from "../types";
 import { categories, communities } from "../data/seedData";
 import { Brand } from "../components/Brand";
+import { CommunityChat } from "../components/CommunityChat";
+import type { Community } from "../types";
 import { PolicyBar } from "../components/PolicyBar";
 import { NewsletterForm } from "../components/NewsletterForm";
 
@@ -33,6 +35,7 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
   // newsletter is now handled by <NewsletterForm /> (professional, API-ready)
   // joinedCommunities - list of community names the user has joined
   const [joinedCommunities, setJoinedCommunities] = useState<string[]>([]);
+  const [activeChat, setActiveChat] = useState<Community | null>(null);
 
   // availableCategories - all category tabs, including any new ones from published stories
   // e.g., if a new story has category "Podcast", it adds a new tab
@@ -64,6 +67,14 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
   const newest = stories[0];
   // cardStories are the rest, shown in grid
   const cardStories = filtered.filter((story) => story !== newest);
+
+  // Close chat on Esc (keyboard friendly)
+  useEffect(() => {
+    if (!activeChat) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setActiveChat(null); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [activeChat]);
 
   // toggleCommunity - join or leave a community
   const toggleCommunity = (name: string) => {
@@ -242,10 +253,51 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
           </div>
           <p className="communities-intro">Useful rooms for asking better questions, sharing leads, and finding momentum together.</p>
           <div className="community-grid">
-            {communities.map((community) => <article className="community-card" key={community.name}><div className={`community-art ${community.accent}`}><span aria-hidden="true">◌</span><span aria-hidden="true">◌</span><span aria-hidden="true">◌</span></div><div className="community-card-body"><span className="story-label">Community</span><h3>{community.name}</h3><p>{community.description}</p><div className="community-footer"><span>{community.members}</span><button type="button" onClick={() => toggleCommunity(community.name)}>{joinedCommunities.includes(community.name) ? "Joined" : "Join community"} -&gt;</button></div></div></article>)}
+            {communities.map((community) => {
+              const isJoined = joinedCommunities.includes(community.name);
+              return (
+                <article className="community-card" key={community.name}>
+                  <div className={`community-art ${community.accent}`}><span aria-hidden="true">◌</span><span aria-hidden="true">◌</span><span aria-hidden="true">◌</span></div>
+                  <div className="community-card-body">
+                    <span className="story-label">Community</span>
+                    <h3>{community.name}</h3>
+                    <p>{community.description}</p>
+                    <div className="community-footer">
+                      <span>{community.members}</span>
+                      {isJoined ? (
+                        <button type="button" className="chat-open-btn" onClick={() => setActiveChat(community)}>Open chat →</button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            toggleCommunity(community.name);
+                            setActiveChat(community);
+                          }}
+                        >
+                          Join & chat →
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
           </div>
         </section>
       </main>
+      {/* Chatroom - community discussion */}
+      {activeChat && (
+        <CommunityChat
+          key={activeChat.name}
+          community={activeChat}
+          onClose={() => setActiveChat(null)}
+          onLeave={() => {
+            toggleCommunity(activeChat.name);
+            setActiveChat(null);
+          }}
+        />
+      )}
+
       {/* Story popup modal */}
       {selectedStory && <div className="client-modal-backdrop" role="presentation" onClick={() => setSelectedStory(undefined)}><article className="story-reader" role="dialog" aria-modal="true" aria-labelledby="story-reader-title" onClick={(event) => event.stopPropagation()}><button className="reader-close" type="button" onClick={() => setSelectedStory(undefined)} aria-label="Close story">X</button><div className="reader-image" style={{ backgroundImage: `url(${selectedStory.image})` }} role="img" aria-label={selectedStory.title} /><div className="reader-content"><span className="story-label">{selectedStory.category}</span><h2 id="story-reader-title">{selectedStory.title}</h2><div className="story-meta">{selectedStory.meta}</div><p>{selectedStory.excerpt}</p><p>Explore the details, deadlines, and next steps in this published story. The full editorial body will be supplied by the publishing service when backend content is connected.</p>{selectedStory.actionUrl && <a className="button button-dark" href={selectedStory.actionUrl} target="_blank" rel="noreferrer">{selectedStory.actionLabel || "Open opportunity"} -&gt;</a>}</div></article></div>}
       {/* Premium Newsletter - like Beehiiv/Substack */}
