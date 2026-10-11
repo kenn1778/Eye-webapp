@@ -25,7 +25,7 @@ export function RefundPolicy() {
           <h2>2. Paid features (if any)</h2>
           <p>If we introduce paid features (e.g., premium briefings, application reviews, or events), this section will apply. Currently no paid checkout is live. This policy is published proactively to meet app store and consumer law requirements.</p>
           <ul>
-            <li><strong>14-day cooling-off:</strong> For digital services not yet started, you may cancel within 14 days for a full refund where required by Ghana Consumer Protection or EU/UK law.</li>
+            <li><strong>14-day cooling-off:</strong> For digital services not yet started, you may cancel within 14 days for a full refund where required by Nigerian Consumer Protection or EU/UK law.</li>
             <li><strong>After service starts:</strong> If you request a service to start immediately (the usual for digital content), you acknowledge you lose the 14-day right once performance has begun, but we will still consider good-faith refunds.</li>
             <li><strong>Subscriptions:</strong> If we offer a recurring newsletter-plus plan, you can cancel anytime. Cancellation stops future charges; already-billed periods are non-refundable after delivery unless required by law or we agree otherwise.</li>
           </ul>
@@ -34,7 +34,7 @@ export function RefundPolicy() {
         <section>
           <h2>3. How to request a refund</h2>
           <ol>
-            <li>Email <a href="mailto:teckennedy177@gmail.com">teckennedy177@gmail.com</a> with subject “Refund — [your email]” within 14 days of payment.</li>
+            <li>Email <a href="mailto:teckennedy177@gmail.com">teckennedy177@gmail.com</a> with subject “Refund request” within 14 days of payment.</li>
             <li>Include receipt/transaction ID and reason.</li>
             <li>We respond within 5 business days and, if approved, refund to the original payment method within 10 business days.</li>
           </ol>

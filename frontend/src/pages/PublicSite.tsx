@@ -1,6 +1,6 @@
 // PublicSite - public facing pages
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
 import type { Story } from "../types";
 import { categories, communities } from "../data/seedData";
 import { Brand } from "../components/Brand";
@@ -8,6 +8,9 @@ import { CommunityChat } from "../components/CommunityChat";
 import type { Community } from "../types";
 import { PolicyBar } from "../components/PolicyBar";
 import { NewsletterForm } from "../components/NewsletterForm";
+import { Reveal } from "../components/Reveal";
+import { ReviewSection } from "../components/ReviewSection";
+import { HeroEye } from "../components/HeroEye";
 
 // Props: stories to display, and function to open admin login
 type PublicSiteProps = {
@@ -15,16 +18,59 @@ type PublicSiteProps = {
   openAdmin: () => void; // switch to admin view
 };
 
+// Words cycled through in the hero headline
+const heroWords = ["signal", "clarity", "momentum", "opportunity"];
+
 // PublicSite - the full public page
 export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
   // isShrunk - true when user scrolls down >32px, header becomes compact
   const [isShrunk, setIsShrunk] = useState(false);
+  // wordIndex - which hero headline word is active
+  const [wordIndex, setWordIndex] = useState(0);
+  const [prevWordIndex, setPrevWordIndex] = useState(0);
+  const wordIndexRef = useRef(0);
+  // showBackToTop - true when the page is scrolled far enough down
+  const [showBackToTop, setShowBackToTop] = useState(false);
+  // heroRef - used for cursor parallax on the hero orbit circle
+  const heroRef = useRef<HTMLElement>(null);
   // Listen to scroll to shrink header (eye text hides leaving only icon)
   useEffect(() => {
-    const onScroll = () => setIsShrunk(window.scrollY > 32);
+    const onScroll = () => {
+      setIsShrunk(window.scrollY > 32);
+      setShowBackToTop(window.scrollY > 600);
+    };
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  // Rotate the hero headline word on a timer
+  useEffect(() => {
+    // Frozen under automation so visual-regression snapshots stay deterministic.
+    if (navigator.webdriver) return;
+    const t = window.setInterval(() => {
+      setPrevWordIndex(wordIndexRef.current);
+      wordIndexRef.current = (wordIndexRef.current + 1) % heroWords.length;
+      setWordIndex(wordIndexRef.current);
+    }, 2600);
+    return () => window.clearInterval(t);
+  }, []);
+
+  // Parallax the hero orbit circle toward the cursor (CSS vars, no re-render)
+  const handleHeroMove = (e: ReactMouseEvent<HTMLElement>) => {
+    const el = heroRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width - 0.5;
+    const y = (e.clientY - rect.top) / rect.height - 0.5;
+    el.style.setProperty("--orbit-x", `${(x * 34).toFixed(1)}px`);
+    el.style.setProperty("--orbit-y", `${(y * 22).toFixed(1)}px`);
+  };
+  const handleHeroLeave = () => {
+    const el = heroRef.current;
+    if (!el) return;
+    el.style.setProperty("--orbit-x", "0px");
+    el.style.setProperty("--orbit-y", "0px");
+  };
 
   // category - which filter tab is selected (default All stories)
   const [category, setCategory] = useState("All stories");
@@ -76,6 +122,16 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
     return () => window.removeEventListener("keydown", onKey);
   }, [activeChat]);
 
+  // Story reader: close on Esc and move focus into the dialog
+  const readerCloseRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (!selectedStory) return;
+    readerCloseRef.current?.focus();
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setSelectedStory(undefined); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [selectedStory]);
+
   // toggleCommunity - join or leave a community
   const toggleCommunity = (name: string) => {
     setJoinedCommunities((current) => current.includes(name) ? current.filter((item) => item !== name) : [...current, name]);
@@ -105,13 +161,30 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
           Admin workspace <span aria-hidden="true">-&gt;</span>
         </button>
       </header>
-      <PolicyBar />
       <main id="main-content">
         {/* Hero / Intro band - big headline */}
-        <section className="intro-band">
+        <section
+          className="intro-band"
+          ref={heroRef}
+          onMouseMove={handleHeroMove}
+          onMouseLeave={handleHeroLeave}
+        >
+          <HeroEye />
           <div className="eyebrow">For the next chapter</div>
           <h1>
-            Find the signal
+            Find the{" "}
+            <span className="hero-rotator">
+              <span className="sr-only" aria-live="polite">{heroWords[wordIndex]}</span>
+              {heroWords.map((word, i) => (
+                <span
+                  key={word}
+                  aria-hidden="true"
+                  className={`hero-word ${i === wordIndex ? "is-active" : i === prevWordIndex ? "is-leaving" : ""}`}
+                >
+                  {word}
+                </span>
+              ))}
+            </span>
             <br />
             <em>in the noise.</em>
           </h1>
@@ -126,6 +199,10 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
             <button className="text-button" type="button" onClick={() => document.getElementById("newsletter")?.scrollIntoView({ behavior: "smooth" })}>
               Get the weekly brief <span aria-hidden="true">+</span>
             </button>
+          </div>
+          <div className="hero-scroll-hint" aria-hidden="true">
+            <span className="hero-scroll-mouse"><span /></span>
+            <span className="hero-scroll-label">Scroll</span>
           </div>
         </section>
         {/* Live banner - only shows after publishing a new post */}
@@ -146,6 +223,7 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
           </section>
         )}
         {/* Featured story - large card */}
+        <Reveal>
         <section className="feature-section" id="stories">
           <div className="section-heading">
             <div>
@@ -180,7 +258,9 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
             </div>
           </article>
         </section>
+        </Reveal>
         {/* Latest stories - search + filter + grid */}
+        <Reveal>
         <section className="latest-section" id="opportunities">
           <div className="latest-toolbar">
             <div>
@@ -245,7 +325,9 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
             ))}
           </div>
         </section>
+        </Reveal>
         {/* Communities */}
+        <Reveal>
         <section className="communities-section" id="communities" aria-labelledby="communities-title">
           <div className="section-heading">
             <div><div className="eyebrow">Find your people</div><h2 id="communities-title">Communities</h2></div>
@@ -284,7 +366,12 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
             })}
           </div>
         </section>
+        </Reveal>
       </main>
+      {/* Visitor reviews */}
+      <Reveal>
+        <ReviewSection />
+      </Reveal>
       {/* Chatroom - community discussion */}
       {activeChat && (
         <CommunityChat
@@ -299,8 +386,9 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
       )}
 
       {/* Story popup modal */}
-      {selectedStory && <div className="client-modal-backdrop" role="presentation" onClick={() => setSelectedStory(undefined)}><article className="story-reader" role="dialog" aria-modal="true" aria-labelledby="story-reader-title" onClick={(event) => event.stopPropagation()}><button className="reader-close" type="button" onClick={() => setSelectedStory(undefined)} aria-label="Close story">X</button><div className="reader-image" style={{ backgroundImage: `url(${selectedStory.image})` }} role="img" aria-label={selectedStory.title} /><div className="reader-content"><span className="story-label">{selectedStory.category}</span><h2 id="story-reader-title">{selectedStory.title}</h2><div className="story-meta">{selectedStory.meta}</div><p>{selectedStory.excerpt}</p><p>Explore the details, deadlines, and next steps in this published story. The full editorial body will be supplied by the publishing service when backend content is connected.</p>{selectedStory.actionUrl && <a className="button button-dark" href={selectedStory.actionUrl} target="_blank" rel="noreferrer">{selectedStory.actionLabel || "Open opportunity"} -&gt;</a>}</div></article></div>}
+      {selectedStory && <div className="client-modal-backdrop" role="presentation" onClick={() => setSelectedStory(undefined)}><article className="story-reader" role="dialog" aria-modal="true" aria-labelledby="story-reader-title" onClick={(event) => event.stopPropagation()}><button ref={readerCloseRef} className="reader-close" type="button" onClick={() => setSelectedStory(undefined)} aria-label="Close story">X</button><div className="reader-image" style={{ backgroundImage: `url(${selectedStory.image})` }} role="img" aria-label={selectedStory.title} /><div className="reader-content"><span className="story-label">{selectedStory.category}</span><h2 id="story-reader-title">{selectedStory.title}</h2><div className="story-meta">{selectedStory.meta}</div><p>{selectedStory.excerpt}</p><p>Explore the details, deadlines, and next steps in this published story. The full editorial body will be supplied by the publishing service when backend content is connected.</p>{selectedStory.actionUrl && <a className="button button-dark" href={selectedStory.actionUrl} target="_blank" rel="noreferrer">{selectedStory.actionLabel || "Open opportunity"} -&gt;</a>}</div></article></div>}
       {/* Premium Newsletter - like Beehiiv/Substack */}
+      <Reveal>
       <section className="newsletter-section" id="newsletter" aria-labelledby="newsletter-title">
         <div className="newsletter-card">
           <div className="newsletter-card-left">
@@ -326,12 +414,13 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
           </div>
         </div>
       </section>
+      </Reveal>
 
       {/* Footer - with real business details, copyright, and legal links */}
       <footer className="site-footer" id="about">
         <div className="footer-brand-col">
           <Brand />
-          <p>A useful publication for people in motion.</p>
+          <p className="footer-tagline">A useful publication for people in motion.</p>
           <div className="business-details">
             <p><strong>Alozie Izuchukwu Johnkennedy</strong> — No. 14 Lawal Street, Alimosho, Akowonjo, Lagos State, Nigeria</p>
             <p>Business: Sole proprietor (Nigeria) • Mon–Fri 9am–5pm WAT</p>
@@ -339,18 +428,27 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
             <p className="footer-disclaimer">Images: <a href="https://unsplash.com/license" target="_blank" rel="noreferrer">Unsplash License</a> • Fonts: <a href="https://fonts.google.com" target="_blank" rel="noreferrer">Google Fonts (OFL)</a></p>
           </div>
         </div>
+        <nav className="footer-nav" aria-label="Footer navigation">
+          <h3 className="footer-nav-title">Explore</h3>
+          <a href="#stories">Stories</a>
+          <a href="#opportunities">Opportunities</a>
+          <a href="#communities">Communities</a>
+          <a href="#newsletter">Newsletter</a>
+        </nav>
         <div className="footer-newsletter">
-          <NewsletterForm variant="footer" placeholder="you@example.com" buttonLabel="Subscribe" showBenefits={false} showSocialProof={false} />
+          <NewsletterForm variant="footer" placeholder="you@example.com" buttonLabel="Subscribe" showBenefits={false} />
         </div>
+        <PolicyBar />
         <div className="footer-meta">
           <span>© 2026 EYE. All rights reserved.</span>
-          <a href="/privacy">Privacy</a>
-          <a href="/terms">Terms</a>
-          <a href="/cookies">Cookies</a>
-          <a href="/refund">Refund</a>
           <a href="mailto:teckennedy177@gmail.com">Contact</a>
         </div>
       </footer>
+      {showBackToTop && (
+        <button className="back-to-top" type="button" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} aria-label="Back to top">
+          <span aria-hidden="true">↑</span>
+        </button>
+      )}
       </div>
     </>
   );

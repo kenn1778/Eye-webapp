@@ -1,55 +1,61 @@
-import { useEffect, useState } from "react";
+﻿// CookieConsent - consent banner that appears once per browser.
+// Frontend-preview behavior: the choice is stored in this browser and a
+// "eye-consent" CustomEvent is dispatched so an analytics layer can react.
+// No analytics or tracking script is loaded by this component.
 
-type Consent = "accepted" | "rejected" | null;
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { readString, removeItem, writeString } from "../lib/storage";
+
+type Consent = "accepted" | "rejected";
+
+const CONSENT_KEY = "eye:consent";
+const CONSENT_EVENT = "eye-consent";
+/** Delay before the banner appears, so it does not compete with first paint. */
+const BANNER_DELAY_MS = 800;
+
+function isConsent(value: string | null): value is Consent {
+  return value === "accepted" || value === "rejected";
+}
+
+/** Reads the stored choice, ignoring anything that is not a known value. */
+function loadConsent(): Consent | null {
+  const stored = readString(CONSENT_KEY);
+  return isConsent(stored) ? stored : null;
+}
 
 export function CookieConsent() {
-  const [consent, setConsent] = useState<Consent>(() => {
-    try {
-      return (localStorage.getItem("eye:consent") as Consent) || null;
-    } catch {
-      return null;
-    }
-  });
+  const [consent, setConsent] = useState<Consent | null>(loadConsent);
   const [showSettings, setShowSettings] = useState(false);
-  const [isReady, setIsReady] = useState(() => {
-    try {
-      return localStorage.getItem("eye:consent") !== null;
-    } catch {
-      return false;
-    }
-  });
+  const [isReady, setIsReady] = useState(() => readString(CONSENT_KEY) !== null);
 
   useEffect(() => {
     if (consent !== null) return;
-    const t = window.setTimeout(() => setIsReady(true), 800);
-    return () => window.clearTimeout(t);
+    const timer = window.setTimeout(() => setIsReady(true), BANNER_DELAY_MS);
+    return () => window.clearTimeout(timer);
   }, [consent]);
 
-  // Persist and dispatch event so analytics can listen
   const save = (value: Consent) => {
-    if (!value) return;
-    localStorage.setItem("eye:consent", value);
+    writeString(CONSENT_KEY, value);
     setConsent(value);
     setShowSettings(false);
-    window.dispatchEvent(new CustomEvent("eye-consent", { detail: value }));
-    // Example: only enable analytics if accepted
-    // if (value === "accepted") enableAnalytics();
+    window.dispatchEvent(new CustomEvent(CONSENT_EVENT, { detail: value }));
   };
 
-  // If user already chose, hide banner unless they open settings
-  const isVisible = (consent === null && isReady) || showSettings;
+  const resetChoice = () => {
+    removeItem(CONSENT_KEY);
+    setConsent(null);
+  };
 
-  if (!isVisible) {
-    return (
-      <button
-        className="cookie-settings-link"
-        type="button"
-        onClick={() => setShowSettings(true)}
-        aria-label="Open cookie settings"
-      >
-        Cookie settings
-      </button>
-    );
+  // Hide completely after a choice is made. Banner only shows once per browser.
+  if (consent !== null && !showSettings) {
+    return null;
+  }
+
+  const isBannerVisible = (consent === null && isReady) || showSettings;
+
+  if (!isBannerVisible) {
+    return null;
   }
 
   return (
@@ -58,7 +64,7 @@ export function CookieConsent() {
         <h2 id="cookie-title" className="eyebrow">Cookies</h2>
         <p id="cookie-desc">
           We use strictly necessary cookies to run the site. With your consent, we use analytics to see what is useful.
-          No ads, no sale of data. See <a href="/cookies">Cookies</a> and <a href="/privacy">Privacy</a>.
+          No ads, no sale of data. See <Link to="/cookies">Cookies</Link> and <Link to="/privacy">Privacy</Link>.
         </p>
         <div className="cookie-actions">
           <button className="button-secondary" type="button" onClick={() => save("rejected")}>Reject non-essential</button>
@@ -69,8 +75,10 @@ export function CookieConsent() {
         </button>
         {showSettings && consent !== null && (
           <div className="cookie-settings">
-            <p><strong>Current choice:</strong> {consent === "accepted" ? "Analytics allowed" : "Only necessary"}</p>
-            <button className="button-secondary" type="button" onClick={() => { localStorage.removeItem("eye:consent"); setConsent(null); }}>Reset choice</button>
+            <p>
+              <strong>Current choice:</strong> {consent === "accepted" ? "Analytics allowed" : "Only necessary"}
+            </p>
+            <button className="button-secondary" type="button" onClick={resetChoice}>Reset choice</button>
           </div>
         )}
       </div>

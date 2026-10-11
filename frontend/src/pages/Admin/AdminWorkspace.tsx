@@ -7,6 +7,40 @@ import { Brand } from "../../components/Brand";
 import { AdminEditor } from "../../components/AdminEditor";
 import { AdminSectionView } from "./AdminSectionView";
 
+/** Sidebar width bounds for the desktop drag-to-resize handle. */
+const MIN_SIDEBAR_WIDTH = 190;
+const MAX_SIDEBAR_WIDTH = 360;
+const DEFAULT_SIDEBAR_WIDTH = 240;
+
+/** How often dashboard metrics refresh while the workspace is open. */
+const METRICS_POLL_INTERVAL_MS = 30_000;
+
+const METRICS_ENDPOINT = "/api/v1/admin/metrics";
+
+/**
+ * Dashboard cards, defined as data so the markup is written once.
+ * `accent` marks the visually highlighted card.
+ */
+const METRIC_CARDS: ReadonlyArray<{ label: string; value: keyof AdminMetrics; accent?: boolean }> = [
+  { label: "Total posts", value: "totalPosts" },
+  { label: "Published", value: "publishedPosts", accent: true },
+  { label: "Scheduled", value: "scheduledPosts" },
+  { label: "Total views", value: "totalViews" },
+];
+
+/**
+ * Rejects a malformed metrics payload.
+ * Without this an unexpected response shape would render as undefined or NaN
+ * in the dashboard cards.
+ */
+function isAdminMetrics(value: unknown): value is AdminMetrics {
+  if (typeof value !== "object" || value === null) return false;
+  const candidate = value as Record<string, unknown>;
+  return ["totalPosts", "publishedPosts", "scheduledPosts", "totalViews"].every(
+    (key) => typeof candidate[key] === "number" && Number.isFinite(candidate[key] as number),
+  );
+}
+
 // Props: closeAdmin = log out, onPublish = send new story to public site
 type AdminWorkspaceProps = {
   closeAdmin: () => void;
@@ -29,8 +63,8 @@ export function AdminWorkspace({ closeAdmin, onPublish }: AdminWorkspaceProps) {
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   // sidebarOpen - is the left nav visible? (collapsible on mobile)
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  // sidebarWidth - draggable width of sidebar (in pixels)
-  const [sidebarWidth, setSidebarWidth] = useState(240);
+  // sidebarWidth - draggable sidebar width in pixels, clamped to the bounds above
+  const [sidebarWidth, setSidebarWidth] = useState(DEFAULT_SIDEBAR_WIDTH);
   // isResizingSidebar - true while user is dragging the resize handle
   const [isResizingSidebar, setIsResizingSidebar] = useState(false);
   // metrics - numbers for the 4 dashboard cards, fetched from API
@@ -42,20 +76,23 @@ export function AdminWorkspace({ closeAdmin, onPublish }: AdminWorkspaceProps) {
   const refreshMetrics = useCallback(async () => {
     if (!apiBaseUrl) return; // no backend configured -> skip
     try {
-      const response = await fetch(`${apiBaseUrl}/api/v1/admin/metrics`, { credentials: "include" });
+      const response = await fetch(`${apiBaseUrl}${METRICS_ENDPOINT}`, { credentials: "include" });
       if (!response.ok) return; // API error -> keep old numbers
-      const nextMetrics = (await response.json()) as AdminMetrics;
-      startTransition(() => setMetrics(nextMetrics)); // smooth React update
+
+      const payload: unknown = await response.json();
+      if (!isAdminMetrics(payload)) return; // unexpected shape -> keep old numbers
+
+      startTransition(() => setMetrics(payload));
     } catch {
       // network down -> keep last known value
     }
   }, [apiBaseUrl]);
 
-  // Poll metrics on mount and every 30 seconds
+  // Poll metrics on mount, then on an interval while the workspace stays open
   useEffect(() => {
     void refreshMetrics(); // fetch immediately
     if (!apiBaseUrl) return;
-    const interval = window.setInterval(() => void refreshMetrics(), 30000); // every 30s
+    const interval = window.setInterval(() => void refreshMetrics(), METRICS_POLL_INTERVAL_MS);
     return () => window.clearInterval(interval); // cleanup on unmount
   }, [apiBaseUrl, refreshMetrics]);
 
@@ -80,8 +117,7 @@ export function AdminWorkspace({ closeAdmin, onPublish }: AdminWorkspaceProps) {
   useEffect(() => {
     if (!isResizingSidebar) return; // only when dragging
     const handlePointerMove = (event: PointerEvent) => {
-      // clamp width between 190 and 360 px
-      setSidebarWidth(Math.min(360, Math.max(190, event.clientX)));
+      setSidebarWidth(Math.min(MAX_SIDEBAR_WIDTH, Math.max(MIN_SIDEBAR_WIDTH, event.clientX)));
     };
     const stopResize = () => setIsResizingSidebar(false); // stop on release
     window.addEventListener("pointermove", handlePointerMove);
@@ -115,7 +151,7 @@ export function AdminWorkspace({ closeAdmin, onPublish }: AdminWorkspaceProps) {
           </button>
           <button className={`sidebar-item ${activeSection === "Posts" ? "selected" : ""}`} type="button" onClick={() => setActiveSection("Posts")}>
             <span className="sidebar-icon icon-posts" aria-hidden="true" />Posts{" "}
-            <span className="sidebar-count">24</span>
+            <span className="sidebar-count">{seedAdminPosts.length}</span>
           </button>
           <button className={`sidebar-item ${activeSection === "Calendar" ? "selected" : ""}`} type="button" onClick={() => setActiveSection("Calendar")}>
             <span className="sidebar-icon icon-calendar" aria-hidden="true" />Calendar
@@ -190,26 +226,13 @@ export function AdminWorkspace({ closeAdmin, onPublish }: AdminWorkspaceProps) {
             </button>
           </div>
           <section className="metrics-grid">
-            <div className="metric-card">
-              <span className="metric-label">Total posts</span>
-              <strong>{metrics.totalPosts}</strong>
-              <span className="metric-trend">Live count</span>
-            </div>
-            <div className="metric-card accent">
-              <span className="metric-label">Published</span>
-              <strong>{metrics.publishedPosts}</strong>
-              <span className="metric-trend">Live count</span>
-            </div>
-            <div className="metric-card">
-              <span className="metric-label">Scheduled</span>
-              <strong>{metrics.scheduledPosts}</strong>
-              <span className="metric-trend">Live count</span>
-            </div>
-            <div className="metric-card">
-              <span className="metric-label">Total views</span>
-              <strong>{metrics.totalViews}</strong>
-              <span className="metric-trend">Live count</span>
-            </div>
+            {METRIC_CARDS.map(({ label, value, accent }) => (
+              <div key={value} className={accent ? "metric-card accent" : "metric-card"}>
+                <span className="metric-label">{label}</span>
+                <strong>{metrics[value]}</strong>
+                <span className="metric-trend">Live count</span>
+              </div>
+            ))}
           </section>
           <section className="admin-panel">
             <div className="panel-heading">

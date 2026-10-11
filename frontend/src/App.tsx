@@ -1,16 +1,37 @@
-import { useEffect, useState } from "react";
+/*
+ * Required Security Headers for Production
+ * -----------------------------------------
+ * The production web server / CDN should send the following response headers:
+ *
+ * - Content-Security-Policy
+ * - Strict-Transport-Security
+ * - X-Content-Type-Options: nosniff
+ * - X-Frame-Options: DENY
+ * - Referrer-Policy: strict-origin-when-cross-origin
+ * - Permissions-Policy
+ */
+
+import { lazy, Suspense, useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import "./App.css";
 import type { Story } from "./types";
 import { seedStories } from "./data/seedData";
 import { PublicSite } from "./pages/PublicSite";
-import { AdminWorkspace } from "./pages/Admin/AdminWorkspace";
-import { AdminLogin } from "./pages/Admin/AdminLogin";
 import { PrivacyPolicy } from "./pages/Legal/PrivacyPolicy";
 import { Terms } from "./pages/Legal/Terms";
 import { RefundPolicy } from "./pages/Legal/RefundPolicy";
 import { CookiesPolicy } from "./pages/Legal/CookiesPolicy";
 import { CookieConsent } from "./components/CookieConsent";
+import { ADMIN_ENABLED } from "./config";
+import { getSession, logout } from "./lib/auth";
+
+// Admin pages are code-split and only registered when VITE_ENABLE_ADMIN=true.
+const AdminLogin = lazy(() =>
+  import("./pages/Admin/AdminLogin").then((m) => ({ default: m.AdminLogin })),
+);
+const AdminWorkspace = lazy(() =>
+  import("./pages/Admin/AdminWorkspace").then((m) => ({ default: m.AdminWorkspace })),
+);
 
 // Small full-screen loader shown on first paint.
 // Keeps the eye blinking for 2.1s so the app feels alive instead of a blank flash.
@@ -50,17 +71,28 @@ function EyeLoader() {
 // Public stays at /, admin is protected behind /admin/login.
 function AppRoutes() {
   const navigate = useNavigate();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [publishedStories, setPublishedStories] = useState<Story[]>([]);
 
   const allStories = [...publishedStories, ...seedStories];
+
+  useEffect(() => {
+    let cancelled = false;
+    getSession().then((user) => {
+      if (!cancelled) setIsAuthenticated(!!user);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const handleLogin = () => {
     setIsAuthenticated(true);
     navigate("/admin", { replace: true });
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await logout();
     setIsAuthenticated(false);
     navigate("/", { replace: true });
   };
@@ -71,40 +103,51 @@ function AppRoutes() {
   };
 
   const openAdmin = () => {
+    if (!ADMIN_ENABLED) return;
     if (isAuthenticated) navigate("/admin");
     else navigate("/admin/login");
   };
 
   return (
     <>
-      <Routes>
-        <Route path="/" element={<PublicSite stories={allStories} openAdmin={openAdmin} />} />
-        <Route path="/privacy" element={<PrivacyPolicy />} />
-        <Route path="/terms" element={<Terms />} />
-        <Route path="/refund" element={<RefundPolicy />} />
-        <Route path="/cookies" element={<CookiesPolicy />} />
-        <Route
-          path="/admin/login"
-          element={
-            isAuthenticated ? (
-              <Navigate to="/admin" replace />
-            ) : (
-              <AdminLogin onLogin={handleLogin} onBack={() => navigate("/")} />
-            )
-          }
-        />
-        <Route
-          path="/admin/*"
-          element={
-            isAuthenticated ? (
-              <AdminWorkspace closeAdmin={handleLogout} onPublish={handlePublish} />
-            ) : (
-              <Navigate to="/admin/login" replace />
-            )
-          }
-        />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      <Suspense fallback={<EyeLoader />}>
+        <Routes>
+          <Route path="/" element={<PublicSite stories={allStories} openAdmin={openAdmin} />} />
+          <Route path="/privacy" element={<PrivacyPolicy />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/refund" element={<RefundPolicy />} />
+          <Route path="/cookies" element={<CookiesPolicy />} />
+          {ADMIN_ENABLED && (
+            <>
+              <Route
+                path="/admin/login"
+                element={
+                  isAuthenticated === null ? (
+                    <EyeLoader />
+                  ) : isAuthenticated ? (
+                    <Navigate to="/admin" replace />
+                  ) : (
+                    <AdminLogin onLogin={handleLogin} onBack={() => navigate("/")} />
+                  )
+                }
+              />
+              <Route
+                path="/admin/*"
+                element={
+                  isAuthenticated === null ? (
+                    <EyeLoader />
+                  ) : isAuthenticated ? (
+                    <AdminWorkspace closeAdmin={handleLogout} onPublish={handlePublish} />
+                  ) : (
+                    <Navigate to="/admin/login" replace />
+                  )
+                }
+              />
+            </>
+          )}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Suspense>
       <CookieConsent />
     </>
   );

@@ -46,7 +46,7 @@ export function CookiesPolicy() {
         <section>
           <h2>4. Your choices</h2>
           <ul>
-            <li><strong>Banner:</strong> Accept / Reject non-essential cookies on first visit. You can change later via “Cookie settings” in the footer.</li>
+            <li><strong>Banner:</strong> Accept / Reject non-essential cookies on first visit. To change your choice later, clear the <code>eye:consent</code> entry in your browser storage and reload — the banner will appear again.</li>
             <li><strong>Browser:</strong> Block or delete cookies in settings (e.g., Chrome: Settings → Privacy → Cookies).</li>
             <li><strong>Do Not Track:</strong> We respect DNT where feasible, but banner choice takes precedence.</li>
           </ul>
@@ -55,7 +55,7 @@ export function CookiesPolicy() {
 
         <section>
           <h2>5. How to withdraw consent</h2>
-          <p>Click “Cookie settings” in the footer or clear <code>eye:consent</code> in browser storage. Analytics (if enabled) stops immediately.</p>
+          <p>Clear the <code>eye:consent</code> entry in your browser storage and reload the site. Analytics (if enabled) stops immediately.</p>
         </section>
 
         <section>

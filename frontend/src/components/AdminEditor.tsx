@@ -35,6 +35,8 @@ export function AdminEditor({ close: closeEditor, onPublish }: AdminEditorProps)
 
     const sourceValid = !sourceUrl || /^https?:\/\//i.test(sourceUrl); // empty = valid, or must be http
   const actionValid = !actionUrl || /^https?:\/\//i.test(actionUrl);
+  // Featured images are injected into a CSS url(...) below; block javascript:/data: and anything non-http.
+  const imageValid = !featuredImageUrl || /^https?:\/\//i.test(featuredImageUrl);
 
   // addTag - takes text in tagInput, cleans it, adds to tags list
   const addTag = () => {
@@ -105,6 +107,7 @@ export function AdminEditor({ close: closeEditor, onPublish }: AdminEditorProps)
           <input
             value={title}
             placeholder="Give your story a clear, useful title"
+            maxLength={150}
             onChange={(event) => {
               setTitle(event.target.value);
               setAutosave("Autosaving...");
@@ -168,6 +171,7 @@ export function AdminEditor({ close: closeEditor, onPublish }: AdminEditorProps)
             value={excerpt}
             onChange={(event) => setExcerpt(event.target.value)}
             rows={3}
+            maxLength={400}
             placeholder="A short summary for cards and search results"
           />
         </label>
@@ -226,7 +230,13 @@ export function AdminEditor({ close: closeEditor, onPublish }: AdminEditorProps)
             value={featuredImageUrl}
             onChange={(event) => setFeaturedImageUrl(event.target.value)}
             placeholder="https://images.example.org/cover.jpg"
+            aria-invalid={!imageValid}
           />
+          {!imageValid && (
+            <small className="field-help invalid">
+              Use a full URL beginning with http:// or https://.
+            </small>
+          )}
         </label>
         {/* Media attachments grid - 4 cards */}
         <div className="attachment-grid" aria-label="Post media attachments">
@@ -280,7 +290,7 @@ export function AdminEditor({ close: closeEditor, onPublish }: AdminEditorProps)
           </label>
         </div>
         {/* Preview if URL provided */}
-        {featuredImageUrl && (
+        {imageValid && featuredImageUrl && (
           <div
             className="featured-preview"
             style={{ backgroundImage: `url(${featuredImageUrl})` }}
@@ -404,7 +414,7 @@ export function AdminEditor({ close: closeEditor, onPublish }: AdminEditorProps)
           <button
             className="admin-primary"
             type="button"
-            disabled={!sourceValid || !actionValid}
+            disabled={!sourceValid || !actionValid || !imageValid}
             onClick={publish}
           >
             {publishMode === "Publish immediately"

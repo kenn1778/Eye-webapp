@@ -1,0 +1,10 @@
+# Security headers for static hosting (Netlify / Cloudflare Pages style).
+# If you host elsewhere, transfer these to your server config.
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+  Cross-Origin-Opener-Policy: same-origin
+  # CSP: start report-only, then enforce once verified:
+  # Content-Security-Policy-Report-Only: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://fonts.googleapis.com; object-src 'none'; base-uri 'self'; frame-ancestors 'none'

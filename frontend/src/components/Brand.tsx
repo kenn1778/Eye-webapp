@@ -43,7 +43,15 @@ export function Brand() {
       raf = requestAnimationFrame(() => setEyePos({ x: lx, y: ly }));
     };
 
+    const prefersReducedMotion = () =>
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
     const startIdle = () => {
+      // Decorative drift only. Skip it when the visitor asks for reduced motion,
+      // which also keeps the visual-regression baseline deterministic.
+      if (prefersReducedMotion()) return;
+
       idleId = window.setInterval(() => {
         if (eyeHovered || hoveredLetter !== null) return;
         idlePhase += 0.04;

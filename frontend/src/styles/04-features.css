@@ -1,0 +1,581 @@
+/* 
+ *
+ * 
+ *
+ * Loaded by App.css - see that file for the load order.
+ */
+
+/* -- EYE real-time hover closed + EYE letters jump + 2.1s loader -- */
+/* Brand letters - individual jump */
+.brand-text {
+  display: inline-flex;
+  gap: 0;
+  align-items: baseline;
+}
+.brand-letter {
+  display: inline-block;
+  transition: transform .34s cubic-bezier(.34,1.56,.64,1), color .18s ease;
+  will-change: transform;
+  cursor: pointer;
+  padding: 0 1px;
+  transform-origin: center bottom;
+}
+.brand-letter.is-hovered,
+.brand-letter:hover {
+  color: var(--badge-green-dark);
+}
+.brand-letter-0.is-hovered,
+.brand-letter-0:hover {
+  transform: translateY(-7px) rotate(-1deg);
+}
+.brand-letter-1.is-hovered,
+.brand-letter-1:hover {
+  transform: translateY(5px) rotate(1deg);
+}
+.brand-letter-2.is-hovered,
+.brand-letter-2:hover {
+  transform: translateY(-5px) rotate(-0.6deg);
+}
+.brand-letter:focus-visible {
+  outline: 2px solid var(--badge-green);
+  outline-offset: 2px;
+  border-radius: 2px;
+  transform: translateY(-2px);
+}
+
+/* Eye reacts to letter hover - iris looks toward letter */
+.eye-svg.is-letter-0 .eye-iris-group {
+  transform: translate3d(-2.5px, -3px, 0) scale(1.02) !important;
+  animation: none !important;
+}
+.eye-svg.is-letter-1 .eye-iris-group {
+  transform: translate3d(0, 2.8px, 0) scale(1.01) !important;
+  animation: none !important;
+}
+.eye-svg.is-letter-2 .eye-iris-group {
+  transform: translate3d(2.2px, -1.8px, 0) scale(1.02) !important;
+  animation: none !important;
+}
+.eye-svg.is-letter-0 .eye-glint { transform: translate3d(-0.8px, -1px, 0); }
+.eye-svg.is-letter-1 .eye-glint { transform: translate3d(0, 1px, 0); }
+.eye-svg.is-letter-2 .eye-glint { transform: translate3d(0.7px, -0.6px, 0); }
+
+/* Eye closed in real time when hovered */
+.eye-svg.is-closed .eye-lid-top,
+.eye-svg.is-closed .eye-lid-bottom {
+  animation: none !important;
+}
+.eye-svg.is-closed .eye-lid-top {
+  transform: scaleY(1) !important;
+  transition: transform .45s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.eye-svg.is-closed .eye-lid-bottom {
+  transform: scaleY(1) !important;
+  transition: transform .45s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.eye-svg.is-closed .eye-iris-group,
+.eye-svg.is-closed .eye-glint {
+  opacity: 0;
+  transition: opacity .38s ease;
+}
+.brand-icon:hover {
+  cursor: pointer;
+}
+.brand-icon.is-eye-hovered {
+  transform: scale(1.02);
+  transition: transform .14s ease;
+}
+
+/* Fallback for :has() - if user hovers letter without JS, still move iris */
+.brand:has(.brand-letter-0:hover) .eye-iris-group { transform: translate3d(-2.5px, -3px, 0) scale(1.02); }
+.brand:has(.brand-letter-1:hover) .eye-iris-group { transform: translate3d(0, 2.8px, 0) scale(1.01); }
+.brand:has(.brand-letter-2:hover) .eye-iris-group { transform: translate3d(2.2px, -1.8px, 0) scale(1.02); }
+
+/* 2.1s page reload loader - eye blinking rapidly */
+.eye-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: grid;
+  place-items: center;
+  background: #f3f1e9;
+  padding: max(20px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
+  animation: eye-loader-fade 0.45s ease 2.1s forwards;
+}
+.eye-loader-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 22px;
+  animation: eye-loader-rise 0.5s ease both;
+}
+.eye-loader .brand-icon {
+  width: 84px;
+  height: 66px;
+  flex: 0 0 84px;
+}
+.eye-loader .eye-svg {
+  width: 100%;
+  height: 100%;
+}
+.eye-loader .eye-svg.is-loading .eye-lid-top {
+  animation: eye-blink-top 0.62s cubic-bezier(0.4, 0, 0.2, 1) infinite !important;
+}
+.eye-loader .eye-svg.is-loading .eye-lid-bottom {
+  animation: eye-blink-bottom 0.62s cubic-bezier(0.4, 0, 0.2, 1) infinite !important;
+}
+.eye-loader .eye-svg.is-loading .eye-iris-group {
+  animation: eye-bounce 0.55s ease-in-out infinite !important;
+}
+.eye-loader-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.eye-loader-text .eyebrow {
+  letter-spacing: .18em;
+  font-size: 10px;
+}
+.loader-dots {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.loader-dots span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--badge-green);
+  display: block;
+  animation: loader-dot 1.05s ease-in-out infinite;
+}
+.loader-dots span:nth-child(2) { animation-delay: .14s; }
+.loader-dots span:nth-child(3) { animation-delay: .28s; }
+@keyframes loader-dot {
+  0%, 80%, 100% { transform: scale(0.75); opacity: .45; }
+  40% { transform: scale(1); opacity: 1; }
+}
+@keyframes eye-loader-rise {
+  from { opacity: 0; transform: translateY(10px) scale(.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes eye-loader-fade {
+  to { opacity: 0; visibility: hidden; pointer-events: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .brand-letter, .eye-iris-group, .eye-lid-top, .eye-lid-bottom, .eye-loader {
+    animation: none !important;
+    transition: none !important;
+  }
+  .eye-loader { display: none !important; }
+}
+
+
+/* -- HUMAN EYE left/right opposite scan + mouse tracking -- */
+/* Enhanced bounce - iris sweeps left and right like a human scanning */
+@keyframes eye-bounce {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  12% { transform: translate3d(-5.2px, -1px, 0) scale(1.015); } /* look far left */
+  24% { transform: translate3d(0, -0.6px, 0) scale(1); } /* return center */
+  38% { transform: translate3d(5.4px, 0.7px, 0) scale(0.992); } /* look far right */
+  52% { transform: translate3d(0, 0.9px, 0) scale(1); } /* center */
+  66% { transform: translate3d(-3px, 0.3px, 0) scale(1.006); } /* small left */
+  80% { transform: translate3d(3.2px, -0.6px, 0) scale(1.008); } /* small right */
+}
+@keyframes eye-glint-move {
+  0%, 100% { transform: translate3d(0,0,0); }
+  12% { transform: translate3d(-1.5px, -0.6px, 0); }
+  38% { transform: translate3d(1.6px, 0.4px, 0); }
+  66% { transform: translate3d(-0.8px, 0.2px, 0); }
+  80% { transform: translate3d(0.9px, -0.3px, 0); }
+}
+
+/* When mouse moves, iris follows cursor left/right in real time - overrides auto scan */
+.eye-svg.is-tracking .eye-iris-group {
+  animation: none !important;
+  transform: translate3d(var(--eye-x), var(--eye-y), 0) !important;
+  transition: transform 0.09s linear;
+  will-change: transform;
+}
+.eye-svg.is-tracking .eye-glint {
+  animation: none !important;
+  transform: translate3d(calc(var(--eye-x) * 0.28), calc(var(--eye-y) * 0.28), 0) !important;
+  transition: transform 0.09s linear;
+}
+/* Brand wrapper also exposes --eye-x/--eye-y for future CSS */
+.brand.is-tracking .brand-icon {
+  /* subtle scale when tracking to feel alive */
+  transform: scale(1.01);
+}
+
+/* Ensure letter hover still wins over tracking (JS already disables tracking) */
+.eye-svg.is-letter-0.is-tracking .eye-iris-group,
+.eye-svg.is-letter-1.is-tracking .eye-iris-group,
+.eye-svg.is-letter-2.is-tracking .eye-iris-group {
+  /* letter hover has priority - keep letter position */
+}
+
+/* Idle scan when mouse is still - already handled via JS sine, but keep CSS fallback */
+@media (prefers-reduced-motion: no-preference) {
+  .eye-iris-group {
+    animation: eye-bounce 4.2s ease-in-out infinite;
+  }
+}
+
+
+/* -- Professional Newsletter (like Substack/Beehiiv) -- */
+.newsletter-section {
+  padding: 64px 12vw;
+  background: #eef2e8;
+  border-top: 1px solid #d9ded4;
+  border-bottom: 1px solid #d9ded4;
+}
+.newsletter-card {
+  max-width: 1120px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 36px;
+  align-items: center;
+  padding: 36px;
+  background: var(--glass-light);
+  border: 1px solid #d9ded4;
+  box-shadow: 0 18px 40px rgba(29,41,37,.08);
+  backdrop-filter: blur(14px) saturate(110%);
+  -webkit-backdrop-filter: blur(14px) saturate(110%);
+}
+.newsletter-card-left h2 {
+  margin: 10px 0 12px;
+  font-size: clamp(28px, 3.4vw, 40px);
+  line-height: 1.05;
+  letter-spacing: -.06em;
+  color: #1d2925;
+}
+.newsletter-card-copy {
+  max-width: 520px;
+  color: #5a6a61;
+  font-size: 14px;
+  line-height: 1.6;
+  margin: 0 0 18px;
+}
+.newsletter-card-copy strong {
+  color: #1d2925;
+  font-weight: 800;
+}
+.newsletter-trust {
+  margin-top: 12px;
+  color: #7e8e82;
+  font-size: 10px;
+  font-family: 'DM Mono', monospace;
+}
+.newsletter-trust a { color: var(--badge-green-dark); text-decoration: underline; text-underline-offset: 2px; }
+
+/* Newsletter preview mock - right side */
+.newsletter-preview {
+  padding: 18px;
+  background: #fff;
+  border: 1px solid #e0e6dc;
+  border-radius: 14px;
+  box-shadow: 0 10px 24px rgba(39,52,46,.06);
+}
+.preview-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 14px;
+  color: #66716a;
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+}
+.preview-dot { width: 8px; height: 8px; border-radius: 50%; background: #e2e2e2; display: inline-block; }
+.preview-dot:nth-child(1){ background:#ff5f56; } .preview-dot:nth-child(2){ background:#ffbd2e; } .preview-dot:nth-child(3){ background:#27c93f; }
+.preview-subject { margin-left: 8px; color: #35433b; font-weight: 700; }
+.preview-line { height: 8px; background: #eef2e8; border-radius: 999px; margin-bottom: 8px; }
+.preview-pill { margin-top: 14px; display: inline-flex; padding: 7px 10px; background: var(--badge-green); color: #fff; border-radius: 999px; font-size: 10px; font-weight: 800; }
+
+/* Pro form */
+.newsletter-pro { width: 100%; }
+.newsletter-benefits {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 14px;
+  display: grid;
+  gap: 6px;
+  color: #5a6a61;
+  font-size: 12px;
+}
+.newsletter-benefits li { display: flex; gap: 8px; align-items: center; }
+.newsletter-benefits span { color: var(--badge-green); font-weight: 800; }
+.newsletter-pro-form { width: 100%; }
+.hp-field { position: absolute !important; left: -9999px !important; width: 1px !important; height: 1px !important; overflow: hidden !important; clip: rect(0,0,0,0) !important; }
+.newsletter-pro-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 4px;
+  background: #fff;
+  border: 1px solid #cbd3c9;
+  border-radius: 999px;
+  transition: border-color .2s ease, box-shadow .2s ease;
+}
+.newsletter-pro-row:focus-within {
+  border-color: var(--badge-green);
+  box-shadow: 0 0 0 3px rgba(108,154,112,.16);
+}
+.newsletter-pro-row input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  padding: 10px 14px;
+  font-size: 14px;
+  color: #1d2925;
+}
+.newsletter-pro-row input::placeholder { color: #66716a; }
+.newsletter-pro-row input.is-error { color: #8b2e1f; }
+.newsletter-pro-row input.is-success { color: #2a5a33; }
+.newsletter-pro-btn {
+  flex: 0 0 auto;
+  border-radius: 999px !important;
+  padding: 11px 18px !important;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 0;
+}
+.newsletter-pro-btn:disabled { opacity: .6; cursor: not-allowed; }
+.newsletter-pro-btn.is-success { background: #2a5a33 !important; }
+.btn-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255,255,255,.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  display: inline-block;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.newsletter-pro-msg {
+  min-height: 18px;
+  margin-top: 10px;
+  font-size: 11px;
+  line-height: 1.4;
+}
+.newsletter-pro-msg.is-error { color: #8b2e1f; }
+.newsletter-pro-msg.is-success { color: #2a5a33; font-weight: 600; }
+.newsletter-pro-hint { color: #7e8e82; font-size: 10px; font-family: 'DM Mono', monospace; }
+.newsletter-pro-hint a { color: var(--badge-green-dark); }
+
+.newsletter-social-proof {
+  margin-top: 16px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding-top: 16px;
+  border-top: 1px solid #e0e4dc;
+}
+.avatar-stack { display: flex; align-items: center; }
+.avatar-stack-item {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: inline-grid;
+  place-items: center;
+  background: #6c9a70;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  border: 2px solid #fff;
+  margin-left: -8px;
+}
+.avatar-stack-item:first-child { margin-left: 0; background: #4f7b57; }
+.avatar-stack-item:nth-child(2){ background: #7aa07a; }
+.avatar-stack-item:nth-child(3){ background: #a9c77a; color: #1d2925; }
+.avatar-stack-item:last-child { background: #1d2925; color: #e2f04a; font-family: 'DM Mono', monospace; font-size: 9px; }
+.social-proof-text { line-height: 1.3; }
+.social-proof-text strong { display: block; color: #1d2925; font-size: 12px; }
+.social-proof-text span { color: #5a6a61; font-size: 11px; }
+.social-proof-text small { display: block; margin-top: 4px; color: #7e8e82; font-family: 'DM Mono', monospace; font-size: 9px; }
+
+/* Footer variant - compact, no card */
+.newsletter-pro--footer .newsletter-benefits { display: none; }
+.newsletter-pro--footer .newsletter-social-proof { display: none; }
+.newsletter-pro--footer .newsletter-pro-row { background: #fff; }
+.footer-newsletter { min-width: 300px; width: 100%; max-width: 380px; }
+.footer-newsletter .newsletter-pro-msg { margin-top: 8px; }
+
+/* Responsive */
+@media (max-width: 900px) {
+  .newsletter-card { grid-template-columns: 1fr; padding: 24px; }
+  .newsletter-card-right { display: none; }
+  .newsletter-section { padding: 36px 20px; }
+}
+@media (max-width: 520px) {
+  .newsletter-pro-row { flex-direction: column; border-radius: 16px; padding: 6px; }
+  .newsletter-pro-row input { width: 100%; text-align: center; }
+  .newsletter-pro-btn { width: 100%; justify-content: center; }
+  .footer-newsletter { min-width: 0; max-width: none; }
+}
+
+
+/* -- Legal pages (Privacy, Terms, Refund, Cookies) -- */
+.legal-page {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 40px 5.5vw 80px;
+  color: #1d2925;
+  line-height: 1.65;
+}
+.legal-header { margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid #d9ded4; }
+.legal-header h1 { margin: 12px 0 10px; font-size: clamp(32px, 5vw, 48px); letter-spacing: -.04em; }
+.legal-header p { color: #3d4a43; font-size: 14px; }
+.legal-toc { padding: 14px 16px; background: #eef2e8; border: 1px solid #d9ded4; border-radius: 12px; font-size: 11px; margin-bottom: 28px; }
+.legal-toc a { color: var(--badge-green-dark); }
+.legal-page h2 { margin: 32px 0 12px; font-size: 20px; letter-spacing: -.03em; color: #1d2925; }
+.legal-page ul, .legal-page ol { padding-left: 20px; color: #2f3d36; font-size: 13px; }
+.legal-page li { margin-bottom: 6px; }
+.legal-page p { color: #2f3d36; font-size: 13px; margin: 10px 0; }
+.legal-contact-card { padding: 16px; background: #f8f9f4; border: 1px solid #d9ded4; border-radius: 12px; font-size: 12px; }
+.legal-contact-card p { margin: 6px 0; }
+.legal-notice { padding: 14px; background: #fff8e6; border: 1px solid #e8d5a8; border-radius: 8px; font-size: 12px; }
+.legal-table { width: 100%; border-collapse: collapse; font-size: 12px; margin: 16px 0; }
+.legal-table th, .legal-table td { text-align: left; padding: 10px 12px; border: 1px solid #d9ded4; }
+.legal-table th { background: #eef2e8; font-family: 'DM Mono', monospace; font-size: 10px; }
+
+/* -- Cookie banner -- */
+.cookie-banner {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(560px, calc(100% - 24px));
+  z-index: 9998;
+  animation: rise-in .35s ease both;
+}
+.cookie-card {
+  padding: 20px;
+  background: #1d2925;
+  color: #eef2e6;
+  border: 1px solid #2f3d36;
+  border-radius: 16px;
+  box-shadow: 0 20px 40px rgba(0,0,0,.2);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.cookie-card a { color: #b7d17d; }
+.cookie-card .eyebrow { color: #b7d17d; margin-bottom: 8px; }
+.cookie-actions { display: flex; gap: 10px; margin-top: 16px; }
+.cookie-actions .button-secondary { border-color: #4a5a4f; color: #eef2e6; }
+.cookie-manage { margin-top: 10px; background: none; border: 0; color: #8fa397; font-size: 11px; text-decoration: underline; cursor: pointer; }
+.cookie-settings { margin-top: 12px; padding: 12px; background: #27342e; border-radius: 8px; }
+.cookie-settings-link {
+  position: fixed;
+  bottom: 12px;
+  left: 12px;
+  z-index: 9997;
+  padding: 6px 10px;
+  background: #1d2925;
+  color: #eef2e6;
+  border: 1px solid #2f3d36;
+  border-radius: 999px;
+  font-size: 10px;
+  cursor: pointer;
+}
+
+/* -- Contrast fixes (WCAG AA) -- */
+/* Darken light grays that were 3:1 to reach 4.5:1 */
+.section-number { color: #5a6a61 !important; }
+.metric-trend { color: #5a6a61 !important; }
+.muted-cell { color: #5a6a61 !important; }
+.footer-meta a, .site-footer { color: #3d4a43; }
+.eyebrow { color: #3d4a43; }
+.story-meta { color: #5a6a61; }
+
+/* -- Accessibility -- */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 8px;
+  padding: 10px 14px;
+  background: #1d2925;
+  color: #fff;
+  border-radius: 999px;
+  z-index: 9999;
+  text-decoration: none;
+  font-size: 12px;
+}
+.skip-link:focus { left: 12px; }
+:focus-visible { outline: 2px solid var(--badge-green); outline-offset: 2px; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+
+/* Keyboard - ensure all interactive have visible focus */
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 2px solid var(--badge-green);
+  outline-offset: 2px;
+}
+
+/* -- Footer business details -- */
+.footer-brand-col { display: flex; flex-direction: column; gap: 12px; }
+.footer-tagline { font-size: 12px; line-height: 1.5; color: #5a6a61; }
+.footer-nav { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; padding-top: 4px; }
+.footer-nav-title { margin: 0 0 4px; font-family: 'DM Mono', monospace; font-size: 10px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; color: #7e8e82; }
+.footer-nav a { color: #3d4a43; text-decoration: none; font-size: 12px; padding: 2px 0; transition: color .2s ease; }
+.footer-nav a:hover { color: var(--badge-green-dark); }
+.footer-nav a:focus-visible { outline: 2px solid var(--badge-green); outline-offset: 2px; border-radius: 2px; }
+.business-details { font-size: 10px; line-height: 1.5; color: #5a6a61; font-family: 'DM Mono', monospace; }
+.business-details a { color: var(--badge-green-dark); }
+.business-details strong { color: #1d2925; font-family: 'Manrope', sans-serif; }
+.footer-disclaimer { font-size: 9px; color: #7e8e82; }
+.card-disclaimer { display: block; margin-top: 6px; color: #7e8e82; font-size: 9px; font-family: 'DM Mono', monospace; }
+
+/* -- Newsletter consent row -- */
+.consent-row { display: flex; gap: 8px; align-items: flex-start; margin-bottom: 12px; font-size: 11px; line-height: 1.4; color: #3d4a43; }
+.consent-row input { margin-top: 2px; accent-color: var(--badge-green); flex: 0 0 auto; }
+.consent-row a { color: var(--badge-green-dark); }
+
+/* -- Third-party embeds disclosure banner (subtle) -- */
+.embed-notice { font-size: 10px; color: #7e8e82; font-family: 'DM Mono', monospace; }
+
+/* Ensure images have alt handling - background images already have aria-label, add fallback */
+.feature-image, .story-card-image, .reader-image { background-color: #d9ded4; }
+
+/* Button clarity - every button now has discernible text via aria-label or visible text */
+/* X close buttons already have aria-label="Close story" */
+
+
+/* -- Policy bar -- */
+.policy-bar {
+  background: #1d2925;
+  color: #eef2e6;
+  border-bottom: 1px solid #2f3d36;
+  font-size: 11px;
+}
+.policy-bar-inner {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 8px 5.5vw;
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.policy-bar-label { color: #8fa397; font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: .08em; text-transform: uppercase; }
+.policy-link { color: #b8c5b9; text-decoration: none; padding: 4px 8px; border-radius: 999px; transition: color .2s, background .2s; }
+.policy-link:hover { color: #fff; background: rgba(255,255,255,.08); }
+.policy-link.active { color: #1d2925; background: #e2f04a; font-weight: 800; }
+.policy-bar-hint { margin-left: auto; color: #6b7a6e; font-family: 'DM Mono', monospace; font-size: 9px; }
+@media (max-width: 600px) {
+  .policy-bar-inner { gap: 8px; padding: 8px 16px; }
+  .policy-bar-hint { display: none; }
+}
+
+.site-footer .policy-bar {
+  grid-column: 1 / -1;
+  border-bottom: none;
+  border-top: 1px solid #2f3d36;
+}
+
+

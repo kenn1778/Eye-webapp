@@ -1,0 +1,441 @@
+/* 
+ *
+ * 
+ *
+ * Loaded by App.css - see that file for the load order.
+ */
+
+/* -- Mobile Navigation Fix — keep nav accessible on all devices -- */
+@media (max-width: 767px) {
+  .site-header { flex-wrap: nowrap; gap: 10px; }
+  .main-nav { display: flex !important; gap: 14px; margin-left: auto; overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; scrollbar-width: none; flex: 1 1 auto; justify-content: flex-end; padding-bottom: 2px; }
+  .main-nav::-webkit-scrollbar { display: none; }
+  .main-nav a { flex: 0 0 auto; white-space: nowrap; font-size: 11px; padding: 6px 0; }
+  .admin-link { flex: 0 0 auto; margin-left: 6px; }
+}
+@media (max-width: 374px) {
+  .main-nav { gap: 10px; }
+  .main-nav a { font-size: 10.5px; }
+}
+/* Ensure header never clips */
+.site-header { min-width: 0; overflow: visible; }
+.site-header > * { min-width: 0; }
+
+/* Ensure every container can scroll when text exceeds viewport — fallback */
+@supports (height: 100dvh) {
+  .feature-content, .story-card-content, .community-card-body, .reader-content {
+    max-height: min(70vh, 600px);
+  }
+}
+/* Prevent long unbroken strings from breaking layout */
+a, p, h1, h2, h3, span, strong, small, label, button {
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  hyphens: auto;
+}
+
+
+
+/* -- BRAND SHRINK: The EYEs text hides leaving only icon on shrink + mobile -- */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  transition: height .32s cubic-bezier(.22,.61,.36,1), padding .32s cubic-bezier(.22,.61,.36,1), background .32s cubic-bezier(.22,.61,.36,1), box-shadow .32s cubic-bezier(.22,.61,.36,1), backdrop-filter .32s cubic-bezier(.22,.61,.36,1);
+}
+.site-header.is-shrunk {
+  height: 56px !important;
+  padding-top: max(0px, env(safe-area-inset-top));
+  background: rgba(248,249,244,.92);
+  backdrop-filter: blur(18px) saturate(130%);
+  -webkit-backdrop-filter: blur(18px) saturate(130%);
+  box-shadow: 0 4px 20px rgba(29,41,37,.08);
+  border-bottom-color: rgba(205,209,199,.9);
+}
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  transition: gap .22s ease;
+}
+.brand-text {
+  display: inline-block;
+  white-space: nowrap;
+  overflow: hidden;
+  max-width: 200px;
+  opacity: 1;
+  transform: translateX(0);
+  transition: opacity .22s ease, transform .22s ease, max-width .22s ease, margin .22s ease;
+}
+.site-header.is-shrunk .brand-text {
+  opacity: 0;
+  transform: translateX(-10px);
+  max-width: 0 !important;
+  width: 0;
+  margin: 0 !important;
+  pointer-events: none;
+}
+.site-header.is-shrunk .brand {
+  gap: 0;
+}
+.site-header.is-shrunk .brand-logo {
+  transform: scale(0.96);
+  transition: transform .22s ease;
+}
+@media (max-width: 767px) {
+  .brand-text {
+    display: none !important;
+    max-width: 0 !important;
+    opacity: 0 !important;
+  }
+  .brand {
+    gap: 0 !important;
+  }
+  .site-header {
+    height: 62px;
+    padding: 0 16px;
+  }
+  .site-header.is-shrunk {
+    height: 54px !important;
+  }
+}
+@media (min-width: 768px) and (max-width: 900px) {
+  .site-header.is-shrunk .brand-text {
+    display: none !important;
+  }
+}
+.sidebar-closed .admin-brand .brand-text {
+  display: none !important;
+}
+.admin-brand .brand-text {
+  transition: opacity .2s ease, max-width .2s ease;
+}
+.site-footer .brand-text {
+  display: inline-block !important;
+  max-width: none !important;
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+
+/* -- EYE ICON: real blink + bounce + footer fixes -- */
+/* Brand icon base */
+.brand-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 27px;
+  flex: 0 0 34px;
+  overflow: visible;
+}
+.eye-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
+}
+.eye-outline {
+  transition: stroke-width .2s ease;
+}
+.brand:hover .eye-outline {
+  stroke-width: 8;
+}
+
+/* Iris + pupil gentle bounce like real eye micro-saccades */
+.eye-iris-group {
+  transform-origin: center center;
+  animation: eye-bounce 4.2s cubic-bezier(.22,.61,.36,1) infinite;
+  will-change: transform;
+}
+/* NOTE: an earlier eye-bounce keyframe set lived here. It was superseded by the
+   left/right scanning version further down, which is the one the CSS cascade
+   actually applied. Kept as a note so the animation history is traceable. */
+
+/* Glint follows iris with slight lag - makes eye feel alive */
+.eye-glint {
+  animation: eye-glint-move 4.2s cubic-bezier(.22,.61,.36,1) infinite;
+  will-change: transform;
+}
+/* NOTE: an earlier eye-glint-move keyframe set lived here. It was superseded by
+   the version further down that tracks the iris movement. */
+
+/* Blink - lids scale from top/bottom */
+.eye-lid {
+  will-change: transform;
+  backface-visibility: hidden;
+  pointer-events: none;
+}
+.eye-lid-top {
+  transform-origin: 80px 10px;
+  transform: scaleY(0);
+  animation: eye-blink-top 5.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+.eye-lid-bottom {
+  transform-origin: 80px 92px;
+  transform: scaleY(0);
+  animation: eye-blink-bottom 5.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+@keyframes eye-blink-top {
+  0%, 82%, 100% { transform: scaleY(0); }
+  86% { transform: scaleY(0.08); }
+  89% { transform: scaleY(0.45); }
+  91% { transform: scaleY(0.88); }
+  92.5% { transform: scaleY(1); }
+  94% { transform: scaleY(0.65); }
+  96% { transform: scaleY(0.18); }
+  98% { transform: scaleY(0.04); }
+}
+@keyframes eye-blink-bottom {
+  0%, 82%, 100% { transform: scaleY(0); }
+  86% { transform: scaleY(0.08); }
+  89% { transform: scaleY(0.45); }
+  91% { transform: scaleY(0.88); }
+  92.5% { transform: scaleY(1); }
+  94% { transform: scaleY(0.65); }
+  96% { transform: scaleY(0.18); }
+  98% { transform: scaleY(0.04); }
+}
+
+/* Double blink occasionally - extra keyframe at 35% for realism */
+.eye-svg:hover .eye-iris-group {
+  animation-duration: 1.8s;
+}
+.eye-svg:hover .eye-lid-top,
+.eye-svg:hover .eye-lid-bottom {
+  animation-duration: 2.1s;
+}
+
+/* Brand hover micro-bounce - eyes react */
+.brand:hover .brand-icon {
+  animation: eye-brand-bounce 0.45s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes eye-brand-bounce {
+  0% { transform: translateY(0) scale(1); }
+  30% { transform: translateY(-2px) scale(1.04); }
+  60% { transform: translateY(1px) scale(0.98); }
+  100% { transform: translateY(0) scale(1); }
+}
+
+/* Reduced motion fallback */
+@media (prefers-reduced-motion: reduce) {
+  .eye-iris-group, .eye-glint, .eye-lid-top, .eye-lid-bottom, .brand-icon {
+    animation: none !important;
+  }
+}
+
+/* -- FOOTER BAR FIXES: strokes on highlight + shape movement -- */
+.site-footer {
+  position: relative;
+  isolation: isolate;
+  overflow: clip;
+  contain: layout style;
+  border-top: 1px solid #cdd1c7;
+  background: #f3f1e9;
+  /* Prevent shape shift - use stable grid */
+  grid-template-columns: 1.4fr 1fr 1.4fr;
+  gap: 25px;
+  align-items: start;
+  padding: 35px 5.5vw;
+  /* Ensure highlight stroke does not cause layout shift */
+  outline-offset: 2px;
+}
+
+/* Remove duplicate footer definition jitter - enforce single stable layout */
+.site-footer > * {
+  min-width: 0;
+  will-change: auto;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+/* Footer brand - no jump on hover */
+.site-footer .brand {
+  gap: 10px;
+  transition: gap .2s ease;
+}
+.site-footer .brand:hover {
+  transform: none;
+}
+.site-footer .brand-icon {
+  transition: transform .28s cubic-bezier(.34,1.56,.64,1);
+}
+.site-footer .brand:hover .brand-icon {
+  transform: scale(1.06) rotate(-1deg);
+}
+
+/* Newsletter form - fix stroke highlight shape movement */
+.newsletter-form {
+  min-width: 260px;
+  isolation: isolate;
+}
+.newsletter-form label {
+  margin-bottom: 9px;
+}
+.newsletter-form > div {
+  gap: 7px;
+  align-items: center;
+}
+.newsletter-form input {
+  min-width: 0;
+  width: 100%;
+  padding: 10px 12px;
+  color: #35433b;
+  border: 1px solid #b8cdb4;
+  border-radius: 999px;
+  outline: none;
+  background: rgba(255,255,255,.58);
+  font-size: 11px;
+  transition: border-color .2s ease, background .2s ease, box-shadow .2s ease, transform .2s ease;
+  will-change: border-color, box-shadow;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+.newsletter-form input:hover {
+  border-color: #9fc09c;
+  background: #fff;
+  transform: translateZ(0);
+}
+.newsletter-form input:focus {
+  border-color: var(--badge-green);
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(108,154,112,.16), 0 1px 2px rgba(0,0,0,.04);
+}
+.newsletter-form input:focus-visible {
+  outline: none;
+  border-color: var(--badge-green);
+  box-shadow: 0 0 0 3px rgba(108,154,112,.18);
+}
+.newsletter-form .button {
+  flex: 0 0 auto;
+  border: 1px solid transparent;
+  transition: background .22s ease, border-color .22s ease, transform .22s ease, box-shadow .22s ease;
+  will-change: transform;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+.newsletter-form .button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(108,154,112,.18);
+}
+.newsletter-form .button:active {
+  transform: translateY(0);
+}
+.newsletter-form .button:focus-visible {
+  outline: 2px solid var(--badge-green);
+  outline-offset: 2px;
+}
+
+/* Footer meta links - fix highlight stroke + shape movement */
+.footer-meta {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 18px;
+  padding-top: 16px;
+  border-top: 1px solid #d9ded4;
+}
+.footer-meta a {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 0;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: color .2s ease, border-color .2s ease, transform .2s ease;
+  will-change: transform, color;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+.footer-meta a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 1px;
+  background: var(--badge-green-dark);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform .22s ease;
+}
+.footer-meta a:hover {
+  color: var(--badge-green-dark);
+  transform: translateY(-1px);
+}
+.footer-meta a:hover::after,
+.footer-meta a:focus-visible::after {
+  transform: scaleX(1);
+}
+.footer-meta a:focus-visible {
+  outline: 2px solid var(--badge-green);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Newsletter small status - no shift */
+.newsletter-form small {
+  min-height: 14px;
+  display: block;
+}
+
+/* Footer responsive - keep shape stable */
+@media (max-width: 1024px) {
+  .site-footer {
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  .site-footer .newsletter-form {
+    grid-column: 1 / -1;
+  }
+}
+@media (max-width: 760px) {
+  .site-footer {
+    grid-template-columns: 1fr !important;
+    gap: 18px !important;
+    padding: 28px 20px !important;
+    text-align: left;
+  }
+  .footer-meta {
+    justify-content: flex-start !important;
+    flex-wrap: wrap;
+  }
+  .newsletter-form > div {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .newsletter-form .button {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* TV footer - keep centered, no stretch */
+@media (min-width: 1920px) {
+  .site-footer {
+    grid-template-columns: 1.4fr 1fr 1.4fr;
+    padding: 42px 5.5vw;
+    gap: 32px;
+  }
+}
+
+
+/* Icon size overrides for context - keep eye crisp */
+.login-brand .brand-icon {
+  width: 48px;
+  height: 36px;
+  flex: 0 0 48px;
+}
+.admin-brand .brand-icon {
+  width: 35px;
+  height: 27px;
+  flex: 0 0 35px;
+}
+.login-brand .eye-svg,
+.admin-brand .eye-svg {
+  width: 100%;
+  height: 100%;
+}
+
+

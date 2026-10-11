@@ -15,7 +15,7 @@ export function PrivacyPolicy() {
         <div className="legal-header">
           <div className="eyebrow">Legal • Effective: 12 September 2026 • Version 2.0</div>
           <h1>Privacy Policy</h1>
-          <p>EYE (“we”, “us”) respects your privacy. This policy explains what we collect, why, how long we keep it, and your rights under Ghana Data Protection Act 2012 (Act 843), EU GDPR, and California CCPA/CPRA. Read it with our <Link to="/terms">Terms</Link> and <Link to="/cookies">Cookies Policy</Link>.</p>
+          <p>EYE (“we”, “us”) respects your privacy. This policy explains what we collect, why, how long we keep it, and your rights under the Nigeria Data Protection Act 2023 (NDPA), EU GDPR, and California CCPA/CPRA. Read it with our <Link to="/terms">Terms</Link> and <Link to="/cookies">Cookies Policy</Link>.</p>
           <div className="legal-notice">
             <strong>Plain English summary:</strong> We only collect your email if you ask for the weekly brief. We do not sell data, we do not track you across sites without consent, and you can delete your data anytime via <a href="mailto:teckennedy177@gmail.com">teckennedy177@gmail.com</a>.
           </div>
@@ -51,10 +51,10 @@ export function PrivacyPolicy() {
         <section id="basis">
           <h2>3. Legal basis</h2>
           <ul>
-            <li><strong>Consent (GDPR Art.6(1)(a), Ghana DPA s.18)</strong> — newsletter and non-essential cookies. Withdraw anytime via unsubscribe link or <a href="mailto:teckennedy177@gmail.com">teckennedy177@gmail.com</a>.</li>
+            <li><strong>Consent (GDPR Art.6(1)(a), Nigeria NDPA)</strong> — newsletter and non-essential cookies. Withdraw anytime via unsubscribe link or <a href="mailto:teckennedy177@gmail.com">teckennedy177@gmail.com</a>.</li>
             <li><strong>Legitimate interest (Art.6(1)(f))</strong> — security, fraud prevention, and aggregated analytics with minimal privacy impact.</li>
             <li><strong>Contract (Art.6(1)(b))</strong> — providing the admin workspace to invited members.</li>
-            <li><strong>Legal obligation</strong> — where Ghana law requires retention.</li>
+            <li><strong>Legal obligation</strong> — where Nigerian law requires retention.</li>
           </ul>
         </section>
 
@@ -79,7 +79,7 @@ export function PrivacyPolicy() {
 
         <section id="transfers">
           <h2>6. International transfers</h2>
-          <p>Servers may be outside Ghana/EU. Where we transfer, we use safeguards such as EU Standard Contractual Clauses or adequacy decisions and limit data to what is needed.</p>
+          <p>Servers may be outside Nigeria/EU. Where we transfer, we use safeguards such as EU Standard Contractual Clauses or adequacy decisions and limit data to what is needed.</p>
         </section>
 
         <section id="retention">
@@ -92,12 +92,12 @@ export function PrivacyPolicy() {
         </section>
 
         <section id="rights">
-          <h2>8. Your rights (Ghana/EU/California)</h2>
+          <h2>8. Your rights (Nigeria/EU/California)</h2>
           <p>You may have rights to access, correct, delete, restrict, object, portability, and to withdraw consent. California residents may also have “Do Not Sell/Share” and “Limit Use” rights — we do not sell/share, so no opt-out needed, but we honor requests.</p>
           <ul>
             <li>Unsubscribe: link in every email (one click).</li>
-            <li>Access/delete: email <a href="mailto:teckennedy177@gmail.com">teckennedy177@gmail.com</a> — we reply within 30 days (Ghana DPA/GDPR) or 45 days (CCPA).</li>
-            <li>Complaints: Ghana Data Protection Commission, your EU DPA, or California AG.</li>
+            <li>Access/delete: email <a href="mailto:teckennedy177@gmail.com">teckennedy177@gmail.com</a> — we reply within 30 days (NDPA/GDPR) or 45 days (CCPA).</li>
+            <li>Complaints: Nigeria Data Protection Commission (NDPC), your EU DPA, or California AG.</li>
           </ul>
         </section>
 
@@ -126,9 +126,9 @@ export function PrivacyPolicy() {
             Email: <a href="mailto:teckennedy177@gmail.com">teckennedy177@gmail.com</a><br/>
             Phone: 07086193675 / +234 708 619 3675 • Lagos, Nigeria<br/>
             Business: Sole proprietor (Nigeria) • NDPA compliant</p>
-            <p><strong>Have a Nigerian counsel review before launch.</strong></p>
+
           </div>
-          <p><em>This template is not legal advice.</em></p>
+
         </section>
       </main>
       <footer className="site-footer"><Brand /><p>© 2026 EYE</p><div className="footer-meta"><Link to="/privacy">Privacy</Link><Link to="/terms">Terms</Link><Link to="/cookies">Cookies</Link><Link to="/refund">Refund</Link></div></footer>

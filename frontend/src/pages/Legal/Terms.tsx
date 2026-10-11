@@ -40,10 +40,10 @@ export function Terms() {
 
         <section>
           <h2>4. No guarantees & limitation of liability</h2>
-          <p>Content is provided “as is” without warranties. To the extent permitted by Ghana law (and applicable local law where you access the service):</p>
+          <p>Content is provided “as is” without warranties. To the extent permitted by Nigerian law (and applicable local law where you access the service):</p>
           <ul>
             <li>We do not guarantee that every listing is current, complete, or that you will be eligible or successful.</li>
-            <li>We are not liable for indirect, incidental, or consequential damages, or for reliance on listings. Our total liability for any claim is limited to GHS 500 or the amount you paid us in the last 12 months, whichever is lower (or minimum required by law).</li>
+            <li>We are not liable for indirect, incidental, or consequential damages, or for reliance on listings. Our total liability for any claim is limited to NGN 100,000 (Nigerian Naira) or the amount you paid us in the last 12 months, whichever is lower (or minimum required by law).</li>
           </ul>
         </section>
 
@@ -65,7 +65,7 @@ export function Terms() {
         <section>
           <h2>8. Changes & governing law</h2>
           <p>We may update these terms and will post the new date above. Continued use after changes means you accept them.</p>
-          <p><strong>Governing law:</strong> Laws of the Republic of Ghana. Disputes first via good-faith negotiation for 30 days, then courts of Accra, unless mandatory consumer law in your country requires otherwise.</p>
+          <p><strong>Governing law:</strong> Laws of the Federal Republic of Nigeria. Disputes first via good-faith negotiation for 30 days, then the courts of Lagos State, Nigeria, unless mandatory consumer law in your country requires otherwise.</p>
         </section>
 
         <section>
@@ -74,7 +74,7 @@ export function Terms() {
             <p>Alozie Izuchukwu Johnkennedy — No. 14 Lawal Street, Alimosho, Akowonjo, Lagos State, Nigeria<br/>Email: <a href="mailto:teckennedy177@gmail.com">teckennedy177@gmail.com</a></p>
             <p>Registered as sole proprietor in Nigeria.</p>
           </div>
-          <p><em>Not legal advice — have counsel review.</em></p>
+
         </section>
       </main>
       <footer className="site-footer"><Brand /><p>© 2026 EYE</p><div className="footer-meta"><Link to="/privacy">Privacy</Link><Link to="/terms">Terms</Link></div></footer>

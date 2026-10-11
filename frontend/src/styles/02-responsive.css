@@ -1,0 +1,448 @@
+/* 
+ *
+ * 
+ *
+ * Loaded by App.css - see that file for the load order.
+ */
+
+/* -- A. Universal Scroll-Safety: every container handles overflow -- */
+.site-shell, .site-header, .intro-band, .feature-section, .latest-section,
+.communities-section, .site-footer, .feature-story, .feature-content,
+.story-grid, .story-card, .story-card-content, .community-grid, .community-card,
+.community-card-body, .reader-content, .admin-shell, .admin-main, .admin-content,
+.admin-panel, .metric-card, .posts-table, .editor-modal, .story-reader,
+.workspace-view, .calendar-panel, .upcoming-panel, .media-grid, .taxonomy-panel,
+.settings-panel, .team-panel, .login-card, .workspace-heading, .admin-heading,
+.metrics-grid, .schedule-panel, .activity-panel, .attachment-grid, .editor-divider,
+.modal-backdrop, .client-modal-backdrop {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  hyphens: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #aeb9ad transparent;
+}
+
+/* Make every text container actually scroll when it exceeds viewport/parent */
+.story-card-content,
+.feature-content,
+.community-card-body,
+.admin-community-body,
+.reader-content,
+.admin-panel,
+.settings-panel,
+.team-panel,
+.workspace-heading p,
+.admin-heading p,
+.intro-copy {
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: auto;
+  scrollbar-gutter: stable;
+}
+
+/* Specific max-heights so scroll triggers only when text is long */
+.feature-content p { max-height: clamp(6em, 18vh, 11em); }
+.story-card p { max-height: clamp(4.5em, 14vh, 7em); }
+.community-card-body p,
+.admin-community-body p { max-height: clamp(4em, 12vh, 6em); }
+.reader-content p { max-height: none; } /* reader scrolls via container */
+.reader-content { max-height: min(70vh, 560px); }
+.feature-content h3,
+.story-card h3,
+.community-card-body h3 { max-height: clamp(3.2em, 12vh, 5em); overflow-y: auto; }
+.workspace-heading p,
+.admin-heading p,
+.communities-intro { max-height: 6em; overflow-y: auto; }
+
+/* Ensure images/media never force overflow */
+img, video, audio, iframe, svg { max-width: 100%; height: auto; }
+.feature-image, .story-card-image, .reader-image, .community-art,
+.media-preview, .featured-preview { max-width: 100%; overflow: hidden; background-size: cover; background-position: center; }
+
+/* Tables and grids always scroll horizontally if needed */
+.posts-table { overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; scrollbar-width: thin; }
+.table-row { min-width: 720px; }
+.calendar-grid, .media-grid, .story-grid, .community-grid { min-width: 0; overflow: visible; }
+
+/* Editor & modals scroll safely */
+.editor-modal, .story-reader, .logout-dialog, .login-card {
+  max-height: min(92vh, 92dvh);
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: auto;
+}
+.modal-backdrop, .client-modal-backdrop {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+}
+
+/* Category tabs scroll horizontally when overflow */
+.category-tabs, .media-filter, .admin-tabs {
+  overflow-x: auto;
+  overflow-y: hidden;
+  flex-wrap: nowrap;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  scroll-snap-type: x proximity;
+  padding-bottom: 6px;
+}
+.category-tabs::-webkit-scrollbar, .media-filter::-webkit-scrollbar { display: none; }
+.category-tab, .admin-tab { flex: 0 0 auto; scroll-snap-align: start; white-space: nowrap; }
+
+/* Attachment grid, permalink, invite rows never overflow viewport */
+.attachment-grid, .editor-two-col, .invite-row, .taxonomy-add, .newsletter-form > div {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+.attachment-card, .permalink-row, .invite-row input, .invite-row select {
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* -- B. Refined Scrollbars -- */
+.story-card-content::-webkit-scrollbar,
+.feature-content::-webkit-scrollbar,
+.community-card-body::-webkit-scrollbar,
+.reader-content::-webkit-scrollbar { width: 6px; height: 6px; }
+.story-card-content::-webkit-scrollbar-thumb,
+.feature-content::-webkit-scrollbar-thumb,
+.community-card-body::-webkit-scrollbar-thumb { background: #aeb9ad; border-radius: 99px; border: 1px solid transparent; background-clip: padding-box; }
+
+/* Show scrollbar on hover/focus for discoverability */
+.story-card-content:hover, .feature-content:hover { scrollbar-color: #7e8d81 #e8ece4; }
+
+/* -- C. Layout Fixes — Prevent Horizontal Overflow -- */
+.site-shell { width: 100%; max-width: 1440px; }
+.site-header, .admin-topbar, .intro-band, .feature-section, .latest-section,
+.communities-section, .site-footer, .admin-content {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+.intro-band { overflow: hidden; } /* keep decorative circle clipped but content visible */
+.feature-story, .story-card, .community-card, .admin-panel, .metric-card,
+.media-asset, .admin-community-card { min-width: 0; overflow: hidden; }
+.feature-content, .story-card-content { min-height: 0; }
+
+/* -- D. Breakpoints — Mobile / Tablet / Desktop / TV -- */
+
+/* 320-374: Extra small phones (iPhone SE, small Android) */
+@media (max-width: 374px) {
+  .site-header { padding: 0 12px; height: 66px; }
+  .brand { font-size: 14px; gap: 8px; }
+  .brand-logo { width: 28px; height: 22px; flex-basis: 28px; }
+  .admin-link { padding: 7px 9px; font-size: 9px; max-width: 120px; }
+  .intro-band { padding: 56px 14px 44px; }
+  h1 { font-size: clamp(36px, 12vw, 52px); line-height: 0.95; }
+  .intro-copy { font-size: 13px; }
+  .intro-actions { flex-direction: column; align-items: stretch; gap: 14px; }
+  .intro-actions .button, .intro-actions .text-button { width: 100%; justify-content: center; }
+  .feature-section, .latest-section, .communities-section { padding: 36px 14px; }
+  .feature-image { min-height: 180px; }
+  .feature-content { padding: 22px 16px 26px; }
+  .feature-content h3 { font-size: 24px; }
+  .search-field { width: 100%; }
+  .story-grid, .community-grid { gap: 14px; }
+  .story-card-content { padding: 18px 16px 16px; }
+  .site-footer { padding: 24px 14px; gap: 14px; }
+  .metrics-grid { grid-template-columns: 1fr; }
+  .metric-card { min-height: 110px; }
+  .admin-panel { padding: 16px 12px 0; }
+  .table-row { min-width: 640px; }
+  .editor-modal { padding: 18px 14px; }
+  .modal-heading h2 { font-size: 26px; }
+  .calendar-grid { gap: 4px; }
+  .calendar-date { min-height: 36px; font-size: 10px; }
+  .media-grid { gap: 10px; }
+  .team-member { grid-template-columns: 28px 1fr auto; }
+  input, select, textarea { font-size: 16px !important; } /* iOS anti-zoom */
+}
+
+/* 375-479: Standard phones (iPhone 12/13/14, Pixel) */
+@media (min-width: 375px) and (max-width: 479px) {
+  .site-header { padding: 0 16px; height: 70px; }
+  .intro-band { padding: 64px 18px 52px; min-height: auto; }
+  .hero-eye { width: 96px; height: 96px; right: 12px; top: 18px; }
+  h1 { font-size: clamp(42px, 13vw, 64px); }
+  .feature-section, .latest-section, .communities-section { padding: 44px 16px; }
+  .story-card-content { min-height: 0; }
+  .metrics-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .admin-content { padding: 24px 14px 40px; }
+  input, select, textarea { font-size: 16px !important; }
+}
+
+/* 480-599: Large phones / Phablets */
+@media (min-width: 480px) and (max-width: 599px) {
+  .site-header { padding: 0 18px; }
+  .intro-band { padding: 72px 22px 60px; }
+  .feature-section, .latest-section, .communities-section { padding: 52px 18px; }
+  .story-grid { grid-template-columns: 1fr; }
+  .community-grid { grid-template-columns: 1fr; }
+  .media-grid { grid-template-columns: repeat(2, 1fr); }
+  .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+  .site-footer { grid-template-columns: 1fr; }
+}
+
+/* 600-767: Small tablets / Large phablets */
+@media (min-width: 600px) and (max-width: 767px) {
+  .site-header { padding: 0 20px; }
+  .main-nav { gap: 16px; }
+  .main-nav a, .admin-link { font-size: 11px; }
+  .intro-band { padding: 80px 6vw 70px; }
+  .feature-story { grid-template-columns: 1fr; }
+  .feature-image { min-height: 260px; }
+  .story-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .community-grid { grid-template-columns: repeat(2, 1fr); }
+  .media-grid { grid-template-columns: repeat(2, 1fr); }
+  .site-footer { grid-template-columns: 1fr 1fr; }
+  .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+  .admin-bottom-grid { grid-template-columns: 1fr; }
+}
+
+/* 768-1023: Tablet portrait (iPad, Android tablets) */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .site-header { padding: 0 3.5vw; height: 78px; }
+  .main-nav { gap: 20px; margin-left: 0; }
+  .intro-band { padding: 84px 6vw 76px; min-height: 440px; }
+  .hero-eye { width: 300px; height: 300px; right: 2%; top: 18px; }
+  h1 { font-size: clamp(56px, 7vw, 84px); }
+  .feature-section, .latest-section, .communities-section { padding: 64px 5vw; }
+  .feature-story { grid-template-columns: 1fr 1fr; }
+  .feature-content { padding: 30px 28px; }
+  .feature-content h3 { font-size: clamp(26px, 3vw, 38px); }
+  .story-grid { grid-template-columns: repeat(2, 1fr); }
+  .community-grid, .community-admin-grid { grid-template-columns: repeat(2, 1fr); }
+  .media-grid { grid-template-columns: repeat(3, 1fr); }
+  .site-footer { grid-template-columns: auto 1fr; gap: 20px; }
+  .newsletter-form { grid-column: 1 / -1; }
+  .admin-content { padding: 36px 3vw 50px; }
+  .metrics-grid { grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .metric-card strong { font-size: 28px; }
+  .admin-bottom-grid { grid-template-columns: 1fr; }
+  .calendar-layout { grid-template-columns: 1fr; }
+  .settings-grid { grid-template-columns: 1fr; }
+}
+
+/* 1024-1279: Tablet landscape / Small laptop */
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .site-header { padding: 0 4vw; }
+  .main-nav { gap: 22px; }
+  .intro-band, .feature-section, .latest-section, .communities-section { padding-inline: 5vw; }
+  .feature-story { grid-template-columns: 1.15fr 0.85fr; }
+  .story-grid { grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .community-grid { grid-template-columns: repeat(3, 1fr); }
+  .media-grid { grid-template-columns: repeat(3, 1fr); }
+  .site-footer { grid-template-columns: auto 1fr minmax(280px, 1.2fr) auto; }
+  .admin-content { max-width: 1200px; }
+}
+
+/* 1280-1439: Desktop */
+@media (min-width: 1280px) and (max-width: 1439px) {
+  .site-shell { max-width: 1440px; }
+  .feature-content h3 { font-size: 42px; }
+  .story-grid { gap: 18px; }
+}
+
+/* 1440-1919: Large desktop */
+@media (min-width: 1440px) and (max-width: 1919px) {
+  .site-shell { max-width: 1600px; }
+  .site-header { padding-inline: 4.5vw; }
+  .intro-band { padding: 110px 8vw 100px; min-height: 560px; }
+  .feature-section, .latest-section, .communities-section { padding-inline: 8vw; padding-block: 90px; }
+  .story-grid { gap: 20px; }
+  .community-grid { gap: 18px; }
+}
+
+/* 1920-2559: Full HD TV / Large monitors */
+@media (min-width: 1920px) {
+  .site-shell { max-width: 1720px; }
+  .site-header { height: 96px; padding-inline: 3vw; }
+  .brand { font-size: 20px; }
+  .brand-logo { width: 40px; height: 32px; flex-basis: 40px; }
+  .main-nav { gap: 36px; }
+  .main-nav a, .admin-link { font-size: 13px; }
+  .intro-band { min-height: 620px; padding: 130px 6vw 120px; }
+  .hero-eye { width: 460px; height: 460px; right: 5%; top: 18px; }
+  h1 { font-size: clamp(72px, 5.5vw, 120px); }
+  .intro-copy { font-size: 17px; max-width: 520px; }
+  .feature-section, .latest-section, .communities-section { padding: 100px 6vw; }
+  .feature-story { min-height: 460px; }
+  .feature-image { min-height: 460px; }
+  .feature-content { padding: 50px 48px; }
+  .feature-content h3 { font-size: 52px; max-width: 560px; }
+  .feature-content p { font-size: 15px; max-width: 460px; }
+  .story-grid { gap: 22px; }
+  .story-card h3 { font-size: 24px; }
+  .story-card p { font-size: 13.5px; }
+  .community-card-body h3 { font-size: 22px; }
+  .admin-content { max-width: 1540px; padding: 60px 3vw 80px; }
+  .admin-topbar { height: 78px; }
+  .metric-card { min-height: 150px; }
+  .metric-card strong { font-size: 38px; }
+}
+
+/* 2560-3839: 4K / QHD */
+@media (min-width: 2560px) {
+  .site-shell { max-width: 1920px; }
+  .site-header { height: 110px; }
+  .brand { font-size: 22px; }
+  .brand-logo { width: 46px; height: 36px; flex-basis: 46px; }
+  h1 { font-size: 132px; }
+  .intro-band { min-height: 720px; padding: 150px 8vw 140px; }
+  .feature-section, .latest-section, .communities-section { padding: 120px 8vw; }
+  .story-grid { gap: 28px; }
+  .story-card-content, .community-card-body { padding: 28px; }
+  .admin-content { max-width: 1760px; }
+  .admin-panel, .metric-card { font-size: 15px; }
+}
+
+/* 3840+: 8K / Ultra-wide TV — center & cap scaling */
+@media (min-width: 3840px) {
+  .site-shell { max-width: 2100px; }
+  html { font-size: 22px; }
+  .site-header, .intro-band, .feature-section, .latest-section,
+  .communities-section, .site-footer { padding-inline: 0; }
+  .admin-content { max-width: 1900px; }
+}
+
+/* -- E. iOS / Android / Device-Specific -- */
+
+/* iOS safe-area already in :root; apply to fixed bars */
+@supports (padding: max(0px)) {
+  .site-header { padding-top: max(0px, env(safe-area-inset-top)); }
+  .site-footer { padding-bottom: max(16px, env(safe-area-inset-bottom)); }
+  .admin-topbar { padding-top: max(0px, env(safe-area-inset-top)); }
+  .admin-content { padding-bottom: max(24px, env(safe-area-inset-bottom)); }
+  .login-card { margin-top: env(safe-area-inset-top); margin-bottom: env(safe-area-inset-bottom); }
+}
+
+/* iOS rubber-band & momentum scroll */
+@supports (-webkit-touch-callout: none) {
+  body { min-height: -webkit-fill-available; }
+  #root { min-height: -webkit-fill-available; }
+  .admin-content, .editor-modal, .story-reader { -webkit-overflow-scrolling: touch; }
+  input, textarea, select { font-size: 16px !important; } /* prevent zoom */
+}
+
+/* Android — ensure font scaling respects accessibility */
+@media (max-width: 767px) {
+  html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+  input, select, textarea, button { font-size: 16px; } /* critical: prevent iOS/Android zoom */
+  .search-field input, .admin-search input { font-size: 16px; }
+  .newsletter-form input { font-size: 16px; }
+}
+
+/* Tap targets — WCAG 44px minimum on touch devices */
+@media (pointer: coarse) {
+  button, a, .category-tab, .admin-tab, .sidebar-item, .card-read, .story-link {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  .category-tab, .admin-tab { padding: 11px 15px; }
+  .card-read, .story-link, .card-action { padding: 8px 0; }
+  .row-menu, .icon-button, .menu-toggle { min-width: 44px; min-height: 44px; display: inline-grid; place-items: center; }
+}
+
+/* Hover only on devices that support it */
+@media (hover: hover) and (pointer: fine) {
+  .story-card:hover { transform: translateY(-5px); }
+  .community-card:hover { transform: translateY(-5px); }
+  .metric-card:hover { transform: translateY(-4px); }
+}
+@media (hover: none) {
+  .story-card:hover, .community-card:hover, .metric-card:hover { transform: none; }
+  .story-card:active { transform: scale(0.99); }
+}
+
+/* Orientation handling */
+@media (orientation: landscape) and (max-height: 500px) {
+  .intro-band { min-height: auto; padding: 40px 6vw 36px; }
+  .hero-eye { display: none; }
+  h1 { font-size: clamp(32px, 8vw, 56px); }
+  .feature-image { min-height: 180px; }
+  .editor-modal, .story-reader { max-height: 88vh; }
+  .login-card { padding: 18px 16px; }
+}
+
+/* High DPI / Retina */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .feature-image, .story-card-image, .reader-image { image-rendering: -webkit-optimize-contrast; }
+}
+
+/* -- F. Accessibility, Print, Reduced Motion -- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
+
+@media print {
+  .site-header, .admin-sidebar, .admin-topbar, .modal-backdrop, .client-modal-backdrop,
+  .sidebar-overlay, .menu-toggle { display: none !important; }
+  .site-shell, .admin-shell, .admin-main, .admin-content { display: block !important; height: auto !important; max-height: none !important; overflow: visible !important; }
+  .story-card, .community-card, .admin-panel { break-inside: avoid; box-shadow: none !important; }
+}
+
+/* -- G. Admin Responsive Refinements -- */
+@media (max-width: 1024px) {
+  .admin-shell { --sidebar-width: 220px; }
+}
+@media (max-width: 860px) {
+  .admin-heading { flex-direction: column; align-items: flex-start; gap: 16px; }
+  .admin-panel { padding: 20px 16px 0; }
+  .post-toolbar { flex-direction: column; align-items: stretch; gap: 12px; }
+  .admin-tabs { gap: 12px; overflow-x: auto; }
+  .admin-search { width: 100%; }
+  .admin-search input { width: 100%; }
+}
+@media (max-width: 760px) {
+  /* already collapses sidebar via transform, ensure content fills */
+  .admin-shell.sidebar-open .admin-sidebar { transform: translateX(0); }
+  .admin-shell.sidebar-closed .admin-sidebar { transform: translateX(-105%); }
+  .admin-main { width: 100%; min-width: 0; }
+  .metrics-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .metric-card { min-height: 118px; padding: 16px 14px; }
+  .metric-card strong { font-size: 26px; }
+  .admin-bottom-grid { grid-template-columns: 1fr; }
+  .calendar-layout, .settings-grid { grid-template-columns: 1fr; }
+  .media-grid { grid-template-columns: 1fr 1fr; }
+  .editor-modal { width: 100%; max-width: 100%; border-radius: 0; max-height: 100dvh; }
+  .invite-row { grid-template-columns: 1fr; }
+  .permission-legend { grid-template-columns: 1fr; }
+  .team-member { grid-template-columns: 28px 1fr auto; gap: 8px; padding: 10px 0; }
+  .login-card { width: calc(100% - 24px); padding: 22px 18px; }
+  .login-orbit { width: 320px; height: 320px; }
+}
+
+/* -- H. TV Remote / Keyboard Navigation (focus states for TV) -- */
+@media (min-width: 1920px) and (hover: none) {
+  a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
+    outline: 3px solid #6c9a70;
+    outline-offset: 4px;
+    box-shadow: 0 0 0 6px rgba(108,154,112,0.25);
+  }
+}
+
+/* -- I. Container Queries Fallback (when supported) -- */
+@supports (container-type: inline-size) {
+  .story-card, .community-card, .admin-panel { container-type: inline-size; }
+  @container (max-width: 320px) {
+    .story-card-content { padding: 16px; }
+    .story-card h3 { font-size: 18px; }
+  }
+}
+
+/* -- J. Ensure No Horizontal Scroll on Any Viewport -- */
+html, body { max-width: 100vw; overflow-x: clip; }
+.site-shell, .admin-shell, .login-shell { max-width: 100vw; overflow-x: clip; }
+* { max-width: 100%; }
+img, video, iframe { max-width: 100%; }
+.posts-table, .category-tabs { max-width: 100vw; }
+
+
+
+

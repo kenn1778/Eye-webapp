@@ -1,3 +1,8 @@
+// CommunityChat - in-room chat panel for a single community.
+//
+// Frontend-preview behavior: messages live in component state and are seeded
+// from chatSeed. A backend will own message delivery, persistence and moderation.
+
 import { useEffect, useRef, useState } from "react";
 import type { Community } from "../types";
 import { chatSeed, type ChatMessage } from "../data/chatSeed";
@@ -8,77 +13,120 @@ type Props = {
   onLeave: () => void;
 };
 
+/** Simulated "a human is typing" pause before the canned reply arrives. */
+const MIN_REPLY_DELAY_MS = 1200;
+const MAX_REPLY_DELAY_MS = 2000;
+
+/** Canned replies, per community. A real backend replaces this entirely. */
+const cannedReplies: Record<string, string[]> = {
+  "Scholarship seekers": [
+    "Thanks for sharing - I'll check the official doc and reply here.",
+    "Good question - I had the same issue last cycle. The portal updates at midnight WAT.",
+  ],
+  "Creative careers": [
+    "Love this thread. I can intro you to a mentor who cuts trailers.",
+    "Noted - will trim and re-upload. Appreciate the eyes.",
+  ],
+  "First job circle": [
+    "Solid advice. Anyone want to do a mock interview this week?",
+    "I'll DM you a CV teardown checklist - 5 mins and you're clearer.",
+  ],
+};
+
+/** Who the simulated reply comes from, per community. */
+const replySpeakers: Record<string, { user: string; avatar: string }> = {
+  "Scholarship seekers": { user: "Nia H.", avatar: "NH" },
+  "Creative careers": { user: "Kwame B.", avatar: "KB" },
+  "First job circle": { user: "Amara O.", avatar: "AO" },
+};
+
+const FALLBACK_SPEAKER = { user: "A member", avatar: "AM" };
+
+/** "09:12" in 24-hour form, matching the seeded message timestamps. */
+function formatClockTime(date: Date): string {
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  return `${hours}:${minutes}`;
+}
+
+/** Uniform random integer in [min, max]. */
+function randomBetween(min: number, max: number): number {
+  return min + Math.random() * (max - min);
+}
+
 export function CommunityChat({ community, onClose, onLeave }: Props) {
   const [messages, setMessages] = useState<ChatMessage[]>(() => chatSeed[community.name] ?? []);
   const [draft, setDraft] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+
   const listRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // auto-focus input when chat opens
+  // Monotonic suffix keeps message ids unique even when two messages are
+  // created within the same millisecond (Date.now() alone can collide).
+  const messageCountRef = useRef(0);
+  const nextMessageId = () => `m-${Date.now()}-${messageCountRef.current++}`;
+
+  // The pending simulated reply must not fire after the panel closes,
+  // otherwise it calls setState on an unmounted component.
+  const replyTimerRef = useRef<number | null>(null);
+
+  // Move focus into the composer when the chat opens or switches community.
   useEffect(() => {
     inputRef.current?.focus();
   }, [community.name]);
 
-  // auto-scroll to bottom when messages change
+  // Always show the newest message.
   useEffect(() => {
-    const el = listRef.current;
-    if (!el) return;
-    el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+    listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, isTyping]);
+
+  // Clear the pending reply on unmount.
+  useEffect(
+    () => () => {
+      if (replyTimerRef.current !== null) window.clearTimeout(replyTimerRef.current);
+    },
+    [],
+  );
 
   const handleSend = () => {
     const text = draft.trim();
     if (!text) return;
 
-    const now = new Date();
-    const time = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
-
     const mine: ChatMessage = {
-      id: String(Date.now()),
+      id: nextMessageId(),
       community: community.name,
       user: "You",
       avatar: "YO",
       text,
-      time,
+      time: formatClockTime(new Date()),
       isMe: true,
     };
 
     setMessages((prev) => [...prev, mine]);
     setDraft("");
-
-    // Simulate reply for demo - like a human in the room
     setIsTyping(true);
-    window.setTimeout(() => {
-      setIsTyping(false);
-      const replies: Record<string, string[]> = {
-        "Scholarship seekers": [
-          "Thanks for sharing — I’ll check the official doc and reply here.",
-          "Good question — I had the same issue last cycle. The portal updates at midnight WAT.",
-        ],
-        "Creative careers": [
-          "Love this thread. I can intro you to a mentor who cuts trailers.",
-          "Noted — will trim and re-upload. Appreciate the eyes.",
-        ],
-        "First job circle": [
-          "Solid advice. Anyone want to do a mock interview this week?",
-          "I’ll DM you a CV teardown checklist — 5 mins and you’re clearer.",
-        ],
-      };
-      const pool = replies[community.name] ?? ["Got it — will follow up!"];
+
+    replyTimerRef.current = window.setTimeout(() => {
+      replyTimerRef.current = null;
+
+      const pool = cannedReplies[community.name] ?? ["Got it - will follow up!"];
+      const speaker = replySpeakers[community.name] ?? FALLBACK_SPEAKER;
       const replyText = pool[Math.floor(Math.random() * pool.length)];
+
       setMessages((prev) => [
         ...prev,
         {
-          id: String(Date.now() + 1),
+          id: nextMessageId(),
           community: community.name,
-          user: community.name === "Scholarship seekers" ? "Nia H." : community.name === "Creative careers" ? "Kwame B." : "Amara O.",
-          avatar: community.name === "Scholarship seekers" ? "NH" : community.name === "Creative careers" ? "KB" : "AO",
+          user: speaker.user,
+          avatar: speaker.avatar,
           text: replyText,
-          time: `${String(new Date().getHours()).padStart(2, "0")}:${String(new Date().getMinutes()).padStart(2, "0")}`,
+          time: formatClockTime(new Date()),
         },
       ]);
-    }, 1200 + Math.random() * 800);
+      setIsTyping(false);
+    }, randomBetween(MIN_REPLY_DELAY_MS, MAX_REPLY_DELAY_MS));
   };
 
   return (
@@ -88,23 +136,23 @@ export function CommunityChat({ community, onClose, onLeave }: Props) {
         <header className="chat-header">
           <div className="chat-header-left">
             <div className={`community-art ${community.accent} chat-header-art`} aria-hidden="true">
-              <span>◌</span><span>◌</span><span>◌</span>
+              <span>&#9675;</span><span>&#9675;</span><span>&#9675;</span>
             </div>
             <div>
               <h2 id="chat-title" className="chat-title">{community.name}</h2>
               <div className="chat-subtitle">
-                <span className="chat-live-dot" aria-hidden="true" /> {community.members} • 12 online • #general
+                <span className="chat-live-dot" aria-hidden="true" /> {community.members} &bull; #general
               </div>
             </div>
           </div>
           <div className="chat-header-actions">
             <button className="button-secondary chat-leave" type="button" onClick={onLeave}>Leave</button>
-            <button className="reader-close" type="button" onClick={onClose} aria-label="Close chat">×</button>
+            <button className="reader-close" type="button" onClick={onClose} aria-label="Close chat">&times;</button>
           </div>
         </header>
 
         <div className="chat-notice">
-          <span aria-hidden="true">🔒</span> This is a community chatroom. Be respectful, share sources, no spam. Messages are illustrative in demo.
+          <span aria-hidden="true">&#128274;</span> This is a community chatroom. Be respectful, share sources, no spam. Messages are illustrative in demo.
         </div>
 
         <div ref={listRef} className="chat-list" role="log" aria-live="polite" aria-relevant="additions">
@@ -121,7 +169,7 @@ export function CommunityChat({ community, onClose, onLeave }: Props) {
           ))}
           {isTyping && (
             <div className="chat-msg">
-              <span className="chat-avatar" aria-hidden="true">…</span>
+              <span className="chat-avatar" aria-hidden="true">&hellip;</span>
               <div className="chat-bubble-wrap">
                 <div className="chat-bubble is-typing"><span></span><span></span><span></span></div>
               </div>
@@ -143,17 +191,17 @@ export function CommunityChat({ community, onClose, onLeave }: Props) {
             type="text"
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
-            placeholder={`Message #general in ${community.name}…`}
+            placeholder={`Message #general in ${community.name}...`}
             autoComplete="off"
             maxLength={500}
           />
           <button className="button button-dark chat-send" type="submit" disabled={!draft.trim()} aria-label="Send message">
-            Send <span aria-hidden="true">→</span>
+            Send <span aria-hidden="true">&rarr;</span>
           </button>
         </form>
 
         <div className="chat-footer-hint">
-          Press <kbd>Enter</kbd> to send • <kbd>Esc</kbd> to close • Messages stay in this browser for demo
+          Press <kbd>Enter</kbd> to send &bull; <kbd>Esc</kbd> to close &bull; Messages stay in this browser for demo
         </div>
       </div>
     </div>
