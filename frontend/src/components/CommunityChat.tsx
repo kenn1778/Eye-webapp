@@ -49,7 +49,7 @@ function formatClockTime(date: Date): string {
   return `${hours}:${minutes}`;
 }
 
-/** Uniform random integer in [min, max]. */
+/** Uniform random value in [min, max]; a float is fine for timer delays. */
 function randomBetween(min: number, max: number): number {
   return min + Math.random() * (max - min);
 }
@@ -156,14 +156,14 @@ export function CommunityChat({ community, onClose, onLeave }: Props) {
         </div>
 
         <div ref={listRef} className="chat-list" role="log" aria-live="polite" aria-relevant="additions">
-          {messages.map((m) => (
-            <div key={m.id} className={`chat-msg ${m.isMe ? "is-me" : ""}`}>
-              <span className="chat-avatar" aria-hidden="true">{m.avatar}</span>
+          {messages.map((message) => (
+            <div key={message.id} className={`chat-msg ${message.isMe ? "is-me" : ""}`}>
+              <span className="chat-avatar" aria-hidden="true">{message.avatar}</span>
               <div className="chat-bubble-wrap">
                 <div className="chat-meta">
-                  <strong>{m.user}</strong> <span>{m.time}</span>
+                  <strong>{message.user}</strong> <span>{message.time}</span>
                 </div>
-                <div className="chat-bubble">{m.text}</div>
+                <div className="chat-bubble">{message.text}</div>
               </div>
             </div>
           ))}

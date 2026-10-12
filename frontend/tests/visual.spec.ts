@@ -104,6 +104,20 @@ async function settlePage(page: Page) {
 async function waitForApp(page: Page) {
   await page.waitForSelector(".site-shell, .login-shell, .admin-shell", { timeout: LOADER_TIMEOUT });
   await expect(page.locator(".eye-loader")).toHaveCount(0);
+
+  // The UI fonts come from Google Fonts through an @import in index.css.
+  // document.fonts.ready can resolve before that import registers its faces, so
+  // explicitly request each family; the baseline must not fall back to system
+  // fonts, which reflow the page and shift every snapshot.
+  await page.evaluate(async () => {
+    await Promise.all([
+      document.fonts.load('400 16px "Manrope"'),
+      document.fonts.load('500 16px "DM Mono"'),
+      document.fonts.load('600 16px "Playfair Display"'),
+    ]);
+    await document.fonts.ready;
+  });
+
   await settlePage(page);
 }
 
@@ -167,7 +181,11 @@ test.describe("public site", () => {
     await waitForApp(page);
     await acceptCookies(page);
 
-    await page.locator(".story-card").first().click();
+    // Dispatch the click instead of using click(): a real click first scrolls the
+    // card into view, and the reader is a translucent panel, so a different
+    // scroll position behind it changes the blurred backdrop and makes the
+    // snapshot flap. The page stays at the top left by waitForApp this way.
+    await page.locator(".story-card").first().dispatchEvent("click");
     await expect(page.locator(".story-reader")).toBeVisible();
     await expect(page).toHaveScreenshot("story-reader.png");
   });
@@ -179,8 +197,23 @@ test.describe("public site", () => {
 
     await page.getByRole("button", { name: /join & chat/i }).first().scrollIntoViewIfNeeded();
     await page.getByRole("button", { name: /join & chat/i }).first().click();
-    await expect(page.locator(".chat-shell")).toBeVisible();
-    await expect(page).toHaveScreenshot("community-chat.png");
+
+    const panel = page.locator(".chat-panel");
+    await expect(panel).toBeVisible();
+
+    // The chat list glides to the newest message when the panel opens. Let that
+    // settle so the capture never lands mid-scroll.
+    await panel.locator(".chat-list").evaluate(async (element) => {
+      for (let frame = 0; frame < 60; frame++) {
+        const before = element.scrollTop;
+        await new Promise((resolve) => requestAnimationFrame(resolve));
+        if (element.scrollTop === before) break;
+      }
+    });
+
+    // Snapshot the panel itself, not the page: the full-page shot includes the
+    // blurred page behind the backdrop, which flickers under parallel load.
+    await expect(panel).toHaveScreenshot("community-chat.png", { animations: "disabled" });
   });
 
   for (const route of ["privacy", "terms", "refund", "cookies"]) {

@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Brand } from "../../components/Brand";
 
+// Static legal copy served at /refund; published proactively even though no paid checkout is live yet.
 export function RefundPolicy() {
   return (
     <div className="site-shell">

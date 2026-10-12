@@ -45,6 +45,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   };
 
   handleHome = () => {
+    // Full navigation, not client routing, so the crashed tree is discarded.
     window.location.assign("/");
   };
 

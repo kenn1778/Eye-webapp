@@ -2,9 +2,14 @@
  *
  * 
  *
+ * 01-foundations.css - design tokens, reset, typography, layout and the public
+ * page shell: header/nav, hero band, feature and latest sections, plus the
+ * admin shell, cards, modals and editors. The bulk of the original sheet.
+ *
  * Loaded by App.css - see that file for the load order.
  */
 
+/* overflow-x:clip kills stray overflow without creating a scroll container, so sticky headers keep working. */
 .site-shell { max-width: 1440px; margin: 0 auto; overflow-x: clip; overflow-y: visible; background: #f3f1e9; min-height: 100dvh; display: flex; flex-direction: column; min-width: 0; }
 
 .site-header { height: 86px; padding: 0 5.5vw; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #cdd1c7; }
@@ -31,6 +36,7 @@
 
 .hero-eye { position: absolute; width: 390px; height: 390px; right: 6%; top: 22px; display: flex; align-items: center; justify-content: center; pointer-events: none; z-index: 0; }
 .hero-eye svg { width: 78%; height: auto; overflow: visible; }
+/* Staggered delays desync iris, glint and lids so the idle animation feels organic. */
 .hero-eye .eye-iris-group {
   animation: eye-wander 8s ease-in-out infinite;
   animation-delay: 0.9s;
@@ -146,6 +152,7 @@ h2 { margin-top: 8px; color: #1d2925; font-size: clamp(30px, 4vw, 50px); line-he
 
 .client-modal-backdrop { position: fixed; inset: 0; z-index: 15; display: grid; place-items: center; padding: 20px; background: rgba(22, 34, 29, .48); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); animation: rise-in .2s ease both; }
 
+/* The -webkit- prefix repeats each backdrop-filter for older Safari. */
 .story-reader { position: relative; width: min(760px, 100%); max-height: calc(100vh - 40px); overflow-y: auto; border: 1px solid rgba(255, 255, 255, .55); background: var(--glass-light); box-shadow: 0 25px 70px rgba(21, 31, 26, .27); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); animation: rise-in .3s ease both; }
 
 .reader-close { position: absolute; z-index: 1; top: 15px; right: 15px; width: 30px; height: 30px; color: #4f7b57; border: 1px solid #b8d09b; border-radius: 50%; background: rgba(240, 247, 233, .9); cursor: pointer; }
@@ -172,6 +179,7 @@ h2 { margin-top: 8px; color: #1d2925; font-size: clamp(30px, 4vw, 50px); line-he
 
 .newsletter-form small { display: block; margin-top: 7px; color: var(--badge-green-dark); font-size: 9px; }
 
+/* Superseded by the four-column definition below; kept in place by the original split. */
 .site-footer { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; align-items: center; padding: 35px 5.5vw; color: #657168; border-top: 1px solid #cdd1c7; font-size: 11px; }
 
 .site-footer { display: grid; grid-template-columns: auto 1fr minmax(280px, 1.35fr) auto; gap: 25px; align-items: center; padding: 35px 5.5vw; color: #657168; border-top: 1px solid #cdd1c7; font-size: 11px; }
@@ -975,6 +983,7 @@ h2 { margin-top: 8px; color: #1d2925; font-size: clamp(30px, 4vw, 50px); line-he
 
 
 
+/* Shared entrance for cards, panels and modals. */
 @keyframes rise-in {
 
   from { opacity: 0; transform: translateY(16px); }
@@ -1131,6 +1140,7 @@ body { overflow-x: hidden; overflow-wrap: anywhere; }
 
 h1, h2, h3, p, label, strong, small, button, a { max-width: 100%; overflow-wrap: anywhere; }
 
+/* Admin app locks to the viewport: fixed-height topbar, .admin-content does the scrolling. */
 .admin-shell { min-height: 100dvh; max-height: 100dvh; overflow: hidden; }
 
 .admin-main { min-height: 100dvh; max-height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
@@ -1345,7 +1355,7 @@ h1, h2, h3, p, label, strong, small, button, a { max-width: 100%; overflow-wrap:
   }
 }
 
-/* Performance: content-visibility for off-screen grids */
+/* Skip rendering off-screen grids; the intrinsic size reserves scroll space so the scrollbar does not jump. */
 .story-grid, .community-grid, .media-grid {
   content-visibility: auto;
   contain-intrinsic-size: 1px 500px;

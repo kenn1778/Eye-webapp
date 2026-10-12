@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Brand } from "../../components/Brand";
 
+// Static legal copy served at /cookies; the cookie names it cites must stay in sync with the consent banner.
 export function CookiesPolicy() {
   return (
     <div className="site-shell">

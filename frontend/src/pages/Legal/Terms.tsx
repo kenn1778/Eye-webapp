@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Brand } from "../../components/Brand";
 
+// Static legal copy served at /terms; the wording below is reviewed text, not UI.
 export function Terms() {
   return (
     <div className="site-shell">

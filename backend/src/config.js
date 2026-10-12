@@ -2,6 +2,8 @@ import "dotenv/config";
 
 function toBool(value, fallback = false) {
   if (value === undefined) return fallback;
+  // Anything outside this set is treated as false rather than throwing, so a
+  // typo in an env var degrades to "off" instead of crashing startup.
   return ["1", "true", "yes", "on"].includes(String(value).toLowerCase());
 }
 
@@ -15,6 +17,7 @@ const isProduction = (process.env.NODE_ENV ?? "development") === "production";
 export const config = {
   isProduction,
   port: toInt(process.env.PORT, 4000),
+  // Normalized up front to match how login lowercases and trims the input.
   adminEmail: (process.env.ADMIN_EMAIL ?? "").trim().toLowerCase(),
   adminPasswordHash: process.env.ADMIN_PASSWORD_HASH ?? "",
   jwtSecret: process.env.AUTH_JWT_SECRET ?? "",

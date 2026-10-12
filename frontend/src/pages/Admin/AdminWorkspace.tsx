@@ -33,11 +33,11 @@ const METRIC_CARDS: ReadonlyArray<{ label: string; value: keyof AdminMetrics; ac
  * Without this an unexpected response shape would render as undefined or NaN
  * in the dashboard cards.
  */
-function isAdminMetrics(value: unknown): value is AdminMetrics {
+function isValidAdminMetrics(value: unknown): value is AdminMetrics {
   if (typeof value !== "object" || value === null) return false;
-  const candidate = value as Record<string, unknown>;
+  const record = value as Record<string, unknown>;
   return ["totalPosts", "publishedPosts", "scheduledPosts", "totalViews"].every(
-    (key) => typeof candidate[key] === "number" && Number.isFinite(candidate[key] as number),
+    (key) => typeof record[key] === "number" && Number.isFinite(record[key] as number),
   );
 }
 
@@ -61,12 +61,27 @@ export function AdminWorkspace({ closeAdmin, onPublish }: AdminWorkspaceProps) {
   const [activeSection, setActiveSection] = useState("Overview");
   // showLogoutDialog - confirm logout popup
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
-  // sidebarOpen - is the left nav visible? (collapsible on mobile)
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  // sidebarOpen - is the left nav visible? Defaults to open on desktop (>760px) and closed on phones (<=760px)
+  const [sidebarOpen, setSidebarOpen] = useState(() => {
+    if (typeof window === "undefined") return true;
+    return window.matchMedia("(min-width: 761px)").matches;
+  });
   // sidebarWidth - draggable sidebar width in pixels, clamped to the bounds above
   const [sidebarWidth, setSidebarWidth] = useState(DEFAULT_SIDEBAR_WIDTH);
   // isResizingSidebar - true while user is dragging the resize handle
   const [isResizingSidebar, setIsResizingSidebar] = useState(false);
+  // Keep the drawer closed whenever the viewport is a phone (<=760px). The sidebar becomes an off-canvas drawer on phones.
+  useEffect(() => {
+    const mobileQuery = window.matchMedia("(max-width: 760px)");
+    const syncDrawer = () => {
+      if (mobileQuery.matches) {
+        setSidebarOpen(false);
+      }
+    };
+    syncDrawer();
+    mobileQuery.addEventListener("change", syncDrawer);
+    return () => mobileQuery.removeEventListener("change", syncDrawer);
+  }, []);
   // metrics - numbers for the 4 dashboard cards, fetched from API
   const [metrics, setMetrics] = useState<AdminMetrics>(emptyMetrics);
   // apiBaseUrl - optional backend URL from env var VITE_API_BASE_URL
@@ -80,8 +95,9 @@ export function AdminWorkspace({ closeAdmin, onPublish }: AdminWorkspaceProps) {
       if (!response.ok) return; // API error -> keep old numbers
 
       const payload: unknown = await response.json();
-      if (!isAdminMetrics(payload)) return; // unexpected shape -> keep old numbers
+      if (!isValidAdminMetrics(payload)) return; // unexpected shape -> keep old numbers
 
+      // Low priority so a background refresh never blocks typing or clicks.
       startTransition(() => setMetrics(payload));
     } catch {
       // network down -> keep last known value
@@ -110,6 +126,11 @@ export function AdminWorkspace({ closeAdmin, onPublish }: AdminWorkspaceProps) {
     [activeTab, query],
   );
 
+  // Choosing a section on a phone should also dismiss the drawer so the panel is visible.
+  const selectSection = (section: string) => {
+    setActiveSection(section);
+    if (window.matchMedia("(max-width: 760px)").matches) setSidebarOpen(false);
+  };
   // requestLogout - shows the confirm dialog
   const requestLogout = () => setShowLogoutDialog(true);
 
@@ -128,6 +149,7 @@ export function AdminWorkspace({ closeAdmin, onPublish }: AdminWorkspaceProps) {
     };
   }, [isResizingSidebar]);
 
+  // Width is passed as a CSS variable so the stylesheet owns the layout maths.
   return (
     <div className={`admin-shell ${sidebarOpen ? "sidebar-open" : "sidebar-closed"} ${isResizingSidebar ? "sidebar-resizing" : ""}`} style={{ "--sidebar-width": `${sidebarWidth}px` } as CSSProperties}>
       {sidebarOpen && <button className="sidebar-overlay" type="button" aria-label="Close admin navigation" onClick={() => setSidebarOpen(false)} />}
@@ -139,41 +161,41 @@ export function AdminWorkspace({ closeAdmin, onPublish }: AdminWorkspaceProps) {
         </div>
         <div className="sidebar-section">
           <span className="sidebar-label">Publish</span>
-          <button className={`sidebar-item ${activeSection === "Overview" ? "selected" : ""}`} type="button" onClick={() => setActiveSection("Overview")}>
+          <button className={`sidebar-item ${activeSection === "Overview" ? "selected" : ""}`} type="button" onClick={() => selectSection("Overview")}>
             <span className="sidebar-icon icon-overview" aria-hidden="true" />Overview
           </button>
           <button
             className="sidebar-item"
             type="button"
-            onClick={() => { setActiveSection("New post"); setShowEditor(true) }}
+            onClick={() => { selectSection("New post"); setShowEditor(true) }}
           >
             <span className="sidebar-icon icon-new" aria-hidden="true" />New post
           </button>
-          <button className={`sidebar-item ${activeSection === "Posts" ? "selected" : ""}`} type="button" onClick={() => setActiveSection("Posts")}>
+          <button className={`sidebar-item ${activeSection === "Posts" ? "selected" : ""}`} type="button" onClick={() => selectSection("Posts")}>
             <span className="sidebar-icon icon-posts" aria-hidden="true" />Posts{" "}
             <span className="sidebar-count">{seedAdminPosts.length}</span>
           </button>
-          <button className={`sidebar-item ${activeSection === "Calendar" ? "selected" : ""}`} type="button" onClick={() => setActiveSection("Calendar")}>
+          <button className={`sidebar-item ${activeSection === "Calendar" ? "selected" : ""}`} type="button" onClick={() => selectSection("Calendar")}>
             <span className="sidebar-icon icon-calendar" aria-hidden="true" />Calendar
           </button>
         </div>
         <div className="sidebar-section">
           <span className="sidebar-label">Library</span>
-          <button className={`sidebar-item ${activeSection === "Media" ? "selected" : ""}`} type="button" onClick={() => setActiveSection("Media")}>
+          <button className={`sidebar-item ${activeSection === "Media" ? "selected" : ""}`} type="button" onClick={() => selectSection("Media")}>
             <span className="sidebar-icon icon-media" aria-hidden="true" />Media
           </button>
-          <button className={`sidebar-item ${activeSection === "Categories" ? "selected" : ""}`} type="button" onClick={() => setActiveSection("Categories")}>
+          <button className={`sidebar-item ${activeSection === "Categories" ? "selected" : ""}`} type="button" onClick={() => selectSection("Categories")}>
             <span className="sidebar-icon icon-categories" aria-hidden="true" />Categories
           </button>
-          <button className={`sidebar-item ${activeSection === "Communities" ? "selected" : ""}`} type="button" onClick={() => setActiveSection("Communities")}>
+          <button className={`sidebar-item ${activeSection === "Communities" ? "selected" : ""}`} type="button" onClick={() => selectSection("Communities")}>
             <span className="sidebar-icon icon-communities" aria-hidden="true" />Communities
           </button>
-          <button className={`sidebar-item ${activeSection === "Team" ? "selected" : ""}`} type="button" onClick={() => setActiveSection("Team")}>
+          <button className={`sidebar-item ${activeSection === "Team" ? "selected" : ""}`} type="button" onClick={() => selectSection("Team")}>
             <span className="sidebar-icon icon-team" aria-hidden="true" />Team access
           </button>
         </div>
         <div className="sidebar-bottom">
-          <button className={`sidebar-item ${activeSection === "Settings" ? "selected" : ""}`} type="button" onClick={() => setActiveSection("Settings")}>
+          <button className={`sidebar-item ${activeSection === "Settings" ? "selected" : ""}`} type="button" onClick={() => selectSection("Settings")}>
             <span className="sidebar-icon icon-settings" aria-hidden="true" />Settings
           </button>
           <button className="profile-row" type="button" onClick={requestLogout} aria-label="Log out of admin workspace">
@@ -206,6 +228,7 @@ export function AdminWorkspace({ closeAdmin, onPublish }: AdminWorkspaceProps) {
           </div>
         </header>
         <main className="admin-content">
+          {/* Overview renders inline below; every other real section is delegated to AdminSectionView. "New post" is excluded because it only opens the editor modal. */}
           {activeSection !== "Overview" && activeSection !== "New post" && (
             <AdminSectionView section={activeSection} onNewPost={() => setShowEditor(true)} />
           )}

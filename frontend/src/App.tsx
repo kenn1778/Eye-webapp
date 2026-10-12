@@ -27,10 +27,10 @@ import { getSession, logout } from "./lib/auth";
 
 // Admin pages are code-split and only registered when VITE_ENABLE_ADMIN=true.
 const AdminLogin = lazy(() =>
-  import("./pages/Admin/AdminLogin").then((m) => ({ default: m.AdminLogin })),
+  import("./pages/Admin/AdminLogin").then((module) => ({ default: module.AdminLogin })),
 );
 const AdminWorkspace = lazy(() =>
-  import("./pages/Admin/AdminWorkspace").then((m) => ({ default: m.AdminWorkspace })),
+  import("./pages/Admin/AdminWorkspace").then((module) => ({ default: module.AdminWorkspace })),
 );
 
 // Small full-screen loader shown on first paint.
@@ -71,12 +71,18 @@ function EyeLoader() {
 // Public stays at /, admin is protected behind /admin/login.
 function AppRoutes() {
   const navigate = useNavigate();
+  // null = session not checked yet, which is distinct from logged out - the
+  // admin routes show a loader until the check resolves so the login form never
+  // flashes for an already-authenticated user.
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [publishedStories, setPublishedStories] = useState<Story[]>([]);
 
+  // Newest admin-published stories lead; seed content fills the rest on first run.
   const allStories = [...publishedStories, ...seedStories];
 
   useEffect(() => {
+    // Guard against a late response setting state after unmount (React 18 dev
+    // double-invokes effects, so this runs twice).
     let cancelled = false;
     getSession().then((user) => {
       if (!cancelled) setIsAuthenticated(!!user);
@@ -103,6 +109,8 @@ function AppRoutes() {
   };
 
   const openAdmin = () => {
+    // Routes are already gated by ADMIN_ENABLED; this stops the entry point from
+    // navigating into a non-existent admin area.
     if (!ADMIN_ENABLED) return;
     if (isAuthenticated) navigate("/admin");
     else navigate("/admin/login");
@@ -157,8 +165,9 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const t = window.setTimeout(() => setIsLoading(false), 2100);
-    return () => window.clearTimeout(t);
+    // Fixed 2.1s so the loader animation matches the eye blink in EyeLoader.
+    const timeoutId = window.setTimeout(() => setIsLoading(false), 2100);
+    return () => window.clearTimeout(timeoutId);
   }, []);
 
   if (isLoading) return <EyeLoader />;

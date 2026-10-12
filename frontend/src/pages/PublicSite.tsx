@@ -28,6 +28,7 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
   // wordIndex - which hero headline word is active
   const [wordIndex, setWordIndex] = useState(0);
   const [prevWordIndex, setPrevWordIndex] = useState(0);
+  // Ref mirrors the index so the timer reads the live value instead of a stale state closure.
   const wordIndexRef = useRef(0);
   // showBackToTop - true when the page is scrolled far enough down
   const [showBackToTop, setShowBackToTop] = useState(false);
@@ -39,6 +40,7 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
       setIsShrunk(window.scrollY > 32);
       setShowBackToTop(window.scrollY > 600);
     };
+    // passive: true keeps scrolling smooth; the handler never calls preventDefault.
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
@@ -47,29 +49,31 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
   useEffect(() => {
     // Frozen under automation so visual-regression snapshots stay deterministic.
     if (navigator.webdriver) return;
-    const t = window.setInterval(() => {
+    const intervalId = window.setInterval(() => {
+      // Publish the old index first so its word can play the leave transition before the swap.
       setPrevWordIndex(wordIndexRef.current);
       wordIndexRef.current = (wordIndexRef.current + 1) % heroWords.length;
       setWordIndex(wordIndexRef.current);
     }, 2600);
-    return () => window.clearInterval(t);
+    return () => window.clearInterval(intervalId);
   }, []);
 
   // Parallax the hero orbit circle toward the cursor (CSS vars, no re-render)
-  const handleHeroMove = (e: ReactMouseEvent<HTMLElement>) => {
-    const el = heroRef.current;
-    if (!el) return;
-    const rect = el.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / rect.width - 0.5;
-    const y = (e.clientY - rect.top) / rect.height - 0.5;
-    el.style.setProperty("--orbit-x", `${(x * 34).toFixed(1)}px`);
-    el.style.setProperty("--orbit-y", `${(y * 22).toFixed(1)}px`);
+  const handleHeroMove = (event: ReactMouseEvent<HTMLElement>) => {
+    const hero = heroRef.current;
+    if (!hero) return;
+    const rect = hero.getBoundingClientRect();
+    // Normalize the cursor to -0.5..0.5 so the orbit drifts symmetrically around center.
+    const x = (event.clientX - rect.left) / rect.width - 0.5;
+    const y = (event.clientY - rect.top) / rect.height - 0.5;
+    hero.style.setProperty("--orbit-x", `${(x * 34).toFixed(1)}px`);
+    hero.style.setProperty("--orbit-y", `${(y * 22).toFixed(1)}px`);
   };
   const handleHeroLeave = () => {
-    const el = heroRef.current;
-    if (!el) return;
-    el.style.setProperty("--orbit-x", "0px");
-    el.style.setProperty("--orbit-y", "0px");
+    const hero = heroRef.current;
+    if (!hero) return;
+    hero.style.setProperty("--orbit-x", "0px");
+    hero.style.setProperty("--orbit-y", "0px");
   };
 
   // category - which filter tab is selected (default All stories)
@@ -78,9 +82,10 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
   const [query, setQuery] = useState("");
   // selectedStory - which story is open in the popup modal, undefined = none
   const [selectedStory, setSelectedStory] = useState<Story>();
-  // newsletter is now handled by <NewsletterForm /> (professional, API-ready)
+  // Newsletter submit lives in <NewsletterForm /> so this page holds no newsletter state.
   // joinedCommunities - list of community names the user has joined
   const [joinedCommunities, setJoinedCommunities] = useState<string[]>([]);
+  // Community whose chat drawer is open; null means no drawer.
   const [activeChat, setActiveChat] = useState<Community | null>(null);
 
   // availableCategories - all category tabs, including any new ones from published stories
@@ -90,6 +95,7 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
       ...categories,
       ...stories
         .map((story) => story.category)
+        // Drop seeded categories, then de-dupe to first occurrence so tab order stays stable.
         .filter((item, index, items) => !categories.includes(item) && items.indexOf(item) === index),
     ],
     [stories],
@@ -109,10 +115,10 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
     [category, query, stories],
   );
 
-  // newest is the first story (treated as featured big card)
-  const newest = stories[0];
-  // cardStories are the rest, shown in grid
-  const cardStories = filtered.filter((story) => story !== newest);
+  // First story is promoted to the large featured card.
+  const featuredStory = stories[0];
+  // Identity check works because both lists hold the same story objects.
+  const cardStories = filtered.filter((story) => story !== featuredStory);
 
   // Close chat on Esc (keyboard friendly)
   useEffect(() => {
@@ -205,7 +211,7 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
             <span className="hero-scroll-label">Scroll</span>
           </div>
         </section>
-        {/* Live banner - only shows after publishing a new post */}
+        {/* Seed data ships four stories, so a fifth means a post was just published */}
         {stories.length > 4 && (
           <section className="published-notice" aria-live="polite">
             <span className="status-live">LIVE NOW</span>
@@ -235,25 +241,25 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
           <article className="feature-story">
             <div
               className="feature-image"
-              style={{ backgroundImage: `url(${newest.image})` }}
+              style={{ backgroundImage: `url(${featuredStory.image})` }}
               role="img"
-              aria-label={newest.title}
+              aria-label={featuredStory.title}
             />
             <div className="feature-content">
-              <span className="story-label">{newest.category}</span>
-              <h3>{newest.title}</h3>
-              <p>{newest.excerpt}</p>
-              {newest.actionUrl ? (
+              <span className="story-label">{featuredStory.category}</span>
+              <h3>{featuredStory.title}</h3>
+              <p>{featuredStory.excerpt}</p>
+              {featuredStory.actionUrl ? (
                 <a
                   className="story-link"
-                  href={newest.actionUrl}
+                  href={featuredStory.actionUrl}
                   target="_blank"
                   rel="noreferrer"
                 >
-                  {newest.actionLabel} <span aria-hidden="true">-&gt;</span>
+                  {featuredStory.actionLabel} <span aria-hidden="true">-&gt;</span>
                 </a>
               ) : (
-                <button className="story-link story-button" type="button" onClick={() => setSelectedStory(newest)}>Read the story <span aria-hidden="true">-&gt;</span></button>
+                <button className="story-link story-button" type="button" onClick={() => setSelectedStory(featuredStory)}>Read the story <span aria-hidden="true">-&gt;</span></button>
               )}
             </div>
           </article>

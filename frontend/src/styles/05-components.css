@@ -2,10 +2,14 @@
  *
  * 
  *
+ * 05-components.css - community chatroom, interactive hero (parallax, word
+ * rotator, scroll hint), scroll reveal, visitor reviews, error boundary.
+ *
  * Loaded by App.css - see that file for the load order.
  */
 
 /* -- Community Chatroom -- */
+/* Fixed full-screen layer; the panel is capped so the page stays visible behind. */
 .chat-shell {
   position: fixed;
   inset: 0;
@@ -50,6 +54,7 @@
 .chat-header-art span { font-size: 14px; }
 .chat-title { font-size: 16px; font-weight: 800; letter-spacing: -.03em; margin: 0; color: #f6f8ed; }
 .chat-subtitle { font-size: 10px; color: #8fa397; font-family: 'DM Mono', monospace; display: flex; align-items: center; gap: 6px; margin-top: 2px; }
+/* Pulsing dot signals an active live session. */
 .chat-live-dot { width: 7px; height: 7px; border-radius: 50%; background: #4f7b57; display: inline-block; box-shadow: 0 0 0 4px rgba(108,154,112,.2); animation: soft-pulse 2s infinite; }
 .chat-header-actions { display: flex; align-items: center; gap: 8px; }
 .chat-leave { font-size: 10px; padding: 6px 12px !important; }
@@ -111,6 +116,7 @@
 }
 .chat-bubble.is-typing span:nth-child(2){ animation-delay: .15s; }
 .chat-bubble.is-typing span:nth-child(3){ animation-delay: .3s; }
+/* Three-dot typing indicator. */
 @keyframes typing-bounce { 0%, 80%, 100% { transform: translateY(0); opacity: .6; } 40% { transform: translateY(-4px); opacity: 1; } }
 
 .chat-composer {
@@ -240,6 +246,7 @@
 }
 
 /* -- Scroll reveal -- */
+/* Starts hidden; .is-visible is toggled by an IntersectionObserver. */
 .reveal {
   opacity: 0;
   transform: translateY(26px);
@@ -425,6 +432,7 @@
 }
 
 /* Error boundary fallback */
+/* Full-page fallback shown when a render throws. */
 .error-boundary { min-height: 100vh; display: grid; place-items: center; padding: 32px; background: linear-gradient(135deg, #1d2925 0%, #304b3d 65%, #6c9a70 140%); }
 .error-boundary-card { max-width: 460px; padding: 42px 38px; border-radius: 22px; background: #f8f9f4; text-align: left; }
 .error-boundary-card h1 { margin: 10px 0 12px; font-size: clamp(28px, 5vw, 40px); line-height: 1.02; letter-spacing: -.04em; }

@@ -9,6 +9,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { readJson, writeJson } from "../lib/storage";
 
+/** Remove markup and control characters before the address is sent anywhere. */
 function stripHtml(input: string): string {
   return input.replace(/<[^>]*>/g, "").replace(/[\u0000-\u001F\u007F]/g, "");
 }
@@ -88,6 +89,7 @@ export function NewsletterForm({
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault();
     const sanitizedEmail = stripHtml(email.trim());
+    // Lowercase so duplicate detection and the API agree on one canonical form.
     const address = sanitizedEmail.toLowerCase();
 
     // Honeypot tripped: drop silently so bots get no signal.

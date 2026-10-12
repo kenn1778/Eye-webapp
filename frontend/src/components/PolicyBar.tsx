@@ -1,5 +1,7 @@
 import { NavLink } from "react-router-dom";
 
+// Compact legal nav. Rendered as real links (not plain text) so each policy page
+// is reachable and the active route is highlighted.
 export function PolicyBar() {
   return (
     <nav className="policy-bar" aria-label="Legal and policies">

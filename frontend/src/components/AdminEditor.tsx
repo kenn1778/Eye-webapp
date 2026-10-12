@@ -1,18 +1,17 @@
-// AdminEditor - modal for creating a new post
+// AdminEditor - create-a-post modal. Everything here is local draft state;
+// persistence is the parent's job via onPublish.
 
 import { useState } from "react";
 import type { Story } from "../types";
 import { seedStories } from "../data/seedData";
 
-// Props - what the parent must give this component
-// close: function to hide the modal
-// onPublish: function to send the new story to the parent
+// The parent owns visibility and persistence; this component only collects,
+// validates and forwards the story.
 type AdminEditorProps = {
   close: () => void;
   onPublish: (story: Story) => void;
 };
 
-// AdminEditor - the full modal form
 export function AdminEditor({ close: closeEditor, onPublish }: AdminEditorProps) {
     const [title, setTitle] = useState("");
   const [excerpt, setExcerpt] = useState("");
@@ -38,11 +37,11 @@ export function AdminEditor({ close: closeEditor, onPublish }: AdminEditorProps)
   // Featured images are injected into a CSS url(...) below; block javascript:/data: and anything non-http.
   const imageValid = !featuredImageUrl || /^https?:\/\//i.test(featuredImageUrl);
 
-  // addTag - takes text in tagInput, cleans it, adds to tags list
+  // Normalize tags to lowercase-hyphen form so chips and filtering stay consistent.
   const addTag = () => {
-    const tag = tagInput.trim().toLowerCase().replace(/\s+/g, "-"); // "My Tag" -> "my-tag"
-    if (tag && !tags.includes(tag)) setTags([...tags, tag]); // only add if not duplicate
-    setTagInput(""); // clear input after adding
+    const normalizedTag = tagInput.trim().toLowerCase().replace(/\s+/g, "-"); // "My Tag" -> "my-tag"
+    if (normalizedTag && !tags.includes(normalizedTag)) setTags([...tags, normalizedTag]);
+    setTagInput("");
   };
 
   // close - asks "are you sure?" if there are unsaved changes
@@ -115,7 +114,7 @@ export function AdminEditor({ close: closeEditor, onPublish }: AdminEditorProps)
             onBlur={() => setAutosave("Autosaved just now")}
           />
         </label>
-        {/* Permalink - editable slug */}
+        {/* Permalink - editable slug, sanitized to URL-safe characters */}
         <div className="permalink-row">
           <span className="permalink-label">Permalink</span>
           <span className="permalink-prefix">theeyes.org/post/</span>
@@ -289,7 +288,7 @@ export function AdminEditor({ close: closeEditor, onPublish }: AdminEditorProps)
             <span className="file-name">{videoFile?.name || "Attach video"}</span>
           </label>
         </div>
-        {/* Preview if URL provided */}
+        {/* Preview only after the http/https check; the URL is injected into CSS url(). */}
         {imageValid && featuredImageUrl && (
           <div
             className="featured-preview"

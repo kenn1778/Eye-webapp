@@ -22,6 +22,8 @@ const resetLimiter = rateLimit({
   message: { message: "Too many reset requests. Please try again later." },
 });
 
+// Shared cookie attributes. maxAge is only added when we set the cookie; when
+// clearing it we must reuse the same attributes but leave off the expiry.
 function baseCookieOptions() {
   return {
     httpOnly: true,
@@ -38,6 +40,7 @@ function cookieOptions() {
   };
 }
 
+// Single-admin deployment, so every verified sign-in carries the admin role.
 function issueToken(email) {
   return jwt.sign({ sub: email, role: "admin" }, config.jwtSecret, {
     expiresIn: `${config.sessionTtlHours}h`,
@@ -74,6 +77,7 @@ authRouter.post("/login", loginLimiter, async (req, res) => {
 
   const emailMatches = email === config.adminEmail;
   const passwordMatches = await bcrypt.compare(password, config.adminPasswordHash);
+  // One generic message so a wrong email and a wrong password are indistinguishable.
   if (!emailMatches || !passwordMatches) {
     return res.status(401).json({ message: "Invalid email or password." });
   }

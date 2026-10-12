@@ -45,9 +45,9 @@ export function AdminLogin({ onLogin, onBack }: AdminLoginProps) {
     const result = await login(email, password);
     setPending(false);
     if (!result.ok) {
-      const attempts = failedAttempts + 1;
-      setFailedAttempts(attempts);
-      if (attempts >= MAX_ATTEMPTS) {
+      const nextAttempts = failedAttempts + 1;
+      setFailedAttempts(nextAttempts);
+      if (nextAttempts >= MAX_ATTEMPTS) {
         setLocked(true);
         setError("Too many failed attempts. Sign-in is locked for 60 seconds.");
         setFailedAttempts(0);
@@ -59,8 +59,9 @@ export function AdminLogin({ onLogin, onBack }: AdminLoginProps) {
     onLogin();
   };
 
-  const showResetNotice = async () => {
+  const handleForgotPassword = async () => {
     await requestPasswordReset(email);
+    // Deliberately vague so a visitor can't probe which addresses are registered.
     setResetNotice(
       "If that address is registered, a single-use reset link (valid for 30 minutes) has been sent. If it does not arrive, contact the workspace owner.",
     );
@@ -77,7 +78,7 @@ export function AdminLogin({ onLogin, onBack }: AdminLoginProps) {
         <form onSubmit={submit} className="login-form">
           <label className="editor-label">Email address<input type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="admin@theeyes.org" autoComplete="email" maxLength={120} /></label>
           <label className="editor-label">Password<div className="password-field"><input type={showPassword ? "text" : "password"} value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Enter your password" autoComplete="current-password" maxLength={128} /><button type="button" onClick={() => setShowPassword(!showPassword)}>{showPassword ? "Hide" : "Show"}</button></div></label>
-          <div className="login-options"><label><input type="checkbox" defaultChecked /> Remember me</label><button type="button" className="login-link" onClick={showResetNotice}>Forgot password?</button></div>
+          <div className="login-options"><label><input type="checkbox" defaultChecked /> Remember me</label><button type="button" className="login-link" onClick={handleForgotPassword}>Forgot password?</button></div>
           {resetNotice && <p className="login-error" role="status">{resetNotice}</p>}
           {error && <p className="login-error" role="alert">{error}</p>}
           <button className="admin-primary login-submit" type="submit" disabled={pending || locked}>{pending ? "Signing in..." : <>Sign in <span aria-hidden="true">-&gt;</span></>}</button>

@@ -2,6 +2,9 @@
  *
  * 
  *
+ * 02-responsive.css - overflow safety, breakpoints for every screen tier
+ * (phone through 8K), device quirks (iOS/Android/TV), print and reduced motion.
+ *
  * Loaded by App.css - see that file for the load order.
  */
 
@@ -49,7 +52,7 @@
 .community-card-body p,
 .admin-community-body p { max-height: clamp(4em, 12vh, 6em); }
 .reader-content p { max-height: none; } /* reader scrolls via container */
-.reader-content { max-height: min(70vh, 560px); }
+.reader-content { max-height: min(70vh, 560px); } /* cap the panel so the page behind stays scrollable */
 .feature-content h3,
 .story-card h3,
 .community-card-body h3 { max-height: clamp(3.2em, 12vh, 5em); overflow-y: auto; }
@@ -355,12 +358,13 @@ img, video, audio, iframe, svg { max-width: 100%; height: auto; }
   .community-card:hover { transform: translateY(-5px); }
   .metric-card:hover { transform: translateY(-4px); }
 }
+/* Touch has no hover: replace the lift with a subtle press. */
 @media (hover: none) {
   .story-card:hover, .community-card:hover, .metric-card:hover { transform: none; }
   .story-card:active { transform: scale(0.99); }
 }
 
-/* Orientation handling */
+/* Landscape phones have little vertical room - hide the decorative eye and tighten the hero. */
 @media (orientation: landscape) and (max-height: 500px) {
   .intro-band { min-height: auto; padding: 40px 6vw 36px; }
   .hero-eye { display: none; }

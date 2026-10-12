@@ -70,6 +70,8 @@ export function Brand() {
     };
   }, [eyeHovered, hoveredLetter]);
 
+  // Apply the CSS tracking transform only while genuinely following the cursor;
+  // hovering or a settled eye should transition back to center.
   const isTracking = (Math.abs(eyePos.x) > 0.1 || Math.abs(eyePos.y) > 0.1) && !eyeHovered && hoveredLetter === null;
 
   return (
@@ -117,7 +119,7 @@ export function Brand() {
       </span>
 
       <span className="brand-text" aria-label="EYE">
-        {letters.map((ch, i) => (
+        {letters.map((letter, i) => (
           <span
             key={i}
             className={`brand-letter brand-letter-${i} ${hoveredLetter === i ? "is-hovered" : ""}`}
@@ -127,7 +129,7 @@ export function Brand() {
             onBlur={() => setHoveredLetter(null)}
             tabIndex={0}
           >
-            {ch}
+            {letter}
           </span>
         ))}
       </span>

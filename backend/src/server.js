@@ -12,6 +12,7 @@ app.disable("x-powered-by");
 if (config.trustProxy) app.set("trust proxy", 1);
 
 app.use(helmet());
+// These endpoints only ever receive small JSON payloads, so keep the cap tight.
 app.use(express.json({ limit: "16kb" }));
 app.use(cookieParser());
 
@@ -21,6 +22,7 @@ app.use(
       if (!origin || config.corsOrigins.includes(origin)) return callback(null, true);
       return callback(new Error("Origin not allowed by CORS"));
     },
+    // Needed so the browser will send and store the session cookie cross-origin.
     credentials: true,
   }),
 );
@@ -40,6 +42,8 @@ app.use((error, _req, res, _next) => {
   });
 });
 
+// Bad auth config is fatal in production, but in development we keep serving so
+// the owner can fix the environment without the process refusing to boot.
 const problems = auditConfig();
 if (problems.length > 0) {
   const banner = `[eye:config] ${problems.join("; ")}`;

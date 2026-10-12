@@ -2,6 +2,9 @@
  *
  * 
  *
+ * 03-brand-motion.css - sticky header shrink/slide, the animated eye logo
+ * (blink, saccade, brand bounce) and footer stability/motion fixes.
+ *
  * Loaded by App.css - see that file for the load order.
  */
 
@@ -37,12 +40,14 @@ a, p, h1, h2, h3, span, strong, small, label, button {
 
 
 /* -- BRAND SHRINK: The EYEs text hides leaving only icon on shrink + mobile -- */
+/* Sticky so the shrink effect stays visible while scrolling. */
 .site-header {
   position: sticky;
   top: 0;
   z-index: 20;
   transition: height .32s cubic-bezier(.22,.61,.36,1), padding .32s cubic-bezier(.22,.61,.36,1), background .32s cubic-bezier(.22,.61,.36,1), box-shadow .32s cubic-bezier(.22,.61,.36,1), backdrop-filter .32s cubic-bezier(.22,.61,.36,1);
 }
+/* Compact state after scroll; safe-area padding keeps it clear of the notch. */
 .site-header.is-shrunk {
   height: 56px !important;
   padding-top: max(0px, env(safe-area-inset-top));
@@ -67,6 +72,7 @@ a, p, h1, h2, h3, span, strong, small, label, button {
   transform: translateX(0);
   transition: opacity .22s ease, transform .22s ease, max-width .22s ease, margin .22s ease;
 }
+/* Collapse the wordmark to zero width; max-width carries the transition, width is the hard stop. */
 .site-header.is-shrunk .brand-text {
   opacity: 0;
   transform: translateX(-10px);
@@ -166,6 +172,7 @@ a, p, h1, h2, h3, span, strong, small, label, button {
   backface-visibility: hidden;
   pointer-events: none;
 }
+/* Origin sits on the lid hinge line inside the SVG viewBox. */
 .eye-lid-top {
   transform-origin: 80px 10px;
   transform: scaleY(0);
@@ -225,6 +232,7 @@ a, p, h1, h2, h3, span, strong, small, label, button {
 }
 
 /* -- FOOTER BAR FIXES: strokes on highlight + shape movement -- */
+/* isolation + contain trap footer layout so the animated shapes cannot reflow neighbours. */
 .site-footer {
   position: relative;
   isolation: isolate;
@@ -241,7 +249,8 @@ a, p, h1, h2, h3, span, strong, small, label, button {
   outline-offset: 2px;
 }
 
-/* Remove duplicate footer definition jitter - enforce single stable layout */
+/* Remove duplicate footer definition jitter - enforce single stable layout.
+   translateZ(0) promotes each column to its own layer so hover strokes cannot shift neighbours. */
 .site-footer > * {
   min-width: 0;
   will-change: auto;

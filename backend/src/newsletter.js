@@ -8,14 +8,16 @@ const subscribeLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+// Deliberately loose: this only rejects obvious garbage. Real ownership is
+// proven later by the double opt-in confirmation email.
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export const newsletterRouter = Router();
 
 // POST /api/v1/newsletter/subscribe
 newsletterRouter.post("/subscribe", subscribeLimiter, (req, res) => {
-  const hp = req.body?.hp;
-  if (typeof hp === "string" && hp.trim() !== "") {
+  const honeypot = req.body?.hp;
+  if (typeof honeypot === "string" && honeypot.trim() !== "") {
     // Honeypot tripped: pretend success so bots get no signal.
     return res.json({ message: "You are on the list. Check your inbox for a confirmation." });
   }

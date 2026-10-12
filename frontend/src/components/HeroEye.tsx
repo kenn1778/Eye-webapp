@@ -14,6 +14,8 @@ export function HeroEye() {
         viewBox="0 0 160 100"
       >
         <defs>
+          {/* Both clips reuse the eye silhouette: the iris cannot spill outside
+              the outline, and the lids need the same shape to cap it. */}
           <clipPath id={clipId}>
             <path d="M12 51 C38 18 62 10 80 10 C101 10 126 23 148 51 C126 78 102 90 80 90 C58 90 34 79 12 51Z" />
           </clipPath>

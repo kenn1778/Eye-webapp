@@ -1,3 +1,4 @@
+/* Web fonts must be requested before any rule; they anchor the type scale. */
 @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;1,600;1,700&display=swap');
 :root {
   font-family: 'Manrope', sans-serif;
@@ -7,18 +8,19 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  font-size: clamp(14px, 0.9vw + 10px, 18px);
-  --vh: 1vh;
+  font-size: clamp(14px, 0.9vw + 10px, 18px); /* fluid root size scales all rem spacing */
+  --vh: 1vh; /* JS-readable viewport units; iOS overflows with plain 100vh */
   --dvh: 1dvh;
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-right: env(safe-area-inset-right, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-left: env(safe-area-inset-left, 0px);
 }
+/* min-width:0 lets grid/flex children shrink below their content width. */
 *, *::before, *::after { box-sizing: border-box; min-width: 0; }
 html {
   scroll-behavior: smooth;
-  overflow-x: hidden;
+  overflow-x: hidden; /* guard against any child forcing a horizontal scrollbar */
   overflow-y: auto;
   scrollbar-gutter: stable;
   -webkit-text-size-adjust: 100%;
@@ -33,9 +35,9 @@ html::-webkit-scrollbar-thumb:hover { background: #7e8d81; }
 body {
   margin: 0;
   min-width: 320px;
-  min-height: 100vh;
-  min-height: 100dvh;
-  min-height: 100svh;
+  min-height: 100vh; /* fallback for browsers without dvh/svh */
+  min-height: 100dvh; /* dynamic viewport - accounts for the mobile URL bar */
+  min-height: 100svh; /* smallest viewport - avoids a jump when the bar collapses */
   overflow-x: hidden;
   overflow-y: visible;
   overflow-wrap: break-word;
@@ -55,7 +57,7 @@ body {
   display: flex;
   flex-direction: column;
   overflow-x: hidden;
-  isolation: isolate;
+  isolation: isolate; /* contains the app's stacking contexts (modals, toasts) */
 }
 h1, h2, h3, h4, h5, h6, p, li, a, span, label, strong, small, blockquote, td, th, div {
   overflow-wrap: anywhere;
@@ -80,19 +82,24 @@ input, textarea, select, button { max-width: 100%; }
   overscroll-behavior: auto;
   scrollbar-gutter: stable;
 }
+/* iOS Safari: -webkit-fill-available tracks the real usable height. */
 @supports (-webkit-touch-callout: none) {
   body { min-height: -webkit-fill-available; }
   #root { min-height: -webkit-fill-available; }
 }
+/* Modern browsers get the cleaner dvh unit when available. */
 @supports (height: 100dvh) {
   body, #root { min-height: 100dvh; }
 }
+/* Respect the OS motion setting: kill smoothing and near-zero the animations. */
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
+/* Keyboard-only focus ring; mouse clicks stay clean. */
 :focus-visible { outline: 2px solid #6c9a70; outline-offset: 2px; }
 :focus:not(:focus-visible) { outline: none; }
+/* Step the root size up on very large displays so the layout does not shrink into a corner. */
 @media (min-width: 1920px) {
   :root { font-size: clamp(16px, 0.6vw + 12px, 20px); }
 }
@@ -102,6 +109,7 @@ input, textarea, select, button { max-width: 100%; }
 @media (min-width: 3840px) {
   :root { font-size: 24px; }
 }
+/* Printing needs the page to overflow naturally, not clip. */
 @media print {
   html, body { overflow: visible; }
   * { scrollbar-width: auto; }

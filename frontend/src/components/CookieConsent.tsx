@@ -27,6 +27,7 @@ function loadConsent(): Consent | null {
 export function CookieConsent() {
   const [consent, setConsent] = useState<Consent | null>(loadConsent);
   const [showSettings, setShowSettings] = useState(false);
+  // Returning visitors who already chose never see the banner; skip the delay for them.
   const [isReady, setIsReady] = useState(() => readString(CONSENT_KEY) !== null);
 
   useEffect(() => {

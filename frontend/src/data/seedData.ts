@@ -7,10 +7,10 @@ export const emptyMetrics: AdminMetrics = {
   totalViews: 0,
 };
 
-// Starter content so the UI isn't empty before the API is wired up
-// NOTE: Seed stories are illustrative examples only. Scholarship availability,
-// deadlines and eligibility change frequently — always verify on the official source.
-// Do not rely solely on summaries here for application decisions.
+// Starter content so the UI isn't empty before the API is wired up.
+// The stories are illustrative examples only: scholarship availability,
+// deadlines and eligibility change frequently, so verify against the official
+// source rather than relying on these summaries for application decisions.
 export const seedStories: Story[] = [
   {
     title: "The quiet power of applying before you feel ready",
@@ -55,6 +55,7 @@ export const communities: Community[] = [
   { name: "First job circle", description: "Practical support for your first role, internship, or freelance brief.", members: "Community", accent: "community-mint" },
 ];
 
+// Labels for the public story filter; order is the display order.
 export const categories = [
   "All stories",
   "Scholarships",
@@ -69,4 +70,5 @@ export const categories = [
   "Entertainment",
 ];
 
+// Admin status filters; "All posts" stays first as the default view.
 export const adminTabs = ["All posts", "Published", "Draft", "Scheduled"];

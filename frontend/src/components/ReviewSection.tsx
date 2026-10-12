@@ -45,6 +45,7 @@ function loadReviews(): Review[] {
   );
 }
 
+/** Remove markup and control characters before display or storage. */
 function stripHtml(input: string): string {
   return input.replace(/<[^>]*>/g, "").replace(/[\u0000-\u001F\u007F]/g, "");
 }
@@ -86,6 +87,7 @@ export function ReviewSection() {
     [],
   );
 
+  // 0 when there are no reviews, so the summary score never renders as NaN.
   const average = useMemo(() => {
     if (reviews.length === 0) return 0;
     return reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length;
@@ -104,6 +106,7 @@ export function ReviewSection() {
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
 
+    // Sanitize before validating and storing; the card renders these as text.
     const sanitizedName = stripHtml(name.trim());
     const sanitizedComment = stripHtml(comment.trim());
     const cleanName = sanitizedName;

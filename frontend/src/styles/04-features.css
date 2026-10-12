@@ -2,6 +2,10 @@
  *
  * 
  *
+ * 04-features.css - eye loaders, interactive brand letters, newsletter and
+ * social proof, legal pages, cookie banner, contrast/accessibility and the
+ * policy bar.
+ *
  * Loaded by App.css - see that file for the load order.
  */
 
@@ -100,7 +104,7 @@
   place-items: center;
   background: #f3f1e9;
   padding: max(20px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
-  animation: eye-loader-fade 0.45s ease 2.1s forwards;
+  animation: eye-loader-fade 0.45s ease 2.1s forwards; /* fade out only after the 2.1s hold */
 }
 .eye-loader-card {
   display: flex;
@@ -289,6 +293,7 @@
   font-size: 9px;
 }
 .preview-dot { width: 8px; height: 8px; border-radius: 50%; background: #e2e2e2; display: inline-block; }
+/* macOS-style traffic-light dots for the newsletter preview. */
 .preview-dot:nth-child(1){ background:#ff5f56; } .preview-dot:nth-child(2){ background:#ffbd2e; } .preview-dot:nth-child(3){ background:#27c93f; }
 .preview-subject { margin-left: 8px; color: #35433b; font-weight: 700; }
 .preview-line { height: 8px; background: #eef2e8; border-radius: 999px; margin-bottom: 8px; }
@@ -308,6 +313,7 @@
 .newsletter-benefits li { display: flex; gap: 8px; align-items: center; }
 .newsletter-benefits span { color: var(--badge-green); font-weight: 800; }
 .newsletter-pro-form { width: 100%; }
+/* Honeypot: an off-screen field bots fill in; humans never see it. */
 .hp-field { position: absolute !important; left: -9999px !important; width: 1px !important; height: 1px !important; overflow: hidden !important; clip: rect(0,0,0,0) !important; }
 .newsletter-pro-row {
   display: flex;
@@ -358,6 +364,7 @@
   animation: spin 0.7s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
+/* Reserve a line so success/error text does not shift the card. */
 .newsletter-pro-msg {
   min-height: 18px;
   margin-top: 10px;
@@ -378,6 +385,7 @@
   border-top: 1px solid #e0e4dc;
 }
 .avatar-stack { display: flex; align-items: center; }
+/* Overlapping avatar row: negative margin stacks them, the white ring separates. */
 .avatar-stack-item {
   width: 28px;
   height: 28px;
@@ -495,6 +503,7 @@
 .story-meta { color: #5a6a61; }
 
 /* -- Accessibility -- */
+/* Off-screen until keyboard-focused, then slides into view. */
 .skip-link {
   position: absolute;
   left: -9999px;

@@ -10,6 +10,7 @@ type RevealProps = {
 // Respects reduced-motion via CSS. No-op when IntersectionObserver is missing.
 export function Reveal({ children, className = "", delay = 0 }: RevealProps) {
   const ref = useRef<HTMLDivElement>(null);
+  // Start visible when IntersectionObserver is unavailable, so content never stays hidden.
   const [visible, setVisible] = useState(() => typeof IntersectionObserver === "undefined");
 
   useEffect(() => {

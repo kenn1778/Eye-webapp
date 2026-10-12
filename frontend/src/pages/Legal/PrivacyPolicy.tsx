@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Brand } from "../../components/Brand";
 import { PolicyBar } from "../../components/PolicyBar";
 
+// Static legal copy served at /privacy; the commitments in the text mirror the NDPA/GDPR/CCPA claims it makes.
 export function PrivacyPolicy() {
   return (
     <div className="site-shell">
