@@ -1,19 +1,14 @@
-// AdminSectionView - switches admin sub-pages
-
 import { useState } from "react";
 import { communities, seedAdminPosts } from "../../data/seedData";
 import { AdminSettings } from "./AdminSettings";
 
-// Props: which section to show, and function to open the editor
 type AdminSectionViewProps = {
-  section: string; // e.g., "Posts", "Calendar", "Media"
-  onNewPost: () => void; // opens the "New post" modal
+  section: string;
+  onNewPost: () => void;
 };
 
-// AdminSectionView - switches UI based on section name
 export function AdminSectionView({ section, onNewPost }: AdminSectionViewProps) {
-  // local state for the "Categories" page - adding new categories
-  const [categoryName, setCategoryName] = useState(""); // text in the add-category input
+  const [categoryName, setCategoryName] = useState("");
   const [categoriesList, setCategoriesList] = useState([
     "Scholarships",
     "Scholarship tips",
@@ -21,20 +16,18 @@ export function AdminSectionView({ section, onNewPost }: AdminSectionViewProps) 
     "Culture",
   ]);
 
-  // addCategory - push new category to list if not empty/duplicate
   const addCategory = () => {
     if (categoryName.trim() && !categoriesList.includes(categoryName.trim())) {
       setCategoriesList([...categoriesList, categoryName.trim()]);
-      setCategoryName(""); // clear input after adding
+      setCategoryName("");
     }
   };
 
-  // Team -> show the full Settings page (which includes team management)
+  // Team lives inside the Settings page.
   if (section === "Team") {
     return <AdminSettings />;
   }
 
-  // Posts -> table of all posts
   if (section === "Posts") {
     return (
       <section className="workspace-view">
@@ -45,28 +38,24 @@ export function AdminSectionView({ section, onNewPost }: AdminSectionViewProps) 
     );
   }
 
-  // Calendar -> monthly grid + upcoming list
   if (section === "Calendar") {
     return (
       <section className="workspace-view"><div className="workspace-heading"><div><div className="eyebrow">Editorial planning</div><h1>Publishing calendar</h1><p>Keep deadlines and scheduled stories visible at a glance.</p></div><button className="admin-primary" type="button" onClick={onNewPost}>+ Schedule post</button></div><div className="calendar-layout"><div className="admin-panel calendar-panel"><div className="calendar-top"><button type="button">&lt;</button><strong>September 2026</strong><button type="button">&gt;</button></div><div className="calendar-grid">{["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"].map((day) => <span className="calendar-day-name" key={day}>{day}</span>)}{Array.from({ length: 35 }, (_, index) => <button className={index === 13 || index === 16 ? "calendar-date has-event" : "calendar-date"} type="button" key={index}>{index < 5 ? "" : index - 5}</button>)}</div></div><div className="admin-panel upcoming-panel"><div className="eyebrow">Up next</div><h2>Scheduled stories</h2><div className="upcoming-item"><span className="schedule-date">14<span>SEP</span></span><div><strong>Remote internships accepting applications now</strong><small>09:00 AM · Opportunities</small></div></div><div className="upcoming-item"><span className="schedule-date">17<span>SEP</span></span><div><strong>How to build a portfolio with no experience</strong><small>12:30 PM · Guide</small></div></div></div></div></section>
     );
   }
 
-  // Media -> grid of image/audio/video assets
   if (section === "Media") {
     return (
       <section className="workspace-view"><div className="workspace-heading"><div><div className="eyebrow">Asset library</div><h1>Media</h1><p>Upload, organize, and reuse images, audio, and video across posts.</p></div><button className="admin-primary" type="button" onClick={onNewPost}>+ Upload media</button></div><div className="media-filter"><button className="category-tab selected" type="button">All media</button><button className="category-tab" type="button">Images</button><button className="category-tab" type="button">Audio</button><button className="category-tab" type="button">Video</button></div><div className="media-grid">{["Campus discussion", "Autumn library", "Career conversation", "Audio interview"].map((assetName, index) => <article className="media-asset" key={assetName}><div className={`media-preview media-${index}`}><span>{index === 3 ? "♪" : index === 2 ? "▶" : "▧"}</span></div><div><strong>{assetName}</strong><small>{index === 3 ? "Audio · 4:18" : index === 2 ? "Video · 12:40" : "Image · 1.8 MB"}</small></div></article>)}</div></section>
     );
   }
 
-  // Categories -> list + add new
   if (section === "Categories") {
     return (
       <section className="workspace-view"><div className="workspace-heading"><div><div className="eyebrow">Content taxonomy</div><h1>Categories</h1><p>Keep the publication easy to browse and consistent to manage.</p></div></div><div className="admin-panel taxonomy-panel"><div className="taxonomy-add"><input value={categoryName} onChange={(event) => setCategoryName(event.target.value)} placeholder="New category name" /><button className="admin-primary" type="button" onClick={addCategory}>Add category</button></div><div className="category-list">{categoriesList.map((category) => <div className="category-row" key={category}><span className="category-symbol">#</span><strong>{category}</strong><span className="muted-cell">{category === "Scholarships" ? "8 posts" : category === "Work" ? "5 posts" : "3 posts"}</span><button className="row-menu" type="button">...</button></div>)}</div></div></section>
     );
   }
 
-  // Communities -> admin view of community cards
   if (section === "Communities") {
     return (
       <section className="workspace-view">
@@ -79,6 +68,6 @@ export function AdminSectionView({ section, onNewPost }: AdminSectionViewProps) 
     );
   }
 
-  // Fallback - show settings for any unknown section
+  // Unknown section: fall back to Settings.
   return <AdminSettings />;
 }

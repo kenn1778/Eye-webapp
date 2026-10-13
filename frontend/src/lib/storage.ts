@@ -1,12 +1,6 @@
-// Safe wrappers around the Web Storage API.
-//
-// Storage is not guaranteed to work: Safari private mode throws on access,
-// users can disable site data, and writes can exceed the quota. Reading raw
-// localStorage at a call site is also easy to get wrong - a corrupted value
-// makes JSON.parse throw and takes the whole component down with it.
-//
-// Every storage read/write in the app goes through this module so a storage
-// failure degrades quietly instead of crashing the UI.
+// localStorage throws in Safari private mode, when site data is blocked, or on
+// quota overflow, and one bad JSON value is enough to take a component down.
+// Everything goes through here so storage failures stay quiet.
 
 const canUseStorage = (): boolean => {
   try {
@@ -45,14 +39,9 @@ export function removeItem(key: string): void {
   }
 }
 
-/**
- * Read and parse a JSON value.
- *
- * Returns `fallback` when the key is missing, the stored text is not valid
- * JSON, or storage is unavailable. When `isValid` is supplied, a parsed value
- * that fails the check is also treated as missing - this stops hand-edited or
- * stale data from reaching components that assume a known shape.
- */
+// Returns the fallback when the key is missing, the stored text isn't valid
+// JSON, or isValid rejects the parsed value - keeps hand-edited or stale data
+// out of components that assume a known shape.
 export function readJson<T>(fallback: T, key: string, isValid?: (value: unknown) => value is T): T {
   const raw = readString(key);
   if (raw === null) return fallback;
@@ -76,7 +65,6 @@ export function writeJson(key: string, value: unknown): boolean {
   }
 }
 
-/** Generate a unique id, preferring the platform UUID implementation. */
 export function createId(prefix: string): string {
   const uuid = globalThis.crypto?.randomUUID?.();
   if (uuid) return `${prefix}-${uuid}`;

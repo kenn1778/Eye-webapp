@@ -1,9 +1,4 @@
-﻿// CookieConsent - consent banner that appears once per browser.
-// Frontend-preview behavior: the choice is stored in this browser and a
-// "eye-consent" CustomEvent is dispatched so an analytics layer can react.
-// No analytics or tracking script is loaded by this component.
-
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { readString, removeItem, writeString } from "../lib/storage";
 
@@ -11,14 +6,12 @@ type Consent = "accepted" | "rejected";
 
 const CONSENT_KEY = "eye:consent";
 const CONSENT_EVENT = "eye-consent";
-/** Delay before the banner appears, so it does not compete with first paint. */
 const BANNER_DELAY_MS = 800;
 
 function isConsent(value: string | null): value is Consent {
   return value === "accepted" || value === "rejected";
 }
 
-/** Reads the stored choice, ignoring anything that is not a known value. */
 function loadConsent(): Consent | null {
   const stored = readString(CONSENT_KEY);
   return isConsent(stored) ? stored : null;

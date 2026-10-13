@@ -2,14 +2,14 @@ export type ChatMessage = {
   id: string;
   community: string;
   user: string;
-  avatar: string; // Initials shown in the avatar bubble, e.g. "AK".
+  avatar: string; // e.g. "AK"
   text: string;
-  time: string; // e.g., "09:42"
-  isMe?: boolean; // True for the signed-in user; drives right-aligned bubbles.
+  time: string; // e.g. "09:42"
+  isMe?: boolean; // drives the right-aligned bubbles
 };
 
-// Demo threads keyed by community name. Keys must match the `communities` seed
-// so opening a community finds its thread.
+// Demo threads keyed by community name. These keys have to match the
+// `communities` seed or a community opens with no thread.
 export const chatSeed: Record<string, ChatMessage[]> = {
   "Scholarship seekers": [
     { id: "1", community: "Scholarship seekers", user: "Amina K.", avatar: "AK", text: "Has anyone heard back from the DAAD shortlist? My status still says under review.", time: "09:12" },

@@ -6,8 +6,7 @@ export type Story = {
   category: string;
   meta: string;
   image: string;
-  // Optional call-to-action, set only when a story links out to an external
-  // page such as the official application site.
+  // Only set when a story links out somewhere, e.g. the official application site.
   actionUrl?: string;
   actionLabel?: string;
 };
@@ -19,8 +18,8 @@ export type Community = {
   accent: string;
 };
 
-// `status` doubles as the admin workflow state and the tab filter, so this
-// union must stay in sync with the admin tabs in seedData.
+// `status` is both the admin workflow state and the tab filter, so it has to
+// stay in sync with the admin tabs in seedData.
 export type AdminPost = {
   title: string;
   type: string;
@@ -29,7 +28,6 @@ export type AdminPost = {
   author: string;
 };
 
-// Counts backing the admin dashboard summary tiles.
 export type AdminMetrics = {
   totalPosts: number;
   publishedPosts: number;
@@ -37,7 +35,6 @@ export type AdminMetrics = {
   totalViews: number;
 };
 
-// Role controls what a team member can do inside the admin workspace.
 export type TeamRole = "Moderator" | "Administrator";
 
 export type TeamMember = {

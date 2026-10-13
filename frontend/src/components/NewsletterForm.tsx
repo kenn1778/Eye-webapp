@@ -1,15 +1,7 @@
-// NewsletterForm - email capture for the weekly brief.
-//
-// Submit flow: honeypot -> consent -> format -> duplicate check -> API.
-// When no VITE_API_BASE_URL is configured the form runs in demo mode and
-// simulates the network round trip, so the UI can be exercised without a
-// backend. Subscriptions are remembered in this browser only.
-
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { readJson, writeJson } from "../lib/storage";
 
-/** Remove markup and control characters before the address is sent anywhere. */
 function stripHtml(input: string): string {
   return input.replace(/<[^>]*>/g, "").replace(/[\u0000-\u001F\u007F]/g, "");
 }
@@ -24,9 +16,7 @@ type Props = {
 };
 
 const SUBSCRIBERS_KEY = "eye:subscribed";
-/** Simulated latency for the demo path, so loading states are visible. */
 const DEMO_LATENCY_MS = 900;
-/** How long the success message stays on screen before resetting. */
 const SUCCESS_RESET_MS = 6000;
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -35,7 +25,6 @@ function isValidEmail(value: string): boolean {
   return EMAIL_PATTERN.test(value.trim());
 }
 
-/** Only accept a stored array of strings; anything else is treated as empty. */
 function isEmailList(value: unknown): value is string[] {
   return Array.isArray(value) && value.every((item) => typeof item === "string");
 }
@@ -56,7 +45,7 @@ export function NewsletterForm({
 
   const apiBase = import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, "");
 
-  // Resets the form back to idle after a successful subscription.
+  // Cancel the idle reset if the form unmounts first.
   const resetTimerRef = useRef<number | null>(null);
   useEffect(
     () => () => {
@@ -65,7 +54,6 @@ export function NewsletterForm({
     [],
   );
 
-  /** Subscribe against the real API. Throws a displayable message on failure. */
   async function subscribeViaApi(base: string, address: string): Promise<string> {
     const response = await fetch(`${base}/api/v1/newsletter/subscribe`, {
       method: "POST",
@@ -80,7 +68,6 @@ export function NewsletterForm({
     return data.message || "Check your email - we sent a confirmation link.";
   }
 
-  /** Demo path: no backend configured, so simulate the round trip. */
   async function subscribeInDemoMode(): Promise<string> {
     await new Promise((resolve) => window.setTimeout(resolve, DEMO_LATENCY_MS));
     return "You are on the list. Check your inbox for a confirmation.";

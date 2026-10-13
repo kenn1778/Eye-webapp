@@ -1,5 +1,3 @@
-// AdminWorkspace - dashboard shell
-
 import { startTransition, useCallback, useEffect, useMemo, useState, type CSSProperties } from "react";
 import type { AdminMetrics, Story } from "../../types";
 import { emptyMetrics, seedAdminPosts, adminTabs } from "../../data/seedData";
@@ -7,20 +5,14 @@ import { Brand } from "../../components/Brand";
 import { AdminEditor } from "../../components/AdminEditor";
 import { AdminSectionView } from "./AdminSectionView";
 
-/** Sidebar width bounds for the desktop drag-to-resize handle. */
 const MIN_SIDEBAR_WIDTH = 190;
 const MAX_SIDEBAR_WIDTH = 360;
 const DEFAULT_SIDEBAR_WIDTH = 240;
 
-/** How often dashboard metrics refresh while the workspace is open. */
 const METRICS_POLL_INTERVAL_MS = 30_000;
 
 const METRICS_ENDPOINT = "/api/v1/admin/metrics";
 
-/**
- * Dashboard cards, defined as data so the markup is written once.
- * `accent` marks the visually highlighted card.
- */
 const METRIC_CARDS: ReadonlyArray<{ label: string; value: keyof AdminMetrics; accent?: boolean }> = [
   { label: "Total posts", value: "totalPosts" },
   { label: "Published", value: "publishedPosts", accent: true },
@@ -28,11 +20,7 @@ const METRIC_CARDS: ReadonlyArray<{ label: string; value: keyof AdminMetrics; ac
   { label: "Total views", value: "totalViews" },
 ];
 
-/**
- * Rejects a malformed metrics payload.
- * Without this an unexpected response shape would render as undefined or NaN
- * in the dashboard cards.
- */
+// Guard against a malformed payload so the cards never render NaN.
 function isValidAdminMetrics(value: unknown): value is AdminMetrics {
   if (typeof value !== "object" || value === null) return false;
   const record = value as Record<string, unknown>;
@@ -41,36 +29,26 @@ function isValidAdminMetrics(value: unknown): value is AdminMetrics {
   );
 }
 
-// Props: closeAdmin = log out, onPublish = send new story to public site
 type AdminWorkspaceProps = {
   closeAdmin: () => void;
   onPublish: (story: Story) => void;
 };
 
-// AdminWorkspace - the whole admin layout
 export function AdminWorkspace({ closeAdmin, onPublish }: AdminWorkspaceProps) {
-  // activeTab - which post filter is selected (All/Published/Draft/Scheduled)
   const [activeTab, setActiveTab] = useState("All posts");
-  // query - search text for filtering posts
   const [query, setQuery] = useState("");
-  // showEditor - whether the "New post" modal is open
   const [showEditor, setShowEditor] = useState(false);
-  // saved - shows "Published!" toast briefly
   const [saved, setSaved] = useState(false);
-  // activeSection - which sidebar page is open (Overview, Posts, etc.)
   const [activeSection, setActiveSection] = useState("Overview");
-  // showLogoutDialog - confirm logout popup
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
-  // sidebarOpen - is the left nav visible? Defaults to open on desktop (>760px) and closed on phones (<=760px)
+  // On phones the sidebar is an off-canvas drawer, so start it closed.
   const [sidebarOpen, setSidebarOpen] = useState(() => {
     if (typeof window === "undefined") return true;
     return window.matchMedia("(min-width: 761px)").matches;
   });
-  // sidebarWidth - draggable sidebar width in pixels, clamped to the bounds above
   const [sidebarWidth, setSidebarWidth] = useState(DEFAULT_SIDEBAR_WIDTH);
-  // isResizingSidebar - true while user is dragging the resize handle
   const [isResizingSidebar, setIsResizingSidebar] = useState(false);
-  // Keep the drawer closed whenever the viewport is a phone (<=760px). The sidebar becomes an off-canvas drawer on phones.
+  // Keep the drawer closed on phones (<=760px), where it becomes an off-canvas panel.
   useEffect(() => {
     const mobileQuery = window.matchMedia("(max-width: 760px)");
     const syncDrawer = () => {
@@ -82,65 +60,58 @@ export function AdminWorkspace({ closeAdmin, onPublish }: AdminWorkspaceProps) {
     mobileQuery.addEventListener("change", syncDrawer);
     return () => mobileQuery.removeEventListener("change", syncDrawer);
   }, []);
-  // metrics - numbers for the 4 dashboard cards, fetched from API
   const [metrics, setMetrics] = useState<AdminMetrics>(emptyMetrics);
-  // apiBaseUrl - optional backend URL from env var VITE_API_BASE_URL
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL as string | undefined;
 
-  // refreshMetrics - fetches latest dashboard numbers from backend
   const refreshMetrics = useCallback(async () => {
-    if (!apiBaseUrl) return; // no backend configured -> skip
+    if (!apiBaseUrl) return;
     try {
       const response = await fetch(`${apiBaseUrl}${METRICS_ENDPOINT}`, { credentials: "include" });
-      if (!response.ok) return; // API error -> keep old numbers
+      if (!response.ok) return;
 
       const payload: unknown = await response.json();
-      if (!isValidAdminMetrics(payload)) return; // unexpected shape -> keep old numbers
+      if (!isValidAdminMetrics(payload)) return;
 
       // Low priority so a background refresh never blocks typing or clicks.
       startTransition(() => setMetrics(payload));
     } catch {
-      // network down -> keep last known value
+      // network down; keep the last known value
     }
   }, [apiBaseUrl]);
 
-  // Poll metrics on mount, then on an interval while the workspace stays open
   useEffect(() => {
-    void refreshMetrics(); // fetch immediately
+    void refreshMetrics();
     if (!apiBaseUrl) return;
     const interval = window.setInterval(() => void refreshMetrics(), METRICS_POLL_INTERVAL_MS);
-    return () => window.clearInterval(interval); // cleanup on unmount
+    return () => window.clearInterval(interval);
   }, [apiBaseUrl, refreshMetrics]);
 
-  // visiblePosts - filtered list based on tab + search query
   const visiblePosts = useMemo(
     () =>
       seedAdminPosts.filter(
         (post) =>
-          (activeTab === "All posts" || post.status === activeTab) && // match tab
+          (activeTab === "All posts" || post.status === activeTab) &&
           (!query.trim() ||
             `${post.title} ${post.type} ${post.author}`
               .toLowerCase()
-              .includes(query.toLowerCase())), // match search text
+              .includes(query.toLowerCase())),
       ),
     [activeTab, query],
   );
 
-  // Choosing a section on a phone should also dismiss the drawer so the panel is visible.
+  // On phones, picking a section should also close the drawer so the panel shows.
   const selectSection = (section: string) => {
     setActiveSection(section);
     if (window.matchMedia("(max-width: 760px)").matches) setSidebarOpen(false);
   };
-  // requestLogout - shows the confirm dialog
   const requestLogout = () => setShowLogoutDialog(true);
 
-  // Handle dragging the sidebar resize handle
   useEffect(() => {
-    if (!isResizingSidebar) return; // only when dragging
+    if (!isResizingSidebar) return;
     const handlePointerMove = (event: PointerEvent) => {
       setSidebarWidth(Math.min(MAX_SIDEBAR_WIDTH, Math.max(MIN_SIDEBAR_WIDTH, event.clientX)));
     };
-    const stopResize = () => setIsResizingSidebar(false); // stop on release
+    const stopResize = () => setIsResizingSidebar(false);
     window.addEventListener("pointermove", handlePointerMove);
     window.addEventListener("pointerup", stopResize);
     return () => {
@@ -149,7 +120,7 @@ export function AdminWorkspace({ closeAdmin, onPublish }: AdminWorkspaceProps) {
     };
   }, [isResizingSidebar]);
 
-  // Width is passed as a CSS variable so the stylesheet owns the layout maths.
+  // Width lives in a CSS variable so the stylesheet owns the layout maths.
   return (
     <div className={`admin-shell ${sidebarOpen ? "sidebar-open" : "sidebar-closed"} ${isResizingSidebar ? "sidebar-resizing" : ""}`} style={{ "--sidebar-width": `${sidebarWidth}px` } as CSSProperties}>
       {sidebarOpen && <button className="sidebar-overlay" type="button" aria-label="Close admin navigation" onClick={() => setSidebarOpen(false)} />}
@@ -228,7 +199,7 @@ export function AdminWorkspace({ closeAdmin, onPublish }: AdminWorkspaceProps) {
           </div>
         </header>
         <main className="admin-content">
-          {/* Overview renders inline below; every other real section is delegated to AdminSectionView. "New post" is excluded because it only opens the editor modal. */}
+          {/* Overview renders here; other sections go through AdminSectionView. "New post" is excluded since it just opens the editor. */}
           {activeSection !== "Overview" && activeSection !== "New post" && (
             <AdminSectionView section={activeSection} onNewPost={() => setShowEditor(true)} />
           )}

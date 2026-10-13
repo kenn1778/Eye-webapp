@@ -1,9 +1,7 @@
-// AdminSettings - workspace preferences + team
-
 import { useState } from "react";
 import type { TeamRole, TeamMember } from "../../types";
 
-// All settings live in component state only; nothing here persists to a backend yet.
+// Everything here is component state for now; nothing persists to a backend yet.
 export function AdminSettings() {
   const [saved, setSaved] = useState(false);
   const [displayName, setDisplayName] = useState("Amara Osei");
@@ -18,7 +16,7 @@ export function AdminSettings() {
   ]);
   const save = () => setSaved(true);
   const inviteMember = () => {
-    // Normalize so "Nia@..." and "nia@..." can't be invited as two separate people.
+    // Lowercase so "Nia@..." and "nia@..." can't be invited as two people.
     const normalizedEmail = inviteEmail.trim().toLowerCase();
     if (!normalizedEmail || teamMembers.some((member) => member.email === normalizedEmail)) return;
     setTeamMembers([...teamMembers, { name: normalizedEmail.split("@")[0], email: normalizedEmail, role: inviteRole, status: "Invited" }]);

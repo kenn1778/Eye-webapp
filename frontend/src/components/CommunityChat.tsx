@@ -1,8 +1,3 @@
-// CommunityChat - in-room chat panel for a single community.
-//
-// Frontend-preview behavior: messages live in component state and are seeded
-// from chatSeed. A backend will own message delivery, persistence and moderation.
-
 import { useEffect, useRef, useState } from "react";
 import type { Community } from "../types";
 import { chatSeed, type ChatMessage } from "../data/chatSeed";
@@ -13,11 +8,9 @@ type Props = {
   onLeave: () => void;
 };
 
-/** Simulated "a human is typing" pause before the canned reply arrives. */
 const MIN_REPLY_DELAY_MS = 1200;
 const MAX_REPLY_DELAY_MS = 2000;
 
-/** Canned replies, per community. A real backend replaces this entirely. */
 const cannedReplies: Record<string, string[]> = {
   "Scholarship seekers": [
     "Thanks for sharing - I'll check the official doc and reply here.",
@@ -33,7 +26,6 @@ const cannedReplies: Record<string, string[]> = {
   ],
 };
 
-/** Who the simulated reply comes from, per community. */
 const replySpeakers: Record<string, { user: string; avatar: string }> = {
   "Scholarship seekers": { user: "Nia H.", avatar: "NH" },
   "Creative careers": { user: "Kwame B.", avatar: "KB" },
@@ -42,14 +34,12 @@ const replySpeakers: Record<string, { user: string; avatar: string }> = {
 
 const FALLBACK_SPEAKER = { user: "A member", avatar: "AM" };
 
-/** "09:12" in 24-hour form, matching the seeded message timestamps. */
 function formatClockTime(date: Date): string {
   const hours = String(date.getHours()).padStart(2, "0");
   const minutes = String(date.getMinutes()).padStart(2, "0");
   return `${hours}:${minutes}`;
 }
 
-/** Uniform random value in [min, max]; a float is fine for timer delays. */
 function randomBetween(min: number, max: number): number {
   return min + Math.random() * (max - min);
 }
@@ -67,8 +57,8 @@ export function CommunityChat({ community, onClose, onLeave }: Props) {
   const messageCountRef = useRef(0);
   const nextMessageId = () => `m-${Date.now()}-${messageCountRef.current++}`;
 
-  // The pending simulated reply must not fire after the panel closes,
-  // otherwise it calls setState on an unmounted component.
+  // If the panel closes while a reply is pending, the timeout would still fire
+  // and call setState on an unmounted component.
   const replyTimerRef = useRef<number | null>(null);
 
   // Move focus into the composer when the chat opens or switches community.

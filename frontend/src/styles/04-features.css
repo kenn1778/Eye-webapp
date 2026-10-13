@@ -1,16 +1,8 @@
-/* 
- *
- * 
- *
- * 04-features.css - eye loaders, interactive brand letters, newsletter and
- * social proof, legal pages, cookie banner, contrast/accessibility and the
- * policy bar.
- *
- * Loaded by App.css - see that file for the load order.
- */
+/* 04-features.css - eye loaders, brand letters, newsletter, legal pages,
+   cookie banner and accessibility bits. Loaded by App.css. */
 
-/* -- EYE real-time hover closed + EYE letters jump + 2.1s loader -- */
-/* Brand letters - individual jump */
+/* Eye hover, letter jump and the page loader. */
+/* Each brand letter jumps on its own. */
 .brand-text {
   display: inline-flex;
   gap: 0;
@@ -64,7 +56,7 @@
 .eye-svg.is-letter-1 .eye-glint { transform: translate3d(0, 1px, 0); }
 .eye-svg.is-letter-2 .eye-glint { transform: translate3d(0.7px, -0.6px, 0); }
 
-/* Eye closed in real time when hovered */
+/* Close the eye while it is hovered. */
 .eye-svg.is-closed .eye-lid-top,
 .eye-svg.is-closed .eye-lid-bottom {
   animation: none !important;
@@ -176,8 +168,8 @@
 }
 
 
-/* -- HUMAN EYE left/right opposite scan + mouse tracking -- */
-/* Enhanced bounce - iris sweeps left and right like a human scanning */
+/* Idle eye scan and mouse tracking. */
+/* Iris sweeps left and right like someone scanning a room. */
 @keyframes eye-bounce {
   0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
   12% { transform: translate3d(-5.2px, -1px, 0) scale(1.015); } /* look far left */
@@ -195,7 +187,7 @@
   80% { transform: translate3d(0.9px, -0.3px, 0); }
 }
 
-/* When mouse moves, iris follows cursor left/right in real time - overrides auto scan */
+/* While the mouse moves, the iris follows it and the auto scan pauses. */
 .eye-svg.is-tracking .eye-iris-group {
   animation: none !important;
   transform: translate3d(var(--eye-x), var(--eye-y), 0) !important;
@@ -207,20 +199,20 @@
   transform: translate3d(calc(var(--eye-x) * 0.28), calc(var(--eye-y) * 0.28), 0) !important;
   transition: transform 0.09s linear;
 }
-/* Brand wrapper also exposes --eye-x/--eye-y for future CSS */
+/* The brand wrapper exposes --eye-x/--eye-y for the iris. */
 .brand.is-tracking .brand-icon {
-  /* subtle scale when tracking to feel alive */
+  /* a touch of scale while tracking */
   transform: scale(1.01);
 }
 
-/* Ensure letter hover still wins over tracking (JS already disables tracking) */
+/* Letter hover takes priority over tracking. */
 .eye-svg.is-letter-0.is-tracking .eye-iris-group,
 .eye-svg.is-letter-1.is-tracking .eye-iris-group,
 .eye-svg.is-letter-2.is-tracking .eye-iris-group {
-  /* letter hover has priority - keep letter position */
+  /* hover wins, so the letter position stays */
 }
 
-/* Idle scan when mouse is still - already handled via JS sine, but keep CSS fallback */
+/* Fallback idle scan for when JS isn't driving it. */
 @media (prefers-reduced-motion: no-preference) {
   .eye-iris-group {
     animation: eye-bounce 4.2s ease-in-out infinite;
@@ -228,7 +220,7 @@
 }
 
 
-/* -- Professional Newsletter (like Substack/Beehiiv) -- */
+/* Newsletter block. */
 .newsletter-section {
   padding: 64px 12vw;
   background: #eef2e8;
@@ -275,7 +267,7 @@
 }
 .newsletter-trust a { color: var(--badge-green-dark); text-decoration: underline; text-underline-offset: 2px; }
 
-/* Newsletter preview mock - right side */
+/* Fake inbox preview on the right. */
 .newsletter-preview {
   padding: 18px;
   background: #fff;
@@ -299,7 +291,6 @@
 .preview-line { height: 8px; background: #eef2e8; border-radius: 999px; margin-bottom: 8px; }
 .preview-pill { margin-top: 14px; display: inline-flex; padding: 7px 10px; background: var(--badge-green); color: #fff; border-radius: 999px; font-size: 10px; font-weight: 800; }
 
-/* Pro form */
 .newsletter-pro { width: 100%; }
 .newsletter-benefits {
   list-style: none;
@@ -408,14 +399,13 @@
 .social-proof-text span { color: #5a6a61; font-size: 11px; }
 .social-proof-text small { display: block; margin-top: 4px; color: #7e8e82; font-family: 'DM Mono', monospace; font-size: 9px; }
 
-/* Footer variant - compact, no card */
+/* Compact footer variant. */
 .newsletter-pro--footer .newsletter-benefits { display: none; }
 .newsletter-pro--footer .newsletter-social-proof { display: none; }
 .newsletter-pro--footer .newsletter-pro-row { background: #fff; }
 .footer-newsletter { min-width: 300px; width: 100%; max-width: 380px; }
 .footer-newsletter .newsletter-pro-msg { margin-top: 8px; }
 
-/* Responsive */
 @media (max-width: 900px) {
   .newsletter-card { grid-template-columns: 1fr; padding: 24px; }
   .newsletter-card-right { display: none; }
@@ -429,7 +419,7 @@
 }
 
 
-/* -- Legal pages (Privacy, Terms, Refund, Cookies) -- */
+/* Legal pages. */
 .legal-page {
   max-width: 760px;
   margin: 0 auto;
@@ -520,7 +510,7 @@
 :focus-visible { outline: 2px solid var(--badge-green); outline-offset: 2px; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
 
-/* Keyboard - ensure all interactive have visible focus */
+/* Visible focus for keyboard users. */
 a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
   outline: 2px solid var(--badge-green);
   outline-offset: 2px;
@@ -545,15 +535,11 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .consent-row input { margin-top: 2px; accent-color: var(--badge-green); flex: 0 0 auto; }
 .consent-row a { color: var(--badge-green-dark); }
 
-/* -- Third-party embeds disclosure banner (subtle) -- */
+/* Embeds disclosure note. */
 .embed-notice { font-size: 10px; color: #7e8e82; font-family: 'DM Mono', monospace; }
 
-/* Ensure images have alt handling - background images already have aria-label, add fallback */
+/* Background images carry aria-label; keep a solid fallback colour. */
 .feature-image, .story-card-image, .reader-image { background-color: #d9ded4; }
-
-/* Button clarity - every button now has discernible text via aria-label or visible text */
-/* X close buttons already have aria-label="Close story" */
-
 
 /* -- Policy bar -- */
 .policy-bar {

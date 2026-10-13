@@ -1,7 +1,5 @@
 import { useEffect, useId, useRef, useState } from "react";
 
-// Brand mark used across header, footer and sidebar.
-// Handles the eye interactions - blink, hover to close, letter hover and mouse tracking.
 export function Brand() {
   const [hoveredLetter, setHoveredLetter] = useState<number | null>(null);
   const [eyeHovered, setEyeHovered] = useState(false);
@@ -14,8 +12,7 @@ export function Brand() {
   const clipId = `eyeClip-${safeId}`;
   const titleId = `eyeTitle-${safeId}`;
 
-  // Make the iris follow the cursor. Keeps the eye feeling alive.
-  // Falls back to a slow idle drift when the mouse is still.
+  // Iris follows the cursor; when the mouse goes still it drifts slowly instead.
   useEffect(() => {
     let raf = 0;
     let lx = 0, ly = 0;
@@ -48,8 +45,8 @@ export function Brand() {
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     const startIdle = () => {
-      // Decorative drift only. Skip it when the visitor asks for reduced motion,
-      // which also keeps the visual-regression baseline deterministic.
+      // Decorative drift only. Skip it when the visitor asks for reduced motion;
+      // that also keeps the visual-regression baseline deterministic.
       if (prefersReducedMotion()) return;
 
       idleId = window.setInterval(() => {
@@ -70,8 +67,8 @@ export function Brand() {
     };
   }, [eyeHovered, hoveredLetter]);
 
-  // Apply the CSS tracking transform only while genuinely following the cursor;
-  // hovering or a settled eye should transition back to center.
+  // Only apply the CSS tracking transform while genuinely following the cursor;
+  // hovering or a settled eye should ease back to center.
   const isTracking = (Math.abs(eyePos.x) > 0.1 || Math.abs(eyePos.y) > 0.1) && !eyeHovered && hoveredLetter === null;
 
   return (

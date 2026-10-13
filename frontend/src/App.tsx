@@ -1,16 +1,3 @@
-/*
- * Required Security Headers for Production
- * -----------------------------------------
- * The production web server / CDN should send the following response headers:
- *
- * - Content-Security-Policy
- * - Strict-Transport-Security
- * - X-Content-Type-Options: nosniff
- * - X-Frame-Options: DENY
- * - Referrer-Policy: strict-origin-when-cross-origin
- * - Permissions-Policy
- */
-
 import { lazy, Suspense, useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import "./App.css";
@@ -25,7 +12,6 @@ import { CookieConsent } from "./components/CookieConsent";
 import { ADMIN_ENABLED } from "./config";
 import { getSession, logout } from "./lib/auth";
 
-// Admin pages are code-split and only registered when VITE_ENABLE_ADMIN=true.
 const AdminLogin = lazy(() =>
   import("./pages/Admin/AdminLogin").then((module) => ({ default: module.AdminLogin })),
 );
@@ -33,8 +19,7 @@ const AdminWorkspace = lazy(() =>
   import("./pages/Admin/AdminWorkspace").then((module) => ({ default: module.AdminWorkspace })),
 );
 
-// Small full-screen loader shown on first paint.
-// Keeps the eye blinking for 2.1s so the app feels alive instead of a blank flash.
+// First-paint loader - the eye blink covers the gap before the app mounts.
 function EyeLoader() {
   return (
     <div className="eye-loader" role="status" aria-live="polite" aria-busy="true" aria-label="Loading EYE">
@@ -67,13 +52,10 @@ function EyeLoader() {
   );
 }
 
-// Centralised routes so navigation is URL-driven and shareable.
-// Public stays at /, admin is protected behind /admin/login.
 function AppRoutes() {
   const navigate = useNavigate();
-  // null = session not checked yet, which is distinct from logged out - the
-  // admin routes show a loader until the check resolves so the login form never
-  // flashes for an already-authenticated user.
+  // null until the session check resolves, so an already-authenticated user
+  // never sees the login form flash.
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [publishedStories, setPublishedStories] = useState<Story[]>([]);
 

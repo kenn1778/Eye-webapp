@@ -1,13 +1,12 @@
-// Central logger. Prints structured, PII-free messages to the console.
-// Kept as a single seam so a backend log endpoint can be swapped in
-// later without touching call sites.
+// Single logger seam: PII-free console output now, and a backend log endpoint
+// can drop in later without touching call sites.
 
 type LogScope = "app" | "auth" | "admin" | "network";
 
 function emit(level: "error" | "warn", scope: LogScope, message: string, detail?: unknown) {
   // The prefix keeps messages greppable and groups output by scope.
   const line = `[eye:${scope}] ${message}`;
-  // Fall back to "" so a missing detail never prints as "undefined".
+  // Empty string so a missing detail doesn't print as "undefined".
   if (level === "error") {
     console.error(line, detail ?? "");
   } else {

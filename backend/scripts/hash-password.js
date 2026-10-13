@@ -22,8 +22,7 @@ if (password.length < 12) {
   process.exit(1);
 }
 
-// Cost factor 12: slow enough to make offline cracking expensive, fast enough
-// that a single login stays responsive.
+// Cost 12: slow enough to hurt offline cracking, fast enough for a login.
 const hash = await bcrypt.hash(password, 12);
 console.log("\nAdd this line to backend/.env:\n");
 console.log(`ADMIN_PASSWORD_HASH=${hash}\n`);

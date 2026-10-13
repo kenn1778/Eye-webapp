@@ -1,7 +1,5 @@
-﻿// Client-side auth against the EYE API.
-//
-// Credentials are verified by the server (see ../../backend). The server issues
-// a signed, HttpOnly session cookie, so the browser never holds the password.
+﻿// Auth talks to the EYE API. The server sets a signed, HttpOnly session cookie,
+// so the browser never holds the password.
 
 import { logError } from "./logger";
 
@@ -30,8 +28,8 @@ export async function login(email: string, password: string): Promise<LoginResul
       const message = typeof data.message === "string" ? data.message : "Invalid email or password.";
       return { ok: false, error: message };
     }
-    // A success response may omit the user; fall back to the submitted email so
-    // the UI still has an identity to display.
+    // Server may omit the user; reuse the submitted email so the UI still has
+    // an identity to show.
     const user = (data.user as SessionUser | undefined) ?? { email };
     return { ok: true, user };
   } catch (error) {
@@ -62,8 +60,8 @@ export async function getSession(): Promise<SessionUser | null> {
   }
 }
 
-// The response is deliberately ignored: the server must not reveal whether an
-// account exists, and the UI shows the same confirmation either way.
+// Response ignored on purpose: the server shouldn't reveal whether an account
+// exists, and the UI shows the same confirmation either way.
 export async function requestPasswordReset(email: string): Promise<void> {
   try {
     await fetch(`${API_BASE}/api/v1/auth/forgot-password`, {

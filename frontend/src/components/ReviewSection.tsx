@@ -1,9 +1,3 @@
-// ReviewSection - lets visitors rate and review the site.
-//
-// Frontend-preview behavior: reviews persist in this browser only, via
-// localStorage. Nothing is sent anywhere and nothing is shared between
-// visitors. A real review service will be connected with the backend.
-
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { createId, readJson, writeJson } from "../lib/storage";
 
@@ -17,13 +11,10 @@ type Review = {
 
 const STORAGE_KEY = "eye_visitor_reviews";
 const MAX_STARS = 5;
-/** How long the "review posted" confirmation stays on screen. */
 const SUCCESS_MESSAGE_MS = 4000;
 
-/**
- * Guards against hand-edited or outdated stored data.
- * Without this an object missing `name` would crash the card render below.
- */
+// Stored reviews can be hand-edited or outdated, so validate before trusting
+// them; a record missing `name` would otherwise crash the card render below.
 function isReview(value: unknown): value is Review {
   if (typeof value !== "object" || value === null) return false;
   const review = value as Record<string, unknown>;
@@ -38,14 +29,12 @@ function isReview(value: unknown): value is Review {
   );
 }
 
-/** Falls back to an empty list when storage is empty, blocked or corrupted. */
 function loadReviews(): Review[] {
   return readJson<Review[]>([], STORAGE_KEY, (value): value is Review[] =>
     Array.isArray(value) && value.every(isReview),
   );
 }
 
-/** Remove markup and control characters before display or storage. */
 function stripHtml(input: string): string {
   return input.replace(/<[^>]*>/g, "").replace(/[\u0000-\u001F\u007F]/g, "");
 }
@@ -93,7 +82,6 @@ export function ReviewSection() {
     return reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length;
   }, [reviews]);
 
-  /** @returns an error message, or null when the review is valid. */
   function validate(cleanName: string, cleanComment: string): string | null {
     if (!cleanName) return "Please add your name.";
     if (cleanName.length > 40) return "Name must be 40 characters or fewer.";
@@ -106,7 +94,7 @@ export function ReviewSection() {
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
 
-    // Sanitize before validating and storing; the card renders these as text.
+    // Clean the input before validating and storing; the card renders it as text.
     const sanitizedName = stripHtml(name.trim());
     const sanitizedComment = stripHtml(comment.trim());
     const cleanName = sanitizedName;

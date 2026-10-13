@@ -1,0 +1,86 @@
+// EYE backend data model.
+// Prisma 7: the connection URL is configured in prisma.config.ts (the `url`
+// field was removed from the datasource block). The generated client is emitted
+// as plain JS so the ESM Node backend can import it without a TypeScript build.
+
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+
+  stories      Story[]
+  posts        Post[]
+  communities  Community[]
+  chatMessages ChatMessage[]
+  reviews      Review[]
+}
+
+model Story {
+  id          String    @id @default(cuid())
+  title       String
+  content     String
+  authorId    String?
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  author User? @relation(fields: [authorId], references: [id])
+}
+
+model Post {
+  id        String   @id @default(cuid())
+  title     String
+  content   String
+  authorId  String?
+  createdAt DateTime @default(now())
+
+  author User? @relation(fields: [authorId], references: [id])
+}
+
+model Community {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  ownerId     String?
+  createdAt   DateTime @default(now())
+
+  owner        User?         @relation(fields: [ownerId], references: [id])
+  chatMessages ChatMessage[]
+}
+
+model ChatMessage {
+  id          String   @id @default(cuid())
+  content     String
+  authorId    String?
+  communityId String?
+  createdAt   DateTime @default(now())
+
+  author    User?      @relation(fields: [authorId], references: [id])
+  community Community? @relation(fields: [communityId], references: [id])
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  rating    Int
+  comment   String?
+  authorId  String?
+  createdAt DateTime @default(now())
+
+  author User? @relation(fields: [authorId], references: [id])
+}
+
+model NewsletterSubscriber {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  subscribedAt DateTime @default(now())
+  confirmed    Boolean  @default(false)
+}

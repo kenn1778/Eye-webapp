@@ -1,6 +1,3 @@
-// Global error boundary. Catches render/lazy-load crashes so visitors see
-// a friendly recovery screen instead of a blank page or a raw stack trace.
-
 import { Component, type ErrorInfo, type ReactNode } from "react";
 import { logError } from "../lib/logger";
 
@@ -10,7 +7,6 @@ type ErrorBoundaryProps = {
 
 type ErrorBoundaryState = {
   hasError: boolean;
-  /** True when a lazy chunk failed to download (offline, redeploy, etc.). */
   isChunkError: boolean;
 };
 

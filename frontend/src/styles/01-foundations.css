@@ -1,13 +1,5 @@
-/* 
- *
- * 
- *
- * 01-foundations.css - design tokens, reset, typography, layout and the public
- * page shell: header/nav, hero band, feature and latest sections, plus the
- * admin shell, cards, modals and editors. The bulk of the original sheet.
- *
- * Loaded by App.css - see that file for the load order.
- */
+/* 01-foundations.css - tokens, reset, typography, layout and the public/admin
+   shells. Loaded by App.css, which sets the order. */
 
 /* overflow-x:clip kills stray overflow without creating a scroll container, so sticky headers keep working. */
 .site-shell { max-width: 1440px; margin: 0 auto; overflow-x: clip; overflow-y: visible; background: #f3f1e9; min-height: 100dvh; display: flex; flex-direction: column; min-width: 0; }
@@ -179,7 +171,7 @@ h2 { margin-top: 8px; color: #1d2925; font-size: clamp(30px, 4vw, 50px); line-he
 
 .newsletter-form small { display: block; margin-top: 7px; color: var(--badge-green-dark); font-size: 9px; }
 
-/* Superseded by the four-column definition below; kept in place by the original split. */
+/* Overridden by the four-column rule just below. */
 .site-footer { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; align-items: center; padding: 35px 5.5vw; color: #657168; border-top: 1px solid #cdd1c7; font-size: 11px; }
 
 .site-footer { display: grid; grid-template-columns: auto 1fr minmax(280px, 1.35fr) auto; gap: 25px; align-items: center; padding: 35px 5.5vw; color: #657168; border-top: 1px solid #cdd1c7; font-size: 11px; }
@@ -983,7 +975,6 @@ h2 { margin-top: 8px; color: #1d2925; font-size: clamp(30px, 4vw, 50px); line-he
 
 
 
-/* Shared entrance for cards, panels and modals. */
 @keyframes rise-in {
 
   from { opacity: 0; transform: translateY(16px); }
@@ -1129,8 +1120,6 @@ h2 { margin-top: 8px; color: #1d2925; font-size: clamp(30px, 4vw, 50px); line-he
 }
 
 
-
-/* Responsive overflow and display profiles */
 
 html, body, #root { min-height: 100%; }
 
@@ -1327,12 +1316,7 @@ h1, h2, h3, p, label, strong, small, button, a { max-width: 100%; overflow-wrap:
 
 }
 
-/* =========================================================
-   ADVANCED LAYER — Every Container Scrolls + Fully Responsive
-   Covers: Mobile (320-767) / Tablet (768-1279) / Desktop / TV (1920+) / iOS / Android
-   ========================================================= */
-
-/* Backdrop-filter fallback for production */
+/* Older browsers without backdrop-filter get an opaque panel. */
 @supports not (backdrop-filter: blur(1px)) {
   .story-reader, .metric-card, .admin-panel, .editor-modal, .url-preview, .admin-community-card, .media-asset {
     background: #f8f9f4;
@@ -1341,13 +1325,13 @@ h1, h2, h3, p, label, strong, small, button, a { max-width: 100%; overflow-wrap:
   }
 }
 
-/* Safe viewport fallback for iOS Safari */
+/* iOS Safari still misreports 100vh - keep the dvh fallback. */
 .admin-shell, .admin-main, .site-shell {
   min-height: 100vh;
   min-height: 100dvh;
 }
 
-/* Mix-blend-mode fallback */
+/* Browsers without mix-blend-mode: drop to plain opacity. */
 @supports not (mix-blend-mode: overlay) {
   .intro-band::before, .feature-story::after {
     mix-blend-mode: normal;

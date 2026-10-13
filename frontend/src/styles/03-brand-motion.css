@@ -1,14 +1,7 @@
-/* 
- *
- * 
- *
- * 03-brand-motion.css - sticky header shrink/slide, the animated eye logo
- * (blink, saccade, brand bounce) and footer stability/motion fixes.
- *
- * Loaded by App.css - see that file for the load order.
- */
+/* 03-brand-motion.css - sticky header shrink, the animated eye logo and
+   footer stability. Loaded by App.css. */
 
-/* -- Mobile Navigation Fix — keep nav accessible on all devices -- */
+/* Keep the nav usable on small screens. */
 @media (max-width: 767px) {
   .site-header { flex-wrap: nowrap; gap: 10px; }
   .main-nav { display: flex !important; gap: 14px; margin-left: auto; overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; scrollbar-width: none; flex: 1 1 auto; justify-content: flex-end; padding-bottom: 2px; }
@@ -20,17 +13,17 @@
   .main-nav { gap: 10px; }
   .main-nav a { font-size: 10.5px; }
 }
-/* Ensure header never clips */
+/* Don't let the header clip its children. */
 .site-header { min-width: 0; overflow: visible; }
 .site-header > * { min-width: 0; }
 
-/* Ensure every container can scroll when text exceeds viewport — fallback */
+/* Let these containers scroll once text outgrows them. */
 @supports (height: 100dvh) {
   .feature-content, .story-card-content, .community-card-body, .reader-content {
     max-height: min(70vh, 600px);
   }
 }
-/* Prevent long unbroken strings from breaking layout */
+/* Long unbroken strings shouldn't break the layout. */
 a, p, h1, h2, h3, span, strong, small, label, button {
   word-break: break-word;
   overflow-wrap: anywhere;
@@ -39,7 +32,7 @@ a, p, h1, h2, h3, span, strong, small, label, button {
 
 
 
-/* -- BRAND SHRINK: The EYEs text hides leaving only icon on shrink + mobile -- */
+/* Shrink behaviour: hide the wordmark and keep just the icon. */
 /* Sticky so the shrink effect stays visible while scrolling. */
 .site-header {
   position: sticky;
@@ -124,8 +117,7 @@ a, p, h1, h2, h3, span, strong, small, label, button {
 }
 
 
-/* -- EYE ICON: real blink + bounce + footer fixes -- */
-/* Brand icon base */
+/* Eye icon: blink and bounce. */
 .brand-icon {
   display: inline-flex;
   align-items: center;
@@ -154,18 +146,11 @@ a, p, h1, h2, h3, span, strong, small, label, button {
   animation: eye-bounce 4.2s cubic-bezier(.22,.61,.36,1) infinite;
   will-change: transform;
 }
-/* NOTE: an earlier eye-bounce keyframe set lived here. It was superseded by the
-   left/right scanning version further down, which is the one the CSS cascade
-   actually applied. Kept as a note so the animation history is traceable. */
-
 /* Glint follows iris with slight lag - makes eye feel alive */
 .eye-glint {
   animation: eye-glint-move 4.2s cubic-bezier(.22,.61,.36,1) infinite;
   will-change: transform;
 }
-/* NOTE: an earlier eye-glint-move keyframe set lived here. It was superseded by
-   the version further down that tracks the iris movement. */
-
 /* Blink - lids scale from top/bottom */
 .eye-lid {
   will-change: transform;
@@ -204,7 +189,7 @@ a, p, h1, h2, h3, span, strong, small, label, button {
   98% { transform: scaleY(0.04); }
 }
 
-/* Double blink occasionally - extra keyframe at 35% for realism */
+/* Hovering the logo speeds up the idle motion. */
 .eye-svg:hover .eye-iris-group {
   animation-duration: 1.8s;
 }
@@ -213,7 +198,7 @@ a, p, h1, h2, h3, span, strong, small, label, button {
   animation-duration: 2.1s;
 }
 
-/* Brand hover micro-bounce - eyes react */
+/* Small bounce when the logo is hovered. */
 .brand:hover .brand-icon {
   animation: eye-brand-bounce 0.45s cubic-bezier(.34,1.56,.64,1);
 }
@@ -224,14 +209,14 @@ a, p, h1, h2, h3, span, strong, small, label, button {
   100% { transform: translateY(0) scale(1); }
 }
 
-/* Reduced motion fallback */
+/* Respect reduced-motion. */
 @media (prefers-reduced-motion: reduce) {
   .eye-iris-group, .eye-glint, .eye-lid-top, .eye-lid-bottom, .brand-icon {
     animation: none !important;
   }
 }
 
-/* -- FOOTER BAR FIXES: strokes on highlight + shape movement -- */
+/* Footer: keep the decorative shapes from shifting on hover. */
 /* isolation + contain trap footer layout so the animated shapes cannot reflow neighbours. */
 .site-footer {
   position: relative;
@@ -240,17 +225,16 @@ a, p, h1, h2, h3, span, strong, small, label, button {
   contain: layout style;
   border-top: 1px solid #cdd1c7;
   background: #f3f1e9;
-  /* Prevent shape shift - use stable grid */
+  /* Stable grid keeps the columns from shifting. */
   grid-template-columns: 1.4fr 1fr 1.4fr;
   gap: 25px;
   align-items: start;
   padding: 35px 5.5vw;
-  /* Ensure highlight stroke does not cause layout shift */
+  /* Keep the focus ring from nudging layout. */
   outline-offset: 2px;
 }
 
-/* Remove duplicate footer definition jitter - enforce single stable layout.
-   translateZ(0) promotes each column to its own layer so hover strokes cannot shift neighbours. */
+/* Promote each footer column to its own layer so hover strokes can't shift neighbours. */
 .site-footer > * {
   min-width: 0;
   will-change: auto;
@@ -273,7 +257,7 @@ a, p, h1, h2, h3, span, strong, small, label, button {
   transform: scale(1.06) rotate(-1deg);
 }
 
-/* Newsletter form - fix stroke highlight shape movement */
+/* Newsletter form: stop the focus ring from shifting the row. */
 .newsletter-form {
   min-width: 260px;
   isolation: isolate;
@@ -335,7 +319,7 @@ a, p, h1, h2, h3, span, strong, small, label, button {
   outline-offset: 2px;
 }
 
-/* Footer meta links - fix highlight stroke + shape movement */
+/* Footer meta links: underline without shifting the row. */
 .footer-meta {
   grid-column: 1 / -1;
   display: flex;
@@ -383,13 +367,13 @@ a, p, h1, h2, h3, span, strong, small, label, button {
   border-radius: 2px;
 }
 
-/* Newsletter small status - no shift */
+/* Reserve space for the status line. */
 .newsletter-form small {
   min-height: 14px;
   display: block;
 }
 
-/* Footer responsive - keep shape stable */
+/* Footer at smaller widths. */
 @media (max-width: 1024px) {
   .site-footer {
     grid-template-columns: 1fr 1fr;
@@ -420,7 +404,7 @@ a, p, h1, h2, h3, span, strong, small, label, button {
   }
 }
 
-/* TV footer - keep centered, no stretch */
+/* TV footer sizing. */
 @media (min-width: 1920px) {
   .site-footer {
     grid-template-columns: 1.4fr 1fr 1.4fr;
@@ -430,7 +414,7 @@ a, p, h1, h2, h3, span, strong, small, label, button {
 }
 
 
-/* Icon size overrides for context - keep eye crisp */
+/* Icon sizes per context. */
 .login-brand .brand-icon {
   width: 48px;
   height: 36px;

@@ -2,8 +2,8 @@ import "dotenv/config";
 
 function toBool(value, fallback = false) {
   if (value === undefined) return fallback;
-  // Anything outside this set is treated as false rather than throwing, so a
-  // typo in an env var degrades to "off" instead of crashing startup.
+  // Junk values fall through to false instead of throwing - a typo just
+  // means "off", it doesn't crash startup.
   return ["1", "true", "yes", "on"].includes(String(value).toLowerCase());
 }
 
@@ -12,12 +12,18 @@ function toInt(value, fallback) {
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
-const isProduction = (process.env.NODE_ENV ?? "development") === "production";
+const nodeEnv = process.env.NODE_ENV ?? "development";
+const isProduction = nodeEnv === "production";
 
 export const config = {
+  nodeEnv,
   isProduction,
   port: toInt(process.env.PORT, 4000),
-  // Normalized up front to match how login lowercases and trims the input.
+  // pino level. Quieter by default in production, chattier in development.
+  logLevel: process.env.LOG_LEVEL ?? (isProduction ? "info" : "debug"),
+  // Optional Redis connection. Empty means "use the in-memory fallbacks".
+  redisUrl: process.env.REDIS_URL ?? "",
+  // Trimmed and lowercased here to match how login treats the input.
   adminEmail: (process.env.ADMIN_EMAIL ?? "").trim().toLowerCase(),
   adminPasswordHash: process.env.ADMIN_PASSWORD_HASH ?? "",
   jwtSecret: process.env.AUTH_JWT_SECRET ?? "",
@@ -28,9 +34,10 @@ export const config = {
   sessionTtlHours: toInt(process.env.SESSION_TTL_HOURS, 8),
   trustProxy: toBool(process.env.TRUST_PROXY, false),
   cookieSecure: toBool(process.env.COOKIE_SECURE, isProduction),
+  // Postgres connection string used by Prisma (see prisma.config.ts).
+  databaseUrl: process.env.DATABASE_URL ?? "",
 };
 
-/** Returns a list of configuration problems that must be fixed before launch. */
 export function auditConfig() {
   const problems = [];
   if (!config.adminEmail) problems.push("ADMIN_EMAIL is not set");

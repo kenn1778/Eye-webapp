@@ -6,8 +6,6 @@ type RevealProps = {
   delay?: number;
 };
 
-// Reveal - fades/slides its children in the first time they scroll into view.
-// Respects reduced-motion via CSS. No-op when IntersectionObserver is missing.
 export function Reveal({ children, className = "", delay = 0 }: RevealProps) {
   const ref = useRef<HTMLDivElement>(null);
   // Start visible when IntersectionObserver is unavailable, so content never stays hidden.

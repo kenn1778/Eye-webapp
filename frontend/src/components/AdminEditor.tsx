@@ -1,12 +1,7 @@
-// AdminEditor - create-a-post modal. Everything here is local draft state;
-// persistence is the parent's job via onPublish.
-
 import { useState } from "react";
 import type { Story } from "../types";
 import { seedStories } from "../data/seedData";
 
-// The parent owns visibility and persistence; this component only collects,
-// validates and forwards the story.
 type AdminEditorProps = {
   close: () => void;
   onPublish: (story: Story) => void;
@@ -37,38 +32,35 @@ export function AdminEditor({ close: closeEditor, onPublish }: AdminEditorProps)
   // Featured images are injected into a CSS url(...) below; block javascript:/data: and anything non-http.
   const imageValid = !featuredImageUrl || /^https?:\/\//i.test(featuredImageUrl);
 
-  // Normalize tags to lowercase-hyphen form so chips and filtering stay consistent.
+  // Tags become lowercase-hyphen so chips and filtering stay consistent.
   const addTag = () => {
     const normalizedTag = tagInput.trim().toLowerCase().replace(/\s+/g, "-"); // "My Tag" -> "my-tag"
     if (normalizedTag && !tags.includes(normalizedTag)) setTags([...tags, normalizedTag]);
     setTagInput("");
   };
 
-  // close - asks "are you sure?" if there are unsaved changes
   const close = () => {
     if (
       !hasUnsavedChanges ||
       window.confirm("You have unsaved changes. Exit without saving?")
     )
-      closeEditor(); // actually close if no changes or user confirms
+      closeEditor();
   };
 
-  // publish - builds a Story object from form fields and sends it up
   const publish = () =>
     onPublish({
-      title: title || "New scholarship opportunity", // fallback if empty
+      title: title || "New scholarship opportunity",
       excerpt: excerpt || "A new opportunity is now available for readers.",
       category,
       meta: "Just published  /  12 Sep 2026",
-      image: featuredImageUrl || seedStories[1].image, // use fallback image
-      actionUrl: actionUrl || undefined, // undefined if empty
+      image: featuredImageUrl || seedStories[1].image,
+      actionUrl: actionUrl || undefined,
       actionLabel: actionLabel || "View opportunity",
     });
 
     return (
-    // backdrop - dark overlay, clicking it closes the modal
     <div className="modal-backdrop" role="presentation" onClick={close}>
-      {/* modal box - clicking inside does NOT close (stopPropagation) */}
+      {/* clicking inside the box must not close it (stopPropagation) */}
       <section
         className="editor-modal"
         role="dialog"
@@ -76,7 +68,6 @@ export function AdminEditor({ close: closeEditor, onPublish }: AdminEditorProps)
         aria-labelledby="editor-title"
         onClick={(event) => event.stopPropagation()}
       >
-        {/* Header - title + close button */}
         <div className="modal-heading">
           <div>
             <div className="eyebrow">New content</div>
@@ -95,12 +86,10 @@ export function AdminEditor({ close: closeEditor, onPublish }: AdminEditorProps)
             X
           </button>
         </div>
-        {/* Status bar - shows saved time */}
         <div className="editor-status">
           <span className="status-live">SAVED</span> {autosave}
           <span className="revision-label">Revision 1</span>
         </div>
-        {/* Post title input */}
         <label className="editor-label">
           Post title
           <input
@@ -114,7 +103,6 @@ export function AdminEditor({ close: closeEditor, onPublish }: AdminEditorProps)
             onBlur={() => setAutosave("Autosaved just now")}
           />
         </label>
-        {/* Permalink - editable slug, sanitized to URL-safe characters */}
         <div className="permalink-row">
           <span className="permalink-label">Permalink</span>
           <span className="permalink-prefix">theeyes.org/post/</span>
@@ -131,7 +119,6 @@ export function AdminEditor({ close: closeEditor, onPublish }: AdminEditorProps)
             Edit
           </button>
         </div>
-        {/* Two columns - content type + category */}
         <div className="editor-two-col">
           <label className="editor-label">
             Content type
@@ -163,7 +150,6 @@ export function AdminEditor({ close: closeEditor, onPublish }: AdminEditorProps)
             </select>
           </label>
         </div>
-        {/* Excerpt */}
         <label className="editor-label">
           Excerpt
           <textarea
@@ -174,7 +160,6 @@ export function AdminEditor({ close: closeEditor, onPublish }: AdminEditorProps)
             placeholder="A short summary for cards and search results"
           />
         </label>
-        {/* Body content */}
         <label className="editor-label">
           Body content
           <textarea
@@ -183,12 +168,10 @@ export function AdminEditor({ close: closeEditor, onPublish }: AdminEditorProps)
             placeholder="Write the main story here. Add headings, links, quotes, and media."
           />
         </label>
-        {/* Divider */}
         <div className="editor-divider">
           <span>Taxonomy and media</span>
           <small>Organize the post for discovery.</small>
         </div>
-        {/* Tags */}
         <label className="editor-label">
           Tags
           <div className="tag-input">
@@ -221,7 +204,6 @@ export function AdminEditor({ close: closeEditor, onPublish }: AdminEditorProps)
             Use focused terms readers may search for.
           </small>
         </label>
-        {/* Featured image URL */}
         <label className="editor-label">
           Featured image URL
           <input
@@ -237,7 +219,6 @@ export function AdminEditor({ close: closeEditor, onPublish }: AdminEditorProps)
             </small>
           )}
         </label>
-        {/* Media attachments grid - 4 cards */}
         <div className="attachment-grid" aria-label="Post media attachments">
           <label className="attachment-card">
             <span className="attachment-icon">?</span>
@@ -303,7 +284,6 @@ export function AdminEditor({ close: closeEditor, onPublish }: AdminEditorProps)
           <span>Link integration</span>
           <small>Connect readers to the official source and next action.</small>
         </div>
-        {/* Source + Action URLs */}
         <div className="editor-two-col">
           <label className="editor-label">
             Source URL
@@ -405,7 +385,6 @@ export function AdminEditor({ close: closeEditor, onPublish }: AdminEditorProps)
             <input placeholder="Describe this post in 150 characters" />
           </label>
         </div>
-        {/* Bottom buttons */}
         <div className="editor-actions">
           <button className="button-secondary" type="button" onClick={close}>
             Cancel

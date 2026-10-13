@@ -1,5 +1,3 @@
-// PublicSite - public facing pages
-
 import { useEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
 import type { Story } from "../types";
 import { categories, communities } from "../data/seedData";
@@ -12,45 +10,36 @@ import { Reveal } from "../components/Reveal";
 import { ReviewSection } from "../components/ReviewSection";
 import { HeroEye } from "../components/HeroEye";
 
-// Props: stories to display, and function to open admin login
 type PublicSiteProps = {
-  stories: Story[]; // all stories including newly published
-  openAdmin: () => void; // switch to admin view
+  stories: Story[];
+  openAdmin: () => void;
 };
 
-// Words cycled through in the hero headline
 const heroWords = ["signal", "clarity", "momentum", "opportunity"];
 
-// PublicSite - the full public page
 export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
-  // isShrunk - true when user scrolls down >32px, header becomes compact
   const [isShrunk, setIsShrunk] = useState(false);
-  // wordIndex - which hero headline word is active
   const [wordIndex, setWordIndex] = useState(0);
   const [prevWordIndex, setPrevWordIndex] = useState(0);
   // Ref mirrors the index so the timer reads the live value instead of a stale state closure.
   const wordIndexRef = useRef(0);
-  // showBackToTop - true when the page is scrolled far enough down
   const [showBackToTop, setShowBackToTop] = useState(false);
-  // heroRef - used for cursor parallax on the hero orbit circle
   const heroRef = useRef<HTMLElement>(null);
-  // Listen to scroll to shrink header (eye text hides leaving only icon)
   useEffect(() => {
     const onScroll = () => {
       setIsShrunk(window.scrollY > 32);
       setShowBackToTop(window.scrollY > 600);
     };
-    // passive: true keeps scrolling smooth; the handler never calls preventDefault.
+    // passive so the page keeps scrolling smoothly; we never call preventDefault here.
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Rotate the hero headline word on a timer
   useEffect(() => {
     // Frozen under automation so visual-regression snapshots stay deterministic.
     if (navigator.webdriver) return;
     const intervalId = window.setInterval(() => {
-      // Publish the old index first so its word can play the leave transition before the swap.
+      // Publish the old index first so its word plays the leave transition before the swap.
       setPrevWordIndex(wordIndexRef.current);
       wordIndexRef.current = (wordIndexRef.current + 1) % heroWords.length;
       setWordIndex(wordIndexRef.current);
@@ -58,12 +47,12 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
     return () => window.clearInterval(intervalId);
   }, []);
 
-  // Parallax the hero orbit circle toward the cursor (CSS vars, no re-render)
+  // Drift the hero orbit circle toward the cursor via CSS vars, no re-render.
   const handleHeroMove = (event: ReactMouseEvent<HTMLElement>) => {
     const hero = heroRef.current;
     if (!hero) return;
     const rect = hero.getBoundingClientRect();
-    // Normalize the cursor to -0.5..0.5 so the orbit drifts symmetrically around center.
+    // Cursor mapped to -0.5..0.5 so the orbit drifts evenly around center.
     const x = (event.clientX - rect.left) / rect.width - 0.5;
     const y = (event.clientY - rect.top) / rect.height - 0.5;
     hero.style.setProperty("--orbit-x", `${(x * 34).toFixed(1)}px`);
@@ -76,20 +65,13 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
     hero.style.setProperty("--orbit-y", "0px");
   };
 
-  // category - which filter tab is selected (default All stories)
   const [category, setCategory] = useState("All stories");
-  // query - text typed in the search box
   const [query, setQuery] = useState("");
-  // selectedStory - which story is open in the popup modal, undefined = none
   const [selectedStory, setSelectedStory] = useState<Story>();
-  // Newsletter submit lives in <NewsletterForm /> so this page holds no newsletter state.
-  // joinedCommunities - list of community names the user has joined
+  // <NewsletterForm /> owns its own state, so no newsletter state lives here.
   const [joinedCommunities, setJoinedCommunities] = useState<string[]>([]);
-  // Community whose chat drawer is open; null means no drawer.
   const [activeChat, setActiveChat] = useState<Community | null>(null);
 
-  // availableCategories - all category tabs, including any new ones from published stories
-  // e.g., if a new story has category "Podcast", it adds a new tab
   const availableCategories = useMemo(
     () => [
       ...categories,
@@ -101,7 +83,6 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
     [stories],
   );
 
-  // filtered - stories matching both category and search text
   const filtered = useMemo(
     () =>
       stories.filter((story) => {
@@ -115,12 +96,11 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
     [category, query, stories],
   );
 
-  // First story is promoted to the large featured card.
+  // The first story becomes the large featured card.
   const featuredStory = stories[0];
   // Identity check works because both lists hold the same story objects.
   const cardStories = filtered.filter((story) => story !== featuredStory);
 
-  // Close chat on Esc (keyboard friendly)
   useEffect(() => {
     if (!activeChat) return;
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setActiveChat(null); };
@@ -128,7 +108,6 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
     return () => window.removeEventListener("keydown", onKey);
   }, [activeChat]);
 
-  // Story reader: close on Esc and move focus into the dialog
   const readerCloseRef = useRef<HTMLButtonElement>(null);
   useEffect(() => {
     if (!selectedStory) return;
@@ -138,7 +117,6 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
     return () => window.removeEventListener("keydown", onKey);
   }, [selectedStory]);
 
-  // toggleCommunity - join or leave a community
   const toggleCommunity = (name: string) => {
     setJoinedCommunities((current) => current.includes(name) ? current.filter((item) => item !== name) : [...current, name]);
   };
@@ -147,13 +125,10 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
     <>
       <a href="#main-content" className="skip-link">Skip to content</a>
       <div className="site-shell">
-      {/* Header - sticky, shrinks on scroll (eye text hides) */}
       <header className={isShrunk ? "site-header is-shrunk" : "site-header"}>
-        {/* Brand logo + EYE text - text hides on shrink/mobile */}
         <a className="brand-link" href="#top">
           <Brand />
         </a>
-        {/* Main navigation - Stories, Opportunities, etc. */}
         <nav className="main-nav" aria-label="Main navigation">
           <a className="active" href="#stories">
             Stories
@@ -162,13 +137,11 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
           <a href="#communities">Communities</a>
           <a href="#about">About</a>
         </nav>
-        {/* Admin button - goes to login */}
         <button className="admin-link" type="button" onClick={openAdmin}>
           Admin workspace <span aria-hidden="true">-&gt;</span>
         </button>
       </header>
       <main id="main-content">
-        {/* Hero / Intro band - big headline */}
         <section
           className="intro-band"
           ref={heroRef}
@@ -228,7 +201,6 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
             </button>
           </section>
         )}
-        {/* Featured story - large card */}
         <Reveal>
         <section className="feature-section" id="stories">
           <div className="section-heading">
@@ -265,7 +237,6 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
           </article>
         </section>
         </Reveal>
-        {/* Latest stories - search + filter + grid */}
         <Reveal>
         <section className="latest-section" id="opportunities">
           <div className="latest-toolbar">
@@ -332,7 +303,6 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
           </div>
         </section>
         </Reveal>
-        {/* Communities */}
         <Reveal>
         <section className="communities-section" id="communities" aria-labelledby="communities-title">
           <div className="section-heading">
@@ -374,11 +344,9 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
         </section>
         </Reveal>
       </main>
-      {/* Visitor reviews */}
       <Reveal>
         <ReviewSection />
       </Reveal>
-      {/* Chatroom - community discussion */}
       {activeChat && (
         <CommunityChat
           key={activeChat.name}
@@ -391,9 +359,7 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
         />
       )}
 
-      {/* Story popup modal */}
       {selectedStory && <div className="client-modal-backdrop" role="presentation" onClick={() => setSelectedStory(undefined)}><article className="story-reader" role="dialog" aria-modal="true" aria-labelledby="story-reader-title" onClick={(event) => event.stopPropagation()}><button ref={readerCloseRef} className="reader-close" type="button" onClick={() => setSelectedStory(undefined)} aria-label="Close story">X</button><div className="reader-image" style={{ backgroundImage: `url(${selectedStory.image})` }} role="img" aria-label={selectedStory.title} /><div className="reader-content"><span className="story-label">{selectedStory.category}</span><h2 id="story-reader-title">{selectedStory.title}</h2><div className="story-meta">{selectedStory.meta}</div><p>{selectedStory.excerpt}</p><p>Explore the details, deadlines, and next steps in this published story. The full editorial body will be supplied by the publishing service when backend content is connected.</p>{selectedStory.actionUrl && <a className="button button-dark" href={selectedStory.actionUrl} target="_blank" rel="noreferrer">{selectedStory.actionLabel || "Open opportunity"} -&gt;</a>}</div></article></div>}
-      {/* Premium Newsletter - like Beehiiv/Substack */}
       <Reveal>
       <section className="newsletter-section" id="newsletter" aria-labelledby="newsletter-title">
         <div className="newsletter-card">
@@ -422,7 +388,6 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
       </section>
       </Reveal>
 
-      {/* Footer - with real business details, copyright, and legal links */}
       <footer className="site-footer" id="about">
         <div className="footer-brand-col">
           <Brand />

@@ -1,5 +1,3 @@
-// AdminLogin - sign in gate
-
 import { useEffect, useState, type FormEvent } from "react";
 import { Brand } from "../../components/Brand";
 import { login, requestPasswordReset } from "../../lib/auth";
@@ -9,7 +7,7 @@ type AdminLoginProps = {
   onBack: () => void;
 };
 
-/** Client-side brute-force damper. Server-side rate limiting is still required. */
+// Client-side attempt limiter only. Server-side rate limiting is still required.
 const MAX_ATTEMPTS = 5;
 const LOCKOUT_MS = 60_000;
 
@@ -23,7 +21,6 @@ export function AdminLogin({ onLogin, onBack }: AdminLoginProps) {
   const [locked, setLocked] = useState(false);
   const [resetNotice, setResetNotice] = useState("");
 
-  // Re-enable the form when the lockout window ends.
   useEffect(() => {
     if (!locked) return;
     const timer = window.setTimeout(() => setLocked(false), LOCKOUT_MS);
@@ -61,7 +58,7 @@ export function AdminLogin({ onLogin, onBack }: AdminLoginProps) {
 
   const handleForgotPassword = async () => {
     await requestPasswordReset(email);
-    // Deliberately vague so a visitor can't probe which addresses are registered.
+    // Kept vague on purpose so a visitor can't probe which addresses exist.
     setResetNotice(
       "If that address is registered, a single-use reset link (valid for 30 minutes) has been sent. If it does not arrive, contact the workspace owner.",
     );
