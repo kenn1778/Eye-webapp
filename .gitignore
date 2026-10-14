@@ -6,3 +6,9 @@
 
 # Local dev logs.
 *.log
+
+# Never commit real environment files. Nested .gitignore files also cover these;
+# this is defence in depth for any .env added at the repo root.
+.env
+.env.*
+!.env.example
