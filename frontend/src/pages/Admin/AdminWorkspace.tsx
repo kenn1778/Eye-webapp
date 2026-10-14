@@ -1,33 +1,33 @@
 import { startTransition, useCallback, useEffect, useMemo, useState, type CSSProperties } from "react";
-import type { AdminMetrics, Story } from "../../types";
+import type { AdminInsights, AdminMetrics, AdminNotification, ActivityPoint, Story } from "../../types";
 import { emptyMetrics, seedAdminPosts, adminTabs } from "../../data/seedData";
 import { Brand } from "../../components/Brand";
 import { AdminEditor } from "../../components/AdminEditor";
 import { AdminSectionView } from "./AdminSectionView";
+import { AdminNotifications } from "./AdminNotifications";
+import { AdminActivityChart } from "./AdminActivityChart";
+import {
+  fetchActivity,
+  fetchInsights,
+  fetchMetrics,
+  fetchNotifications,
+  markAllNotificationsRead,
+  markNotificationRead,
+} from "../../lib/adminApi";
 
 const MIN_SIDEBAR_WIDTH = 190;
 const MAX_SIDEBAR_WIDTH = 360;
 const DEFAULT_SIDEBAR_WIDTH = 240;
 
-const METRICS_POLL_INTERVAL_MS = 30_000;
-
-const METRICS_ENDPOINT = "/api/v1/admin/metrics";
+const POLL_INTERVAL_MS = 30_000;
+const ACTIVITY_DAYS = 14;
 
 const METRIC_CARDS: ReadonlyArray<{ label: string; value: keyof AdminMetrics; accent?: boolean }> = [
-  { label: "Total posts", value: "totalPosts" },
-  { label: "Published", value: "publishedPosts", accent: true },
-  { label: "Scheduled", value: "scheduledPosts" },
-  { label: "Total views", value: "totalViews" },
+  { label: "Subscribers", value: "subscribers", accent: true },
+  { label: "Chat messages", value: "chatMessages" },
+  { label: "Posts", value: "posts" },
+  { label: "Unread alerts", value: "unreadNotifications" },
 ];
-
-// Guard against a malformed payload so the cards never render NaN.
-function isValidAdminMetrics(value: unknown): value is AdminMetrics {
-  if (typeof value !== "object" || value === null) return false;
-  const record = value as Record<string, unknown>;
-  return ["totalPosts", "publishedPosts", "scheduledPosts", "totalViews"].every(
-    (key) => typeof record[key] === "number" && Number.isFinite(record[key] as number),
-  );
-}
 
 type AdminWorkspaceProps = {
   closeAdmin: () => void;
@@ -61,30 +61,54 @@ export function AdminWorkspace({ closeAdmin, onPublish }: AdminWorkspaceProps) {
     return () => mobileQuery.removeEventListener("change", syncDrawer);
   }, []);
   const [metrics, setMetrics] = useState<AdminMetrics>(emptyMetrics);
-  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL as string | undefined;
+  const [insights, setInsights] = useState<AdminInsights | null>(null);
+  const [activity, setActivity] = useState<ActivityPoint[]>([]);
+  const [notifications, setNotifications] = useState<AdminNotification[]>([]);
+  const [unread, setUnread] = useState(0);
 
-  const refreshMetrics = useCallback(async () => {
-    if (!apiBaseUrl) return;
-    try {
-      const response = await fetch(`${apiBaseUrl}${METRICS_ENDPOINT}`, { credentials: "include" });
-      if (!response.ok) return;
+  const refresh = useCallback(async () => {
+    const [nextMetrics, nextInsights, nextActivity, nextNotifications] = await Promise.all([
+      fetchMetrics(),
+      fetchInsights(),
+      fetchActivity(ACTIVITY_DAYS),
+      fetchNotifications(20),
+    ]);
 
-      const payload: unknown = await response.json();
-      if (!isValidAdminMetrics(payload)) return;
-
-      // Low priority so a background refresh never blocks typing or clicks.
-      startTransition(() => setMetrics(payload));
-    } catch {
-      // network down; keep the last known value
-    }
-  }, [apiBaseUrl]);
+    // Low priority so a background refresh never blocks typing or clicks.
+    startTransition(() => {
+      if (nextMetrics) setMetrics(nextMetrics);
+      if (nextInsights) setInsights(nextInsights);
+      if (nextActivity) setActivity(nextActivity);
+      if (nextNotifications) {
+        setNotifications(nextNotifications.notifications);
+        setUnread(nextNotifications.unread);
+      }
+    });
+  }, []);
 
   useEffect(() => {
-    void refreshMetrics();
-    if (!apiBaseUrl) return;
-    const interval = window.setInterval(() => void refreshMetrics(), METRICS_POLL_INTERVAL_MS);
+    void refresh();
+    const interval = window.setInterval(() => void refresh(), POLL_INTERVAL_MS);
     return () => window.clearInterval(interval);
-  }, [apiBaseUrl, refreshMetrics]);
+  }, [refresh]);
+
+  const handleReadNotification = useCallback(
+    (id: string) => {
+      const target = notifications.find((item) => item.id === id);
+      if (target && !target.read) setUnread((count) => Math.max(0, count - 1));
+      setNotifications((prev) =>
+        prev.map((item) => (item.id === id ? { ...item, read: true } : item)),
+      );
+      void markNotificationRead(id);
+    },
+    [notifications],
+  );
+
+  const handleMarkAllRead = useCallback(() => {
+    setNotifications((prev) => prev.map((item) => ({ ...item, read: true })));
+    setUnread(0);
+    void markAllNotificationsRead();
+  }, []);
 
   const visiblePosts = useMemo(
     () =>
@@ -186,13 +210,12 @@ export function AdminWorkspace({ closeAdmin, onPublish }: AdminWorkspaceProps) {
             &lt;- View public site
           </button>
           <div className="topbar-actions">
-            <button
-              className="icon-button"
-              type="button"
-              aria-label="Notifications"
-            >
-              !
-            </button>
+            <AdminNotifications
+              notifications={notifications}
+              unread={unread}
+              onRead={handleReadNotification}
+              onMarkAllRead={handleMarkAllRead}
+            />
             <button className="avatar avatar-top" type="button" onClick={requestLogout} aria-label="Log out of admin workspace">
               AO
             </button>
@@ -227,6 +250,58 @@ export function AdminWorkspace({ closeAdmin, onPublish }: AdminWorkspaceProps) {
                 <span className="metric-trend">Live count</span>
               </div>
             ))}
+          </section>
+          <section className="admin-panel insights-panel">
+            <div className="panel-heading">
+              <div>
+                <div className="eyebrow">App insights</div>
+                <h2>Growth &amp; engagement</h2>
+              </div>
+              <span className="live-indicator">Live</span>
+            </div>
+            <div className="insights-grid">
+              <div className="insight-tile">
+                <span className="insight-label">Subscribers</span>
+                <strong>{insights?.subscribers.total ?? metrics.subscribers}</strong>
+                <span className="insight-delta">
+                  {insights ? `+${insights.subscribers.last7Days} this week` : "Awaiting data"}
+                </span>
+              </div>
+              <div className="insight-tile">
+                <span className="insight-label">Chat messages</span>
+                <strong>{insights?.chat.total ?? metrics.chatMessages}</strong>
+                <span className="insight-delta">
+                  {insights ? `+${insights.chat.last7Days} this week` : "Awaiting data"}
+                </span>
+              </div>
+              <div className="insight-tile">
+                <span className="insight-label">Reviews</span>
+                <strong>{insights?.reviews.total ?? metrics.reviews}</strong>
+                <span className="insight-delta">
+                  {insights && insights.reviews.total > 0
+                    ? `${insights.reviews.averageRating} avg rating`
+                    : "No ratings yet"}
+                </span>
+              </div>
+              <div className="insight-tile">
+                <span className="insight-label">Top community</span>
+                <strong className="insight-name">
+                  {insights?.topCommunities[0]?.name ?? "\u2014"}
+                </strong>
+                <span className="insight-delta">
+                  {insights?.topCommunities[0]
+                    ? `${insights.topCommunities[0].messages} messages`
+                    : "No messages yet"}
+                </span>
+              </div>
+            </div>
+            <div className="activity-block">
+              <div className="activity-block-head">
+                <div className="eyebrow">Activity flow</div>
+                <span className="activity-range">Last {ACTIVITY_DAYS} days</span>
+              </div>
+              <AdminActivityChart series={activity} />
+            </div>
           </section>
           <section className="admin-panel">
             <div className="panel-heading">

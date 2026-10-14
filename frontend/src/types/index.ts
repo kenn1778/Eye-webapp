@@ -29,10 +29,39 @@ export type AdminPost = {
 };
 
 export type AdminMetrics = {
-  totalPosts: number;
-  publishedPosts: number;
-  scheduledPosts: number;
-  totalViews: number;
+  posts: number;
+  stories: number;
+  subscribers: number;
+  chatMessages: number;
+  reviews: number;
+  unreadNotifications: number;
+};
+
+// A single row in the admin notification feed, as returned by the API.
+export type AdminNotification = {
+  id: string;
+  type: string;
+  title: string;
+  body: string | null;
+  actor: string | null;
+  read: boolean;
+  createdAt: string;
+};
+
+export type AdminInsights = {
+  subscribers: { total: number; last7Days: number; last30Days: number };
+  chat: { total: number; last7Days: number; last30Days: number };
+  reviews: { total: number; averageRating: number };
+  posts: { total: number };
+  topCommunities: { name: string; messages: number }[];
+};
+
+// One day in the activity flow chart.
+export type ActivityPoint = {
+  date: string;
+  subscribers: number;
+  chat: number;
+  reviews: number;
 };
 
 export type TeamRole = "Moderator" | "Administrator";

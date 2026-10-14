@@ -6,6 +6,8 @@ import helmet from "helmet";
 import { config, auditConfig } from "./config.js";
 import { authRouter } from "./auth.js";
 import { newsletterRouter } from "./newsletter.js";
+import { chatRouter } from "./chat.js";
+import { adminRouter } from "./admin.js";
 import { prisma, disconnectPrisma } from "./lib/prisma.js";
 import { logger } from "./lib/logger.js";
 import { cache } from "./lib/cache.js";
@@ -95,6 +97,8 @@ app.get("/healthz", async (_req, res) => {
 
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/newsletter", newsletterRouter);
+app.use("/api/v1/chat", chatRouter);
+app.use("/api/v1/admin", adminRouter);
 
 app.use((_req, res) => res.status(404).json({ message: "Not found." }));
 

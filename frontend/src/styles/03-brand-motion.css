@@ -1,17 +1,87 @@
 /* 03-brand-motion.css - sticky header shrink, the animated eye logo and
    footer stability. Loaded by App.css. */
 
-/* Keep the nav usable on small screens. */
+/* Header: the logo stays put; every link lives in the dropdown panel. */
+.nav-toggle {
+  display: inline-grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid #aeb7ab;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, .5);
+  cursor: pointer;
+  transition: background .22s ease, border-color .22s ease, transform .22s ease;
+}
+.nav-toggle:hover { background: #fff; border-color: #1d2925; }
+.nav-toggle:active { transform: scale(.96); }
+.nav-toggle-bars { display: grid; gap: 4px; width: 20px; }
+.nav-toggle-bars span {
+  display: block;
+  height: 2px;
+  border-radius: 2px;
+  background: #1d2925;
+  transition: transform .25s ease, opacity .2s ease;
+}
+.nav-toggle[aria-expanded="true"] .nav-toggle-bars span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+.nav-toggle[aria-expanded="true"] .nav-toggle-bars span:nth-child(2) { opacity: 0; }
+.nav-toggle[aria-expanded="true"] .nav-toggle-bars span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+
+.main-nav {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 5.5vw;
+  left: auto;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 2px;
+  min-width: 230px;
+  max-width: min(320px, calc(100vw - 32px));
+  padding: 10px;
+  background: var(--glass-light);
+  backdrop-filter: blur(18px) saturate(130%);
+  -webkit-backdrop-filter: blur(18px) saturate(130%);
+  border: 1px solid #cdd1c7;
+  border-radius: 16px;
+  box-shadow: 0 20px 44px rgba(29, 41, 37, .16);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: opacity .22s ease, transform .22s ease, visibility .22s ease;
+  z-index: 30;
+}
+.main-nav.is-open { opacity: 1; visibility: visible; transform: translateY(0); }
+.main-nav a {
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  letter-spacing: .02em;
+  white-space: normal;
+}
+.main-nav a:hover { background: rgba(29, 41, 37, .06); color: #1d2925; }
+.main-nav a.active { color: #1d2925; }
+.main-nav a.active::after { display: none; }
+.main-nav .admin-link {
+  margin: 6px 0 0;
+  padding: 12px 14px;
+  text-align: center;
+  border-radius: 10px;
+  background: #1d2925;
+  color: #eef2e6;
+  border-color: #1d2925;
+  font-size: 12px;
+}
+.main-nav .admin-link:hover { background: #2f3d36; color: #fff; border-color: #2f3d36; transform: none; }
+
 @media (max-width: 767px) {
   .site-header { flex-wrap: nowrap; gap: 10px; }
-  .main-nav { display: flex !important; gap: 14px; margin-left: auto; overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; scrollbar-width: none; flex: 1 1 auto; justify-content: flex-end; padding-bottom: 2px; }
-  .main-nav::-webkit-scrollbar { display: none; }
-  .main-nav a { flex: 0 0 auto; white-space: nowrap; font-size: 11px; padding: 6px 0; }
-  .admin-link { flex: 0 0 auto; margin-left: 6px; }
+  .main-nav { right: 16px; left: 16px; min-width: 0; max-width: none; }
 }
 @media (max-width: 374px) {
-  .main-nav { gap: 10px; }
-  .main-nav a { font-size: 10.5px; }
+  .main-nav a { font-size: 12px; }
 }
 /* Don't let the header clip its children. */
 .site-header { min-width: 0; overflow: visible; }

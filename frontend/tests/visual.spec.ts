@@ -73,6 +73,75 @@ test.beforeEach(async ({ page }) => {
 
     return route.continue();
   });
+
+  // Admin dashboard data. The dev server proxies /api to localhost:4000, which
+  // is not running under test, so stub the admin + chat endpoints with fixed
+  // payloads to keep the workspace snapshots deterministic and offline-safe.
+  const activitySeries = Array.from({ length: 14 }, (_, index) => ({
+    date: `2026-09-${String(index + 1).padStart(2, "0")}`,
+    subscribers: (index * 3) % 5,
+    chat: (index * 5) % 9,
+    reviews: index % 3,
+  }));
+
+  await page.route("**/api/v1/admin/**", (route) => {
+    const path = new URL(route.request().url()).pathname;
+    const json = (body: unknown) =>
+      route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(body) });
+
+    if (path.endsWith("/metrics")) {
+      return json({
+        posts: 4,
+        stories: 4,
+        subscribers: 12,
+        chatMessages: 27,
+        reviews: 6,
+        unreadNotifications: 2,
+      });
+    }
+    if (path.endsWith("/insights")) {
+      return json({
+        subscribers: { total: 12, last7Days: 4, last30Days: 9 },
+        chat: { total: 27, last7Days: 11, last30Days: 22 },
+        reviews: { total: 6, averageRating: 4.5 },
+        posts: { total: 4 },
+        topCommunities: [{ name: "Scholarship seekers", messages: 14 }],
+      });
+    }
+    if (path.endsWith("/activity")) {
+      return json({ days: 14, series: activitySeries });
+    }
+    if (path.endsWith("/notifications")) {
+      return json({
+        notifications: [
+          {
+            id: "n1",
+            type: "subscriber",
+            title: "New newsletter subscriber",
+            body: "Signed up from footer",
+            actor: "j***e@example.com",
+            read: false,
+            createdAt: "2026-09-14T09:00:00.000Z",
+          },
+          {
+            id: "n2",
+            type: "chat",
+            title: "New message in Scholarship seekers",
+            body: "Is the deadline still open?",
+            actor: "A visitor",
+            read: true,
+            createdAt: "2026-09-13T15:30:00.000Z",
+          },
+        ],
+        unread: 2,
+      });
+    }
+    return json({ ok: true });
+  });
+
+  await page.route("**/api/v1/chat/**", (route) =>
+    route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true }) }),
+  );
 });
 
 /**
@@ -236,6 +305,8 @@ test.describe("admin workspace", () => {
 
   test("dashboard", async ({ page }) => {
     await loginToAdmin(page);
+    // Wait for the stubbed insights + activity to render so the shot is stable.
+    await expect(page.locator(".activity-chart svg")).toBeVisible();
     await expect(page).toHaveScreenshot("admin-dashboard.png", { fullPage: true });
   });
 

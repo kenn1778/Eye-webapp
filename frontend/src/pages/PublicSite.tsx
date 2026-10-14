@@ -71,6 +71,9 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
   // <NewsletterForm /> owns its own state, so no newsletter state lives here.
   const [joinedCommunities, setJoinedCommunities] = useState<string[]>([]);
   const [activeChat, setActiveChat] = useState<Community | null>(null);
+  // The header keeps only the logo; every link lives in this dropdown.
+  const [menuOpen, setMenuOpen] = useState(false);
+  const headerRef = useRef<HTMLElement>(null);
 
   const availableCategories = useMemo(
     () => [
@@ -108,6 +111,21 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
     return () => window.removeEventListener("keydown", onKey);
   }, [activeChat]);
 
+  // Dismiss the header menu on Escape or a click outside it.
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setMenuOpen(false); };
+    const onPointerDown = (e: PointerEvent) => {
+      if (headerRef.current && !headerRef.current.contains(e.target as Node)) setMenuOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("pointerdown", onPointerDown);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("pointerdown", onPointerDown);
+    };
+  }, [menuOpen]);
+
   const readerCloseRef = useRef<HTMLButtonElement>(null);
   useEffect(() => {
     if (!selectedStory) return;
@@ -125,21 +143,31 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
     <>
       <a href="#main-content" className="skip-link">Skip to content</a>
       <div className="site-shell">
-      <header className={isShrunk ? "site-header is-shrunk" : "site-header"}>
-        <a className="brand-link" href="#top">
+      <header ref={headerRef} className={isShrunk ? "site-header is-shrunk" : "site-header"}>
+        <a className="brand-link" href="#top" onClick={() => setMenuOpen(false)}>
           <Brand />
         </a>
-        <nav className="main-nav" aria-label="Main navigation">
-          <a className="active" href="#stories">
+        <button
+          className="nav-toggle"
+          type="button"
+          aria-expanded={menuOpen}
+          aria-controls="site-menu"
+          aria-label={menuOpen ? "Close menu" : "Open menu"}
+          onClick={() => setMenuOpen((open) => !open)}
+        >
+          <span className="nav-toggle-bars" aria-hidden="true"><span /><span /><span /></span>
+        </button>
+        <nav id="site-menu" className={menuOpen ? "main-nav is-open" : "main-nav"} aria-label="Main navigation">
+          <a className="active" href="#stories" onClick={() => setMenuOpen(false)}>
             Stories
           </a>
-          <a href="#opportunities">Opportunities</a>
-          <a href="#communities">Communities</a>
-          <a href="#about">About</a>
+          <a href="#opportunities" onClick={() => setMenuOpen(false)}>Opportunities</a>
+          <a href="#communities" onClick={() => setMenuOpen(false)}>Communities</a>
+          <a href="#about" onClick={() => setMenuOpen(false)}>About</a>
+          <button className="admin-link" type="button" onClick={() => { setMenuOpen(false); openAdmin(); }}>
+            Admin workspace <span aria-hidden="true">-&gt;</span>
+          </button>
         </nav>
-        <button className="admin-link" type="button" onClick={openAdmin}>
-          Admin workspace <span aria-hidden="true">-&gt;</span>
-        </button>
       </header>
       <main id="main-content">
         <section
@@ -391,13 +419,15 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
       <footer className="site-footer" id="about">
         <div className="footer-brand-col">
           <Brand />
-          <p className="footer-tagline">A useful publication for people in motion.</p>
-          <div className="business-details">
-            <p><strong>Alozie Izuchukwu Johnkennedy</strong> — No. 14 Lawal Street, Alimosho, Akowonjo, Lagos State, Nigeria</p>
-            <p>Business: Sole proprietor (Nigeria) • Mon–Fri 9am–5pm WAT</p>
-            <p>Email: <a href="mailto:teckennedy177@gmail.com">teckennedy177@gmail.com</a> • Phone: 07086193675 / +234 708 619 3675</p>
-            <p className="footer-disclaimer">Images: <a href="https://unsplash.com/license" target="_blank" rel="noreferrer">Unsplash License</a> • Fonts: <a href="https://fonts.google.com" target="_blank" rel="noreferrer">Google Fonts (OFL)</a></p>
-          </div>
+          <details className="footer-disclosure">
+            <summary className="footer-tagline">A useful publication for people in motion.</summary>
+            <div className="business-details">
+              <p><strong>Alozie Izuchukwu Johnkennedy</strong> — No. 14 Lawal Street, Alimosho, Akowonjo, Lagos State, Nigeria</p>
+              <p>Business: Sole proprietor (Nigeria) • Mon–Fri 9am–5pm WAT</p>
+              <p>Email: <a href="mailto:teckennedy177@gmail.com">teckennedy177@gmail.com</a> • Phone: 07086193675 / +234 708 619 3675</p>
+              <p className="footer-disclaimer">Images: <a href="https://unsplash.com/license" target="_blank" rel="noreferrer">Unsplash License</a> • Fonts: <a href="https://fonts.google.com" target="_blank" rel="noreferrer">Google Fonts (OFL)</a></p>
+            </div>
+          </details>
         </div>
         <nav className="footer-nav" aria-label="Footer navigation">
           <h3 className="footer-nav-title">Explore</h3>

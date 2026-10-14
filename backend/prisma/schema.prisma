@@ -66,6 +66,9 @@ model ChatMessage {
 
   author    User?      @relation(fields: [authorId], references: [id])
   community Community? @relation(fields: [communityId], references: [id])
+
+  // Supports the admin activity time-series (bucketed by day).
+  @@index([createdAt])
 }
 
 model Review {
@@ -83,4 +86,25 @@ model NewsletterSubscriber {
   email        String   @unique
   subscribedAt DateTime @default(now())
   confirmed    Boolean  @default(false)
+
+  // Supports the admin activity time-series (bucketed by day).
+  @@index([subscribedAt])
+}
+
+// Admin-facing feed. Rows are created by domain events (a new subscriber, a new
+// community message) and read/dismissed state is persisted per row so the
+// dashboard can show an accurate unread count across sessions.
+model Notification {
+  id        String   @id @default(cuid())
+  // "subscriber" | "chat" | "system"
+  type      String
+  title     String
+  body      String?
+  // Non-sensitive display label for the actor (e.g. a masked email or name).
+  actor     String?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  // The dashboard always filters by read state and orders by recency.
+  @@index([read, createdAt])
 }

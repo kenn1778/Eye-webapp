@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { Community } from "../types";
 import { chatSeed, type ChatMessage } from "../data/chatSeed";
+import { postChatMessage } from "../lib/adminApi";
 
 type Props = {
   community: Community;
@@ -96,6 +97,10 @@ export function CommunityChat({ community, onClose, onLeave }: Props) {
     setMessages((prev) => [...prev, mine]);
     setDraft("");
     setIsTyping(true);
+
+    // Best-effort persistence so the admin feed sees real community activity.
+    // The demo chat never waits on this.
+    void postChatMessage(community.name, text);
 
     replyTimerRef.current = window.setTimeout(() => {
       replyTimerRef.current = null;
