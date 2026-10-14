@@ -139,9 +139,17 @@ test.beforeEach(async ({ page }) => {
     return json({ ok: true });
   });
 
-  await page.route("**/api/v1/chat/**", (route) =>
-    route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true }) }),
-  );
+  await page.route("**/api/v1/chat/**", (route) => {
+    const path = new URL(route.request().url()).pathname;
+    const body = path.endsWith("/agent")
+      ? { reply: "Thanks for reaching out - here is how to get started." }
+      : { ok: true };
+    return route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(body),
+    });
+  });
 });
 
 /**

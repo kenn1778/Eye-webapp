@@ -36,6 +36,11 @@ export const config = {
   cookieSecure: toBool(process.env.COOKIE_SECURE, isProduction),
   // Postgres connection string used by Prisma (see prisma.config.ts).
   databaseUrl: process.env.DATABASE_URL ?? "",
+  // Google Gemini powers the community chat assistant. Empty key disables the
+  // assistant (the chat falls back to its built-in replies).
+  geminiApiKey: process.env.GEMINI_API_KEY ?? "",
+  geminiModel: process.env.GEMINI_MODEL ?? "gemini-2.5-flash",
+  geminiTimeoutMs: toInt(process.env.GEMINI_TIMEOUT_MS, 12000),
 };
 
 export function auditConfig() {

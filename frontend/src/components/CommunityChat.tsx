@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { Community } from "../types";
 import { chatSeed, type ChatMessage } from "../data/chatSeed";
-import { postChatMessage } from "../lib/adminApi";
+import { postChatMessage, fetchAgentReply } from "../lib/adminApi";
 
 type Props = {
   community: Community;
@@ -12,6 +12,8 @@ type Props = {
 const MIN_REPLY_DELAY_MS = 1200;
 const MAX_REPLY_DELAY_MS = 2000;
 
+// Fallback replies used only when the EYE Assistant is unreachable, so the demo
+// chat still feels alive offline.
 const cannedReplies: Record<string, string[]> = {
   "Scholarship seekers": [
     "Thanks for sharing - I'll check the official doc and reply here.",
@@ -27,13 +29,8 @@ const cannedReplies: Record<string, string[]> = {
   ],
 };
 
-const replySpeakers: Record<string, { user: string; avatar: string }> = {
-  "Scholarship seekers": { user: "Nia H.", avatar: "NH" },
-  "Creative careers": { user: "Kwame B.", avatar: "KB" },
-  "First job circle": { user: "Amara O.", avatar: "AO" },
-};
-
-const FALLBACK_SPEAKER = { user: "A member", avatar: "AM" };
+// The assistant speaks with a single consistent identity.
+const AGENT = { user: "EYE Assistant", avatar: "EA" };
 
 function formatClockTime(date: Date): string {
   const hours = String(date.getHours()).padStart(2, "0");
@@ -58,9 +55,15 @@ export function CommunityChat({ community, onClose, onLeave }: Props) {
   const messageCountRef = useRef(0);
   const nextMessageId = () => `m-${Date.now()}-${messageCountRef.current++}`;
 
-  // If the panel closes while a reply is pending, the timeout would still fire
-  // and call setState on an unmounted component.
-  const replyTimerRef = useRef<number | null>(null);
+  // Guards against setState after the panel closes mid-request. Reset on mount
+  // so React StrictMode's dev double-invoke doesn't leave it stuck false.
+  const isMountedRef = useRef(true);
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   // Move focus into the composer when the chat opens or switches community.
   useEffect(() => {
@@ -71,14 +74,6 @@ export function CommunityChat({ community, onClose, onLeave }: Props) {
   useEffect(() => {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, isTyping]);
-
-  // Clear the pending reply on unmount.
-  useEffect(
-    () => () => {
-      if (replyTimerRef.current !== null) window.clearTimeout(replyTimerRef.current);
-    },
-    [],
-  );
 
   const handleSend = () => {
     const text = draft.trim();
@@ -102,26 +97,37 @@ export function CommunityChat({ community, onClose, onLeave }: Props) {
     // The demo chat never waits on this.
     void postChatMessage(community.name, text);
 
-    replyTimerRef.current = window.setTimeout(() => {
-      replyTimerRef.current = null;
+    // Ask the EYE Assistant for a professional reply. If it is unavailable we
+    // fall back to a canned line so the room never goes silent.
+    void (async () => {
+      const startedAt = Date.now();
+      const reply = await fetchAgentReply(community.name, text);
 
-      const pool = cannedReplies[community.name] ?? ["Got it - will follow up!"];
-      const speaker = replySpeakers[community.name] ?? FALLBACK_SPEAKER;
-      const replyText = pool[Math.floor(Math.random() * pool.length)];
+      // Hold the typing indicator briefly so replies don't snap in instantly.
+      const minDelay = randomBetween(MIN_REPLY_DELAY_MS, MAX_REPLY_DELAY_MS);
+      const elapsed = Date.now() - startedAt;
+      if (elapsed < minDelay) {
+        await new Promise((resolve) => setTimeout(resolve, minDelay - elapsed));
+      }
+
+      if (!isMountedRef.current) return;
+
+      const pool = cannedReplies[community.name] ?? ["Got it - I'll follow up shortly."];
+      const replyText = reply ?? pool[Math.floor(Math.random() * pool.length)];
 
       setMessages((prev) => [
         ...prev,
         {
           id: nextMessageId(),
           community: community.name,
-          user: speaker.user,
-          avatar: speaker.avatar,
+          user: AGENT.user,
+          avatar: AGENT.avatar,
           text: replyText,
           time: formatClockTime(new Date()),
         },
       ]);
       setIsTyping(false);
-    }, randomBetween(MIN_REPLY_DELAY_MS, MAX_REPLY_DELAY_MS));
+    })();
   };
 
   return (
@@ -147,7 +153,7 @@ export function CommunityChat({ community, onClose, onLeave }: Props) {
         </header>
 
         <div className="chat-notice">
-          <span aria-hidden="true">&#128274;</span> This is a community chatroom. Be respectful, share sources, no spam. Messages are illustrative in demo.
+          <span aria-hidden="true">&#128274;</span> Community chatroom. Be respectful, share sources, no spam. The EYE Assistant may reply to help.
         </div>
 
         <div ref={listRef} className="chat-list" role="log" aria-live="polite" aria-relevant="additions">

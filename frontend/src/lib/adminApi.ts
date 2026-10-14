@@ -146,3 +146,24 @@ export async function postChatMessage(community: string, text: string): Promise<
     logError("chat", "Could not persist chat message", error);
   }
 }
+
+// Ask the EYE Assistant for a reply. Returns null when the assistant is
+// unavailable so the chat can fall back to its built-in replies.
+export async function fetchAgentReply(community: string, text: string): Promise<string | null> {
+  try {
+    const response = await fetch(`${API_BASE}/api/v1/chat/agent`, {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ community, text }),
+    });
+    if (!response.ok) return null;
+    const payload = (await response.json()) as unknown;
+    if (!isRecord(payload) || typeof payload.reply !== "string") return null;
+    const reply = payload.reply.trim();
+    return reply.length > 0 ? reply : null;
+  } catch (error) {
+    logError("chat", "Could not reach the assistant", error);
+    return null;
+  }
+}
