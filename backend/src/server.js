@@ -8,6 +8,7 @@ import { authRouter } from "./auth.js";
 import { newsletterRouter } from "./newsletter.js";
 import { chatRouter } from "./chat.js";
 import { adminRouter } from "./admin.js";
+import { membershipRouter } from "./membership.js";
 import { prisma, disconnectPrisma } from "./lib/prisma.js";
 import { logger } from "./lib/logger.js";
 import { cache } from "./lib/cache.js";
@@ -63,8 +64,16 @@ app.use(
     },
   }),
 );
-// Only small JSON payloads hit these routes - keep the cap tight.
-app.use(express.json({ limit: "16kb" }));
+// Only small JSON payloads hit these routes - keep the cap tight. The raw body
+// is retained so the Paystack webhook signature can be verified.
+app.use(
+  express.json({
+    limit: "16kb",
+    verify: (req, _res, buf) => {
+      req.rawBody = buf;
+    },
+  }),
+);
 app.use(cookieParser());
 
 app.use(
@@ -99,6 +108,7 @@ app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/newsletter", newsletterRouter);
 app.use("/api/v1/chat", chatRouter);
 app.use("/api/v1/admin", adminRouter);
+app.use("/api/v1/membership", membershipRouter);
 
 app.use((_req, res) => res.status(404).json({ message: "Not found." }));
 

@@ -43,6 +43,22 @@ export const config = {
   // assistant keeps working when Google retires a dated model.
   geminiModel: process.env.GEMINI_MODEL ?? "gemini-flash-latest",
   geminiTimeoutMs: toInt(process.env.GEMINI_TIMEOUT_MS, 12000),
+  // Paystack powers premium membership. An empty secret key disables checkout
+  // (the plans endpoint still responds, with enabled: false).
+  paystackSecretKey: process.env.PAYSTACK_SECRET_KEY ?? "",
+  paystackPublicKey: process.env.PAYSTACK_PUBLIC_KEY ?? "",
+  membershipCurrency: process.env.MEMBERSHIP_CURRENCY ?? "NGN",
+  // Where Paystack sends the browser back after payment.
+  membershipCallbackUrl: process.env.MEMBERSHIP_CALLBACK_URL ?? "",
+  // Single monthly plan for now. Price is in the smallest unit (kobo for NGN).
+  membershipPlans: [
+    {
+      id: "premium-monthly",
+      name: "Premium",
+      interval: "monthly",
+      amountKobo: toInt(process.env.MEMBERSHIP_PRICE_KOBO, 250000),
+    },
+  ],
 };
 
 export function auditConfig() {

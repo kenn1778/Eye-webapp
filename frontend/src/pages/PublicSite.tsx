@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
+import { Link } from "react-router-dom";
 import type { Story } from "../types";
 import { categories, communities } from "../data/seedData";
 import { Brand } from "../components/Brand";
@@ -9,6 +10,11 @@ import { NewsletterForm } from "../components/NewsletterForm";
 import { Reveal } from "../components/Reveal";
 import { ReviewSection } from "../components/ReviewSection";
 import { HeroEye } from "../components/HeroEye";
+import { AdSlot } from "../components/AdSlot";
+import { SponsoredBadge } from "../components/SponsoredBadge";
+import { outboundRel } from "../lib/monetization";
+import { trackEvent } from "../lib/analytics";
+import { MEMBERSHIP_ENABLED } from "../config";
 
 type PublicSiteProps = {
   stories: Story[];
@@ -164,6 +170,9 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
           <a href="#opportunities" onClick={() => setMenuOpen(false)}>Opportunities</a>
           <a href="#communities" onClick={() => setMenuOpen(false)}>Communities</a>
           <a href="#about" onClick={() => setMenuOpen(false)}>About</a>
+          {MEMBERSHIP_ENABLED && (
+            <Link to="/pricing" onClick={() => setMenuOpen(false)}>Pricing</Link>
+          )}
           <button className="admin-link" type="button" onClick={() => { setMenuOpen(false); openAdmin(); }}>
             Admin workspace <span aria-hidden="true">-&gt;</span>
           </button>
@@ -229,6 +238,7 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
             </button>
           </section>
         )}
+        <AdSlot placement="leaderboard" />
         <Reveal>
         <section className="feature-section" id="stories">
           <div className="section-heading">
@@ -247,6 +257,7 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
             />
             <div className="feature-content">
               <span className="story-label">{featuredStory.category}</span>
+              {featuredStory.sponsored && <SponsoredBadge />}
               <h3>{featuredStory.title}</h3>
               <p>{featuredStory.excerpt}</p>
               {featuredStory.actionUrl ? (
@@ -254,7 +265,8 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
                   className="story-link"
                   href={featuredStory.actionUrl}
                   target="_blank"
-                  rel="noreferrer"
+                  rel={outboundRel(featuredStory.actionUrl)}
+                  onClick={() => trackEvent("Outbound link", { url: featuredStory.actionUrl ?? "" })}
                 >
                   {featuredStory.actionLabel} <span aria-hidden="true">-&gt;</span>
                 </a>
@@ -309,6 +321,7 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
                 />
                 <div className="story-card-content">
                   <span className="story-label">{story.category}</span>
+                  {story.sponsored && <SponsoredBadge />}
                   <h3>{story.title}</h3>
                   <p>{story.excerpt}</p>
                   {story.actionUrl && (
@@ -316,8 +329,11 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
                       className="card-action"
                       href={story.actionUrl}
                       target="_blank"
-                      rel="noreferrer"
-                      onClick={(event) => event.stopPropagation()}
+                      rel={outboundRel(story.actionUrl)}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        trackEvent("Outbound link", { url: story.actionUrl ?? "" });
+                      }}
                     >
                       {story.actionLabel} -&gt;
                     </a>
@@ -331,6 +347,7 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
           </div>
         </section>
         </Reveal>
+        <AdSlot placement="in-content" />
         <Reveal>
         <section className="communities-section" id="communities" aria-labelledby="communities-title">
           <div className="section-heading">
@@ -387,7 +404,7 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
         />
       )}
 
-      {selectedStory && <div className="client-modal-backdrop" role="presentation" onClick={() => setSelectedStory(undefined)}><article className="story-reader" role="dialog" aria-modal="true" aria-labelledby="story-reader-title" onClick={(event) => event.stopPropagation()}><button ref={readerCloseRef} className="reader-close" type="button" onClick={() => setSelectedStory(undefined)} aria-label="Close story">X</button><div className="reader-image" style={{ backgroundImage: `url(${selectedStory.image})` }} role="img" aria-label={selectedStory.title} /><div className="reader-content"><span className="story-label">{selectedStory.category}</span><h2 id="story-reader-title">{selectedStory.title}</h2><div className="story-meta">{selectedStory.meta}</div><p>{selectedStory.excerpt}</p><p>Explore the details, deadlines, and next steps in this published story. The full editorial body will be supplied by the publishing service when backend content is connected.</p>{selectedStory.actionUrl && <a className="button button-dark" href={selectedStory.actionUrl} target="_blank" rel="noreferrer">{selectedStory.actionLabel || "Open opportunity"} -&gt;</a>}</div></article></div>}
+      {selectedStory && <div className="client-modal-backdrop" role="presentation" onClick={() => setSelectedStory(undefined)}><article className="story-reader" role="dialog" aria-modal="true" aria-labelledby="story-reader-title" onClick={(event) => event.stopPropagation()}><button ref={readerCloseRef} className="reader-close" type="button" onClick={() => setSelectedStory(undefined)} aria-label="Close story">X</button><div className="reader-image" style={{ backgroundImage: `url(${selectedStory.image})` }} role="img" aria-label={selectedStory.title} /><div className="reader-content"><span className="story-label">{selectedStory.category}</span>{selectedStory.sponsored && <SponsoredBadge />}<h2 id="story-reader-title">{selectedStory.title}</h2><div className="story-meta">{selectedStory.meta}</div><p>{selectedStory.excerpt}</p><p>Explore the details, deadlines, and next steps in this published story. The full editorial body will be supplied by the publishing service when backend content is connected.</p>{selectedStory.actionUrl && <a className="button button-dark" href={selectedStory.actionUrl} target="_blank" rel={outboundRel(selectedStory.actionUrl)} onClick={() => trackEvent("Outbound link", { url: selectedStory.actionUrl ?? "" })}>{selectedStory.actionLabel || "Open opportunity"} -&gt;</a>}</div></article></div>}
       <Reveal>
       <section className="newsletter-section" id="newsletter" aria-labelledby="newsletter-title">
         <div className="newsletter-card">
@@ -415,6 +432,8 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
         </div>
       </section>
       </Reveal>
+
+      <AdSlot placement="footer" />
 
       <footer className="site-footer" id="about">
         <div className="footer-brand-col">

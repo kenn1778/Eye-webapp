@@ -108,3 +108,22 @@ model Notification {
   // The dashboard always filters by read state and orders by recency.
   @@index([read, createdAt])
 }
+
+// Premium membership. Members are identified by email (the public site has no
+// member accounts yet): a row is created when checkout starts and flipped to
+// "active" once Paystack confirms payment.
+model Subscription {
+  id               String    @id @default(cuid())
+  email            String    @unique
+  plan             String    @default("premium")
+  // pending | active | cancelled | expired
+  status           String    @default("pending")
+  provider         String    @default("paystack")
+  providerRef      String?   @unique
+  currentPeriodEnd DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  // The dashboard and access checks filter by status and expiry.
+  @@index([status, currentPeriodEnd])
+}

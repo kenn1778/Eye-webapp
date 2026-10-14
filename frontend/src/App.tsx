@@ -9,7 +9,7 @@ import { Terms } from "./pages/Legal/Terms";
 import { RefundPolicy } from "./pages/Legal/RefundPolicy";
 import { CookiesPolicy } from "./pages/Legal/CookiesPolicy";
 import { CookieConsent } from "./components/CookieConsent";
-import { ADMIN_ENABLED } from "./config";
+import { ADMIN_ENABLED, MEMBERSHIP_ENABLED } from "./config";
 import { getSession, logout } from "./lib/auth";
 
 const AdminLogin = lazy(() =>
@@ -17,6 +17,9 @@ const AdminLogin = lazy(() =>
 );
 const AdminWorkspace = lazy(() =>
   import("./pages/Admin/AdminWorkspace").then((module) => ({ default: module.AdminWorkspace })),
+);
+const Pricing = lazy(() =>
+  import("./pages/Pricing").then((module) => ({ default: module.Pricing })),
 );
 
 // First-paint loader - the eye blink covers the gap before the app mounts.
@@ -103,6 +106,7 @@ function AppRoutes() {
       <Suspense fallback={<EyeLoader />}>
         <Routes>
           <Route path="/" element={<PublicSite stories={allStories} openAdmin={openAdmin} />} />
+          {MEMBERSHIP_ENABLED && <Route path="/pricing" element={<Pricing />} />}
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/refund" element={<RefundPolicy />} />

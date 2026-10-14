@@ -9,6 +9,8 @@ export type Story = {
   // Only set when a story links out somewhere, e.g. the official application site.
   actionUrl?: string;
   actionLabel?: string;
+  // Paid placement: shows a "Sponsored" disclosure label when true.
+  sponsored?: boolean;
 };
 
 export type Community = {

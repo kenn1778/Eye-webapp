@@ -607,4 +607,74 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
   border-top: 1px solid #2f3d36;
 }
 
+/* -- Monetization: ad slots and sponsored labels -- */
+.ad-slot {
+  max-width: 1440px;
+  margin: 32px auto;
+  padding: 0 5.5vw;
+  text-align: center;
+}
+.ad-slot-label {
+  display: block;
+  margin-bottom: 6px;
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: #8a978c;
+}
+.ad-slot .adsbygoogle { min-height: 90px; }
+.sponsored-badge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #e2f04a;
+  color: #1d2925;
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+
+/* -- Premium membership page -- */
+.pricing-page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 48px 5.5vw 72px;
+}
+.pricing-header { margin-bottom: 28px; }
+.pricing-header h1 { font-family: 'Playfair Display', serif; font-size: clamp(28px, 5vw, 44px); margin: 8px 0 12px; color: #1d2925; }
+.pricing-lede { color: #4a5a4f; font-size: 16px; line-height: 1.6; max-width: 52ch; }
+.pricing-note { margin: 16px 0; padding: 12px 16px; border-radius: 12px; background: #f3f1e9; color: #4a5a4f; font-size: 14px; }
+.pricing-card {
+  border: 1px solid #d9ded4;
+  border-radius: 18px;
+  padding: 28px;
+  background: #fff;
+  box-shadow: 0 18px 40px rgba(29, 41, 37, .06);
+}
+.pricing-card-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.pricing-card-head h2 { font-family: 'Playfair Display', serif; font-size: 24px; margin: 0; color: #1d2925; }
+.pricing-price { font-family: 'DM Mono', monospace; font-size: 22px; color: #1d2925; margin: 0; }
+.pricing-price span { font-size: 13px; color: #8a978c; }
+.pricing-benefits { list-style: none; padding: 0; margin: 20px 0; display: grid; gap: 10px; }
+.pricing-benefits li { position: relative; padding-left: 24px; color: #3c4a40; font-size: 15px; }
+.pricing-benefits li::before { content: "\2713"; position: absolute; left: 0; color: #4f7b57; font-weight: 700; }
+.pricing-form { display: flex; gap: 10px; flex-wrap: wrap; }
+.pricing-form input {
+  flex: 1 1 220px;
+  min-width: 0;
+  padding: 12px 14px;
+  border: 1px solid #cfd6c9;
+  border-radius: 10px;
+  font-size: 15px;
+}
+.pricing-form input:focus { outline: 2px solid #4f7b57; outline-offset: 1px; }
+.pricing-msg { margin: 14px 0 0; font-size: 14px; color: #4a5a4f; }
+.pricing-msg.is-error { color: #a33; }
+.pricing-msg.is-success { color: #2f6b3a; }
+.pricing-trust { margin: 14px 0 0; font-size: 12px; color: #8a978c; font-family: 'DM Mono', monospace; }
+
 
