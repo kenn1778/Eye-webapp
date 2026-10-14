@@ -39,7 +39,9 @@ export const config = {
   // Google Gemini powers the community chat assistant. Empty key disables the
   // assistant (the chat falls back to its built-in replies).
   geminiApiKey: process.env.GEMINI_API_KEY ?? "",
-  geminiModel: process.env.GEMINI_MODEL ?? "gemini-2.5-flash",
+  // "gemini-flash-latest" tracks the current stable Flash model, so the
+  // assistant keeps working when Google retires a dated model.
+  geminiModel: process.env.GEMINI_MODEL ?? "gemini-flash-latest",
   geminiTimeoutMs: toInt(process.env.GEMINI_TIMEOUT_MS, 12000),
 };
 
