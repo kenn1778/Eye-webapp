@@ -39,7 +39,8 @@ export default defineConfig({
   // out mid-load. Cap concurrency and give each test generous headroom.
   timeout: 60_000,
   retries: 1,
-  workers: process.env.CI ? 1 : 3,
+  // 2 workers avoids saturating the dev server (3 causes goto timeouts on small machines).
+  workers: process.env.CI ? 1 : 2,
   reporter: [["list"]],
 
   use: {

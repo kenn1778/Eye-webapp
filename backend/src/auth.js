@@ -7,7 +7,7 @@ import { config } from "./config.js";
 import { prisma } from "./lib/prisma.js";
 import { createRateLimitStore } from "./lib/rate-limit.js";
 
-export const SESSION_COOKIE = "__Host-session";
+export const SESSION_COOKIE = config.isProduction || config.cookieSecure ? "__Host-session" : "eye-session";
 
 const loginSchema = z.object({
   email: z.string().email(),

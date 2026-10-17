@@ -65,7 +65,6 @@ export function AdminLogin({ onLogin, onBack }: AdminLoginProps) {
   };
   return (
     <div className="login-shell">
-      <div className="login-orbit" />
       <main className="login-card">
         <button className="login-back" type="button" onClick={onBack}>&lt;- Back to EYE</button>
         <div className="login-brand"><Brand /></div>

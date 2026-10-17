@@ -1,4 +1,4 @@
-/* 02-responsive.css - overflow safety and breakpoints from phone to 8K, plus
+﻿/* 02-responsive.css - overflow safety and breakpoints from phone to 8K, plus
    device quirks, print and reduced motion. Loaded by App.css. */
 
 /* Scroll safety: keep every container from blowing out the layout. */
@@ -298,7 +298,7 @@ img, video, audio, iframe, svg { max-width: 100%; height: auto; }
   .admin-panel, .metric-card { font-size: 15px; }
 }
 
-/* 3840+: 8K / Ultra-wide TV — center & cap scaling */
+/* 3840+: 8K / Ultra-wide TV â€” center & cap scaling */
 @media (min-width: 3840px) {
   .site-shell { max-width: 2100px; }
   html { font-size: 22px; }
@@ -334,7 +334,7 @@ img, video, audio, iframe, svg { max-width: 100%; height: auto; }
   .newsletter-form input { font-size: 16px; }
 }
 
-/* Tap targets — WCAG 44px minimum on touch devices */
+/* Tap targets â€” WCAG 44px minimum on touch devices */
 @media (pointer: coarse) {
   button, a, .category-tab, .admin-tab, .sidebar-item, .card-read, .story-link {
     min-height: 44px;
@@ -412,7 +412,6 @@ img, video, audio, iframe, svg { max-width: 100%; height: auto; }
   .permission-legend { grid-template-columns: 1fr; }
   .team-member { grid-template-columns: 28px 1fr auto; gap: 8px; padding: 10px 0; }
   .login-card { width: calc(100% - 24px); padding: 22px 18px; }
-  .login-orbit { width: 320px; height: 320px; }
 }
 
 /* Focus states for TV and keyboard navigation. */

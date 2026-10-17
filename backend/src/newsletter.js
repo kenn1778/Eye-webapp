@@ -28,7 +28,7 @@ newsletterRouter.post("/subscribe", subscribeLimiter, async (req, res) => {
   const honeypot = req.body?.hp;
   if (typeof honeypot === "string" && honeypot.trim() !== "") {
     // Honeypot tripped - act like it worked, don't tip the bot off.
-    return res.json({ message: "You are on the list. Check your inbox for a confirmation." });
+    return res.json({ message: "Check your email - we sent a confirmation link." });
   }
 
   const parseResult = newsletterSchema.safeParse(req.body);

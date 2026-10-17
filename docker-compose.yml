@@ -26,14 +26,10 @@ services:
   backend:
     build: ./backend
     env_file:
-      - .env
+      - ./backend/.env
     environment:
-      DATABASE_URL: 
-      REDIS_URL: 
-      JWT_SECRET: 
-      JWT_REFRESH_SECRET: 
-      ADMIN_EMAIL: 
-      ADMIN_PASSWORD_HASH: 
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/scholarship
+      REDIS_URL: redis://redis:6379
       PORT: 4000
     depends_on:
       db:
@@ -45,7 +41,12 @@ services:
     restart: unless-stopped
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        VITE_ENABLE_ADMIN: ${VITE_ENABLE_ADMIN:-false}
+        VITE_ENABLE_MEMBERSHIP: ${VITE_ENABLE_MEMBERSHIP:-false}
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-}
     depends_on:
       - backend
     ports:

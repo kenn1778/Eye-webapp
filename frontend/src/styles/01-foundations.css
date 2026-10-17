@@ -580,7 +580,7 @@ h2 { margin-top: 8px; color: #1d2925; font-size: clamp(30px, 4vw, 50px); line-he
 
   .login-brand { margin: 38px 0 32px; }
 
-  .login-orbit { width: 360px; height: 360px; }
+
 
   .workspace-heading { align-items: flex-start; flex-direction: column; }
 
@@ -756,7 +756,7 @@ h2 { margin-top: 8px; color: #1d2925; font-size: clamp(30px, 4vw, 50px); line-he
 
 .login-shell { position: relative; min-height: 100vh; display: grid; place-items: center; overflow: hidden; background: linear-gradient(135deg, #1d2925 0%, #304b3d 65%, #6c9a70 140%); }
 
-.login-orbit { position: absolute; width: 620px; height: 620px; border: 1px solid rgba(183, 209, 125, .22); border-radius: 50%; box-shadow: 0 0 0 32px rgba(183, 209, 125, .05), 0 0 0 72px rgba(183, 209, 125, .04); animation: soft-pulse 5s ease-in-out infinite; }
+
 
 .login-card { position: relative; width: min(470px, calc(100% - 36px)); padding: 27px 33px 29px; border: 1px solid rgba(255, 255, 255, .25); border-radius: 22px; color: #eef2e6; background: rgba(248, 249, 244, .12); box-shadow: 0 25px 70px rgba(8, 17, 12, .3); backdrop-filter: blur(22px) saturate(120%); -webkit-backdrop-filter: blur(22px) saturate(120%); animation: rise-in .65s ease both; }
 

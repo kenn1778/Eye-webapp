@@ -36,6 +36,7 @@ function loadReviews(): Review[] {
 }
 
 function stripHtml(input: string): string {
+  // eslint-disable-next-line no-control-regex -- intentional: strip ASCII control characters from email input
   return input.replace(/<[^>]*>/g, "").replace(/[\u0000-\u001F\u007F]/g, "");
 }
 

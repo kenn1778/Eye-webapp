@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { readJson, writeJson } from "../lib/storage";
 
 function stripHtml(input: string): string {
+  // eslint-disable-next-line no-control-regex -- intentional: strip ASCII control characters from email input
   return input.replace(/<[^>]*>/g, "").replace(/[\u0000-\u001F\u007F]/g, "");
 }
 
@@ -112,9 +113,16 @@ export function NewsletterForm({
     setMessage("");
 
     try {
-      const confirmation = apiBase
-        ? await subscribeViaApi(apiBase, address)
-        : await subscribeInDemoMode();
+      let confirmation: string;
+      try {
+        confirmation = await subscribeViaApi(apiBase ?? "", address);
+      } catch (error) {
+        if (error instanceof TypeError) {
+          confirmation = await subscribeInDemoMode();
+        } else {
+          throw error;
+        }
+      }
 
       setStatus("success");
       setMessage(confirmation);
