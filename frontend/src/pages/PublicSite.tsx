@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
+﻿import { useEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
 import { Link } from "react-router-dom";
 import type { Story } from "../types";
 import { categories, communities } from "../data/seedData";
@@ -15,6 +15,7 @@ import { SponsoredBadge } from "../components/SponsoredBadge";
 import { outboundRel } from "../lib/monetization";
 import { trackEvent } from "../lib/analytics";
 import { MEMBERSHIP_ENABLED } from "../config";
+import { fetchCommunityMembership, setCommunityMembership } from "../lib/adminApi";
 
 type PublicSiteProps = {
   stories: Story[];
@@ -76,6 +77,8 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
   const [selectedStory, setSelectedStory] = useState<Story>();
   // <NewsletterForm /> owns its own state, so no newsletter state lives here.
   const [joinedCommunities, setJoinedCommunities] = useState<string[]>([]);
+  const [communityCounts, setCommunityCounts] = useState<Record<string, number>>({});
+  const [communityMessage, setCommunityMessage] = useState("");
   const [activeChat, setActiveChat] = useState<Community | null>(null);
   // The header keeps only the logo; every link lives in this dropdown.
   const [menuOpen, setMenuOpen] = useState(false);
@@ -141,8 +144,31 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
     return () => window.removeEventListener("keydown", onKey);
   }, [selectedStory]);
 
-  const toggleCommunity = (name: string) => {
-    setJoinedCommunities((current) => current.includes(name) ? current.filter((item) => item !== name) : [...current, name]);
+  useEffect(() => {
+    let cancelled = false;
+    void Promise.all(communities.map(async (community) => ({
+      name: community.name,
+      membership: await fetchCommunityMembership(community.name),
+    }))).then((results) => {
+      if (cancelled) return;
+      setJoinedCommunities(results.filter((item) => item.membership?.joined).map((item) => item.name));
+      setCommunityCounts(Object.fromEntries(results.filter((item) => item.membership).map((item) => [item.name, item.membership!.members])));
+    });
+    return () => { cancelled = true; };
+  }, []);
+
+  const toggleCommunity = async (name: string, joined: boolean): Promise<boolean> => {
+    setCommunityMessage("");
+    const result = await setCommunityMembership(name, joined);
+    if (!result) {
+      setCommunityMessage("Community membership could not be saved. Please try again.");
+      return false;
+    }
+    setJoinedCommunities((current) => result.joined
+      ? current.includes(name) ? current : [...current, name]
+      : current.filter((item) => item !== name));
+    setCommunityCounts((current) => ({ ...current, [name]: result.members }));
+    return true;
   };
 
   return (
@@ -340,7 +366,7 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
                   )}
                   <button className="card-read" type="button" onClick={(event) => { event.stopPropagation(); setSelectedStory(story); }}>Open story -&gt;</button>
                   <div className="story-meta">{story.meta}</div>
-                  <small className="card-disclaimer">Info may change — verify on official source.</small>
+                  <small className="card-disclaimer">Info may change â€” verify on official source.</small>
                 </div>
               </article>
             ))}
@@ -355,29 +381,29 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
             <span className="section-number">03 / 03</span>
           </div>
           <p className="communities-intro">Useful rooms for asking better questions, sharing leads, and finding momentum together.</p>
+          {communityMessage && <p className="review-error" role="alert">{communityMessage}</p>}
           <div className="community-grid">
             {communities.map((community) => {
               const isJoined = joinedCommunities.includes(community.name);
               return (
                 <article className="community-card" key={community.name}>
-                  <div className={`community-art ${community.accent}`}><span aria-hidden="true">◌</span><span aria-hidden="true">◌</span><span aria-hidden="true">◌</span></div>
+                  <div className={`community-art ${community.accent}`}><span aria-hidden="true">â—Œ</span><span aria-hidden="true">â—Œ</span><span aria-hidden="true">â—Œ</span></div>
                   <div className="community-card-body">
                     <span className="story-label">Community</span>
                     <h3>{community.name}</h3>
                     <p>{community.description}</p>
                     <div className="community-footer">
-                      <span>{community.members}</span>
+                      <span>{communityCounts[community.name] ?? 0} members</span>
                       {isJoined ? (
-                        <button type="button" className="chat-open-btn" onClick={() => setActiveChat(community)}>Open chat →</button>
+                        <button type="button" className="chat-open-btn" onClick={() => setActiveChat(community)}>Open chat â†’</button>
                       ) : (
                         <button
                           type="button"
-                          onClick={() => {
-                            toggleCommunity(community.name);
-                            setActiveChat(community);
+                          onClick={async () => {
+                            if (await toggleCommunity(community.name, true)) setActiveChat(community);
                           }}
                         >
-                          Join & chat →
+                          Join & chat â†’
                         </button>
                       )}
                     </div>
@@ -398,35 +424,36 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
           community={activeChat}
           onClose={() => setActiveChat(null)}
           onLeave={() => {
-            toggleCommunity(activeChat.name);
-            setActiveChat(null);
+            void toggleCommunity(activeChat.name, false).then((left) => {
+              if (left) setActiveChat(null);
+            });
           }}
         />
       )}
 
-      {selectedStory && <div className="client-modal-backdrop" role="presentation" onClick={() => setSelectedStory(undefined)}><article className="story-reader" role="dialog" aria-modal="true" aria-labelledby="story-reader-title" onClick={(event) => event.stopPropagation()}><button ref={readerCloseRef} className="reader-close" type="button" onClick={() => setSelectedStory(undefined)} aria-label="Close story">X</button><div className="reader-image" style={{ backgroundImage: `url(${selectedStory.image})` }} role="img" aria-label={selectedStory.title} /><div className="reader-content"><span className="story-label">{selectedStory.category}</span>{selectedStory.sponsored && <SponsoredBadge />}<h2 id="story-reader-title">{selectedStory.title}</h2><div className="story-meta">{selectedStory.meta}</div><p>{selectedStory.excerpt}</p><p>Explore the details, deadlines, and next steps in this published story. The full editorial body will be supplied by the publishing service when backend content is connected.</p>{selectedStory.actionUrl && <a className="button button-dark" href={selectedStory.actionUrl} target="_blank" rel={outboundRel(selectedStory.actionUrl)} onClick={() => trackEvent("Outbound link", { url: selectedStory.actionUrl ?? "" })}>{selectedStory.actionLabel || "Open opportunity"} -&gt;</a>}</div></article></div>}
+      {selectedStory && <div className="client-modal-backdrop" role="presentation" onClick={() => setSelectedStory(undefined)}><article className="story-reader" role="dialog" aria-modal="true" aria-labelledby="story-reader-title" onClick={(event) => event.stopPropagation()}><button ref={readerCloseRef} className="reader-close" type="button" onClick={() => setSelectedStory(undefined)} aria-label="Close story">X</button><div className="reader-image" style={{ backgroundImage: `url(${selectedStory.image})` }} role="img" aria-label={selectedStory.title} /><div className="reader-content"><span className="story-label">{selectedStory.category}</span>{selectedStory.sponsored && <SponsoredBadge />}<h2 id="story-reader-title">{selectedStory.title}</h2><div className="story-meta">{selectedStory.meta}</div><p>{selectedStory.excerpt}</p>{selectedStory.content ? selectedStory.content.split(/\n{2,}/).filter(Boolean).map((paragraph, index) => <p key={`${selectedStory.id ?? selectedStory.title}-${index}`}>{paragraph}</p>) : <p>Explore the details, deadlines, and next steps in this published story.</p>}{selectedStory.linkHeaderUrl && <img className="reader-linked-media" src={selectedStory.linkHeaderUrl} alt="Post attachment" loading="lazy" />}{selectedStory.audioUrl && <audio className="reader-audio" controls preload="none" src={selectedStory.audioUrl}>Your browser does not support audio playback.</audio>}{selectedStory.videoUrl && <video className="reader-video" controls preload="metadata" src={selectedStory.videoUrl}>Your browser does not support video playback.</video>}{selectedStory.actionUrl && <a className="button button-dark" href={selectedStory.actionUrl} target="_blank" rel={outboundRel(selectedStory.actionUrl)} onClick={() => trackEvent("Outbound link", { url: selectedStory.actionUrl ?? "" })}>{selectedStory.actionLabel || "Open opportunity"} -&gt;</a>}</div></article></div>}
       <Reveal>
       <section className="newsletter-section" id="newsletter" aria-labelledby="newsletter-title">
         <div className="newsletter-card">
           <div className="newsletter-card-left">
-            <div className="eyebrow">Weekly brief — every Monday 7am</div>
+            <div className="eyebrow">Weekly brief â€” every Monday 7am</div>
             <h2 id="newsletter-title">Get the opportunities that actually matter</h2>
             <p className="newsletter-card-copy">
-              One curated email. Scholarships, internships, and culture — filtered for builders, not browsers.
+              One curated email. Scholarships, internships, and culture â€” filtered for builders, not browsers.
               Join students and early-career builders across Ghana.
             </p>
             <NewsletterForm variant="card" buttonLabel="Join free" />
             <p className="newsletter-trust">
-              <span aria-hidden="true">🔒</span> No spam. 1-click unsubscribe. <a href="#privacy">Privacy</a> • See <a href="#stories">past briefs</a>
+              <span aria-hidden="true">ðŸ”’</span> No spam. Your email is stored securely. <Link to="/privacy">Privacy</Link> â€¢ See <a href="#stories">past briefs</a>
             </p>
           </div>
           <div className="newsletter-card-right" aria-hidden="true">
             <div className="newsletter-preview">
-              <div className="preview-header"><span className="preview-dot" /><span className="preview-dot" /><span className="preview-dot" /><span className="preview-subject">EYE — Weekly Brief #47</span></div>
+              <div className="preview-header"><span className="preview-dot" /><span className="preview-dot" /><span className="preview-dot" /><span className="preview-subject">EYE â€” Weekly Brief #47</span></div>
               <div className="preview-line" style={{ width: "92%" }} />
               <div className="preview-line" style={{ width: "86%" }} />
               <div className="preview-line" style={{ width: "78%" }} />
-              <div className="preview-pill">3 scholarships closing this week →</div>
+              <div className="preview-pill">3 scholarships closing this week â†’</div>
             </div>
           </div>
         </div>
@@ -441,10 +468,10 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
           <details className="footer-disclosure">
             <summary className="footer-tagline">A useful publication for people in motion.</summary>
             <div className="business-details">
-              <p><strong>Alozie Izuchukwu Johnkennedy</strong> — No. 14 Lawal Street, Alimosho, Akowonjo, Lagos State, Nigeria</p>
-              <p>Business: Sole proprietor (Nigeria) • Mon–Fri 9am–5pm WAT</p>
-              <p>Email: <a href="mailto:teckennedy177@gmail.com">teckennedy177@gmail.com</a> • Phone: 07086193675 / +234 708 619 3675</p>
-              <p className="footer-disclaimer">Images: <a href="https://unsplash.com/license" target="_blank" rel="noreferrer">Unsplash License</a> • Fonts: <a href="https://fonts.google.com" target="_blank" rel="noreferrer">Google Fonts (OFL)</a></p>
+              <p><strong>Alozie Izuchukwu Johnkennedy</strong> â€” No. 14 Lawal Street, Alimosho, Akowonjo, Lagos State, Nigeria</p>
+              <p>Business: Sole proprietor (Nigeria) â€¢ Monâ€“Fri 9amâ€“5pm WAT</p>
+              <p>Email: <a href="mailto:teckennedy177@gmail.com">teckennedy177@gmail.com</a> â€¢ Phone: 07086193675 / +234 708 619 3675</p>
+              <p className="footer-disclaimer">Images: <a href="https://unsplash.com/license" target="_blank" rel="noreferrer">Unsplash License</a> â€¢ Fonts: <a href="https://fonts.google.com" target="_blank" rel="noreferrer">Google Fonts (OFL)</a></p>
             </div>
           </details>
         </div>
@@ -460,13 +487,13 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
         </div>
         <PolicyBar />
         <div className="footer-meta">
-          <span>© 2026 EYE. All rights reserved.</span>
+          <span>Â© 2026 EYE. All rights reserved.</span>
           <a href="mailto:teckennedy177@gmail.com">Contact</a>
         </div>
       </footer>
       {showBackToTop && (
         <button className="back-to-top" type="button" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} aria-label="Back to top">
-          <span aria-hidden="true">↑</span>
+          <span aria-hidden="true">â†‘</span>
         </button>
       )}
       </div>

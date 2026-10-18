@@ -1,8 +1,10 @@
 // Shared domain types
 
 export type Story = {
+  id?: string;
   title: string;
   excerpt: string;
+  content?: string;
   category: string;
   meta: string;
   image: string;
@@ -11,6 +13,14 @@ export type Story = {
   actionLabel?: string;
   // Paid placement: shows a "Sponsored" disclosure label when true.
   sponsored?: boolean;
+  status?: "draft" | "published" | "scheduled";
+  mediaAssetId?: string;
+  linkHeaderAssetId?: string;
+  audioAssetId?: string;
+  videoAssetId?: string;
+  linkHeaderUrl?: string | null;
+  audioUrl?: string | null;
+  videoUrl?: string | null;
 };
 
 export type Community = {

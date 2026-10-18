@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
-import { createId, readJson, writeJson } from "../lib/storage";
+import { fetchPublicReviews, submitPublicReview } from "../lib/adminApi";
 
 type Review = {
   id: string;
@@ -9,31 +9,8 @@ type Review = {
   date: string;
 };
 
-const STORAGE_KEY = "eye_visitor_reviews";
 const MAX_STARS = 5;
 const SUCCESS_MESSAGE_MS = 4000;
-
-// Stored reviews can be hand-edited or outdated, so validate before trusting
-// them; a record missing `name` would otherwise crash the card render below.
-function isReview(value: unknown): value is Review {
-  if (typeof value !== "object" || value === null) return false;
-  const review = value as Record<string, unknown>;
-  return (
-    typeof review.id === "string" &&
-    typeof review.name === "string" &&
-    typeof review.comment === "string" &&
-    typeof review.date === "string" &&
-    typeof review.rating === "number" &&
-    review.rating >= 1 &&
-    review.rating <= MAX_STARS
-  );
-}
-
-function loadReviews(): Review[] {
-  return readJson<Review[]>([], STORAGE_KEY, (value): value is Review[] =>
-    Array.isArray(value) && value.every(isReview),
-  );
-}
 
 function stripHtml(input: string): string {
   // eslint-disable-next-line no-control-regex -- intentional: strip ASCII control characters from email input
@@ -55,20 +32,29 @@ function Stars({ value }: { value: number }) {
 }
 
 export function ReviewSection() {
-  const [reviews, setReviews] = useState<Review[]>(loadReviews);
+  const [reviews, setReviews] = useState<Review[]>([]);
   const [name, setName] = useState("");
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [comment, setComment] = useState("");
   const [error, setError] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
 
   // The confirmation clears itself; cancel it if the section unmounts first.
   const successTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
-    writeJson(STORAGE_KEY, reviews);
-  }, [reviews]);
+    let cancelled = false;
+    void fetchPublicReviews().then((result) => {
+      if (cancelled) return;
+      if (result) setReviews(result.map((item) => ({ ...item, date: new Date(item.createdAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) })));
+      else setError("Reviews could not be loaded. Please refresh and try again.");
+      setLoading(false);
+    });
+    return () => { cancelled = true; };
+  }, []);
 
   useEffect(
     () => () => {
@@ -92,7 +78,7 @@ export function ReviewSection() {
     return null;
   }
 
-  const handleSubmit = (event: FormEvent) => {
+  const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
 
     // Clean the input before validating and storing; the card renders it as text.
@@ -107,19 +93,25 @@ export function ReviewSection() {
       return;
     }
 
+    setError("");
+    setSubmitting(true);
+    const saved = await submitPublicReview({ name: cleanName, rating, comment: cleanComment });
+    setSubmitting(false);
+    if (!saved) {
+      setError("Your review could not be saved. Please try again.");
+      return;
+    }
     const review: Review = {
-      id: createId("r"),
-      name: cleanName,
-      rating,
-      comment: cleanComment,
+      id: saved.id,
+      name: saved.name,
+      rating: saved.rating,
+      comment: saved.comment,
       date: formatDate(),
     };
-
     setReviews((prev) => [review, ...prev]);
     setName("");
     setRating(0);
     setComment("");
-    setError("");
     setSubmitted(true);
 
     successTimerRef.current = window.setTimeout(() => {
@@ -149,7 +141,7 @@ export function ReviewSection() {
               ? "No reviews yet"
               : `${reviews.length} review${reviews.length === 1 ? "" : "s"} on this page`}
           </p>
-          <p className="review-note">Reviews are stored in this browser for demo. A real review service will be connected with the backend.</p>
+          <p className="review-note">Reviews are shared with readers across devices.</p>
         </div>
 
         <form className="review-form" onSubmit={handleSubmit} aria-label="Leave a review">
@@ -185,13 +177,13 @@ export function ReviewSection() {
           </label>
           {error && <p className="review-error" role="alert">{error}</p>}
           {submitted && <p className="review-success" role="status">Thanks &mdash; your review is now live on this page.</p>}
-          <button className="button button-dark review-submit" type="submit">Post review <span aria-hidden="true">&rarr;</span></button>
+          <button className="button button-dark review-submit" type="submit" disabled={loading || submitting}>{submitting ? "Saving..." : "Post review"} <span aria-hidden="true">&rarr;</span></button>
         </form>
       </div>
 
       <div className="review-grid">
         {reviews.length === 0 && (
-          <p className="review-empty">Be the first to leave a review above — it stays in this browser for the demo.</p>
+          <p className="review-empty">{loading ? "Loading reviews..." : "Be the first to leave a review."}</p>
         )}
         {reviews.map((review) => (
           <article className="review-card" key={review.id}>

@@ -11,6 +11,7 @@ import { CookiesPolicy } from "./pages/Legal/CookiesPolicy";
 import { CookieConsent } from "./components/CookieConsent";
 import { ADMIN_ENABLED, MEMBERSHIP_ENABLED } from "./config";
 import { getSession, logout } from "./lib/auth";
+import { createPost, fetchPublicPosts } from "./lib/adminApi";
 
 const AdminLogin = lazy(() =>
   import("./pages/Admin/AdminLogin").then((module) => ({ default: module.AdminLogin })),
@@ -77,6 +78,36 @@ function AppRoutes() {
     };
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+    void fetchPublicPosts().then((posts) => {
+      if (cancelled || !posts) return;
+      const stories = posts.map((post) => ({
+        id: post.id,
+        title: post.title,
+        excerpt: post.excerpt,
+        content: post.content,
+        category: post.category,
+        meta: `Published ${new Date(post.updatedAt).toLocaleDateString()}`,
+        image: post.image,
+        actionUrl: post.actionUrl ?? undefined,
+        actionLabel: post.actionLabel ?? undefined,
+        status: "published" as const,
+        mediaAssetId: post.mediaAssetId ?? undefined,
+        linkHeaderAssetId: post.linkHeaderAssetId ?? undefined,
+        audioAssetId: post.audioAssetId ?? undefined,
+        videoAssetId: post.videoAssetId ?? undefined,
+        linkHeaderUrl: post.linkHeaderUrl,
+        audioUrl: post.audioUrl,
+        videoUrl: post.videoUrl,
+      }));
+      setPublishedStories(stories);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const handleLogin = () => {
     setIsAuthenticated(true);
     navigate("/admin", { replace: true });
@@ -88,9 +119,43 @@ function AppRoutes() {
     navigate("/", { replace: true });
   };
 
-  const handlePublish = (story: Story) => {
-    setPublishedStories((prev) => [story, ...prev]);
-    navigate("/", { replace: true });
+  const handlePublish = async (story: Story): Promise<boolean> => {
+    const saved = await createPost({
+      title: story.title,
+      excerpt: story.excerpt,
+      content: story.content ?? story.excerpt,
+      category: story.category,
+      image: story.image,
+      actionUrl: story.actionUrl ?? null,
+      actionLabel: story.actionLabel ?? null,
+      status: story.status ?? "published",
+      mediaAssetId: story.mediaAssetId,
+      linkHeaderAssetId: story.linkHeaderAssetId,
+      audioAssetId: story.audioAssetId,
+      videoAssetId: story.videoAssetId,
+    });
+    if (!saved) return false;
+    if (saved.status === "published") {
+      const publishedStory: Story = {
+        id: saved.id,
+        title: saved.title,
+        excerpt: saved.excerpt,
+        content: saved.content,
+        category: saved.category,
+        meta: `Published ${new Date(saved.updatedAt).toLocaleDateString()}`,
+        image: saved.image,
+        actionUrl: saved.actionUrl ?? undefined,
+        actionLabel: saved.actionLabel ?? undefined,
+        mediaAssetId: saved.mediaAssetId ?? undefined,
+        linkHeaderAssetId: saved.linkHeaderAssetId ?? undefined,
+        audioAssetId: saved.audioAssetId ?? undefined,
+        videoAssetId: saved.videoAssetId ?? undefined,
+        status: "published",
+      };
+      setPublishedStories((prev) => [publishedStory, ...prev.filter((item) => item.id !== publishedStory.id)]);
+      navigate("/", { replace: true });
+    }
+    return true;
   };
 
   const openAdmin = () => {

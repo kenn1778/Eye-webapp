@@ -52,8 +52,8 @@ function cookieOptions() {
 }
 
 // Single-admin deployment, so every verified sign-in carries the admin role.
-function issueToken(email) {
-  return jwt.sign({ sub: email, role: "admin" }, config.jwtSecret, {
+function issueToken(email, id = null) {
+  return jwt.sign({ sub: email, uid: id, role: "admin" }, config.jwtSecret, {
     expiresIn: `${config.sessionTtlHours}h`,
     issuer: "eye-api",
   });
@@ -75,12 +75,16 @@ export function requireAuth(req, res, next) {
   if (!token) return res.status(401).json({ message: "Not signed in." });
   try {
     const payload = jwt.verify(token, config.jwtSecret, { issuer: "eye-api" });
-    req.user = { email: payload.sub, role: payload.role };
+    req.user = { id: payload.uid ?? null, email: payload.sub, role: payload.role };
     return next();
   } catch {
     res.clearCookie(SESSION_COOKIE, baseCookieOptions());
     return res.status(401).json({ message: "Session expired. Please sign in again." });
   }
+}
+
+export function refreshSessionCookie(res, user) {
+  res.cookie(SESSION_COOKIE, issueToken(user.email, user.id), cookieOptions());
 }
 
 export const authRouter = Router();
@@ -101,8 +105,12 @@ authRouter.post("/login", loginLimiter, async (req, res) => {
 
   // Prefer a database user; fall back to the single admin from the environment
   // so existing deployments keep working before any users are seeded.
-  const user = await findUserByEmail(normalizedEmail);
+  const [user, profile] = await Promise.all([
+    findUserByEmail(normalizedEmail),
+    prisma.adminProfile.findUnique({ where: { email: normalizedEmail } }).catch(() => null),
+  ]);
   const passwordHash =
+    profile?.passwordHash ??
     user?.passwordHash ??
     (normalizedEmail === config.adminEmail ? config.adminPasswordHash : "");
   const passwordMatches = passwordHash ? await bcrypt.compare(password, passwordHash) : false;
@@ -111,8 +119,9 @@ authRouter.post("/login", loginLimiter, async (req, res) => {
     return res.status(401).json({ message: "Invalid email or password." });
   }
 
-  res.cookie(SESSION_COOKIE, issueToken(normalizedEmail), cookieOptions());
-  return res.json({ user: { email: normalizedEmail } });
+  const profileId = profile?.id ?? user?.id ?? null;
+  res.cookie(SESSION_COOKIE, issueToken(normalizedEmail, profileId), cookieOptions());
+  return res.json({ user: { email: normalizedEmail, name: profile?.name ?? user?.name ?? null } });
 });
 
 // GET /api/v1/auth/me

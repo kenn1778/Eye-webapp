@@ -3,7 +3,6 @@ import rateLimit from "express-rate-limit";
 import { z } from "zod";
 import { prisma } from "./lib/prisma.js";
 import { createRateLimitStore } from "./lib/rate-limit.js";
-import { enqueue } from "./lib/queue.js";
 import { createNotification, maskEmail } from "./lib/notifications.js";
 
 const subscribeLimiter = rateLimit({
@@ -39,10 +38,9 @@ newsletterRouter.post("/subscribe", subscribeLimiter, async (req, res) => {
   const email = parseResult.data.email.trim().toLowerCase();
   const source = typeof parseResult.data.source === "string" ? parseResult.data.source.slice(0, 40) : "unknown";
 
-  // Create-only so we can tell a fresh signup from a repeat one. A duplicate
-  // (P2002) means they were already on the list, which is still a success. A
-  // database outage must not change the response - we log it and still
-  // acknowledge the signup.
+  // A duplicate (P2002) means they are already on the list. Never acknowledge
+  // a new signup if the database write failed; otherwise the UI claims data
+  // has been saved when it has not.
   let isNewSubscriber = false;
   try {
     await prisma.newsletterSubscriber.create({ data: { email } });
@@ -50,6 +48,7 @@ newsletterRouter.post("/subscribe", subscribeLimiter, async (req, res) => {
   } catch (error) {
     if (error.code !== "P2002") {
       console.warn(`[eye:newsletter] could not persist subscriber: ${error.code ?? error.message}`);
+      return res.status(503).json({ message: "Signup is temporarily unavailable. Please try again." });
     }
   }
 
@@ -63,9 +62,8 @@ newsletterRouter.post("/subscribe", subscribeLimiter, async (req, res) => {
     });
   }
 
-  // TODO: send a double opt-in confirmation email once a mail provider is wired up.
-  // For now the confirmation is queued as a background job (logged, not sent).
-  enqueue("newsletter.confirm", { to: email, source });
+  // Mail delivery is not configured; be explicit rather than promising an
+  // email that will never arrive. Subscribers are persisted as unconfirmed.
   console.info(`[eye:newsletter] signup accepted (source=${source})`);
-  res.json({ message: "Check your email - we sent a confirmation link." });
+  res.json({ message: "You are on the list. Email confirmation is not available yet." });
 });

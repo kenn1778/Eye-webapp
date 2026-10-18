@@ -1,13 +1,18 @@
-import { useState } from "react";
-import { communities, seedAdminPosts } from "../../data/seedData";
+﻿import { useEffect, useState } from "react";
+import { fetchAuditLog, type AuditLogEntry } from "../../lib/adminApi";
+import { communities } from "../../data/seedData";
 import { AdminSettings } from "./AdminSettings";
+import { AdminPosts } from "./AdminPosts";
+import { AdminMedia } from "./AdminMedia";
 
 type AdminSectionViewProps = {
   section: string;
   onNewPost: () => void;
+  displayName?: string;
+  onProfileSaved?: (name: string) => void;
 };
 
-export function AdminSectionView({ section, onNewPost }: AdminSectionViewProps) {
+export function AdminSectionView({ section, onNewPost, onProfileSaved }: AdminSectionViewProps) {
   const [categoryName, setCategoryName] = useState("");
   const [categoriesList, setCategoriesList] = useState([
     "Scholarships",
@@ -23,31 +28,27 @@ export function AdminSectionView({ section, onNewPost }: AdminSectionViewProps) 
     }
   };
 
+  if (section === "Audit") {
+    return <AuditLogView />;
+  }
+
   // Team lives inside the Settings page.
   if (section === "Team") {
-    return <AdminSettings />;
+    return <AdminSettings onProfileSaved={onProfileSaved} />;
   }
 
   if (section === "Posts") {
-    return (
-      <section className="workspace-view">
-        <div className="workspace-heading"><div><div className="eyebrow">Publishing library</div><h1>All posts</h1><p>Manage drafts, live stories, and scheduled publications.</p></div><button className="admin-primary" type="button" onClick={onNewPost}>+ New post</button></div>
-        <div className="workspace-toolbar"><div className="admin-tabs"><button className="admin-tab active" type="button">All posts</button><button className="admin-tab" type="button">Published</button><button className="admin-tab" type="button">Drafts</button></div><label className="admin-search"><span>⌕</span><input placeholder="Search posts" /></label></div>
-        <div className="admin-panel section-panel"><div className="posts-table"><div className="table-row table-header"><span>Post</span><span>Type</span><span>Status</span><span>Updated</span><span>Author</span><span /></div>{seedAdminPosts.map((post) => <div className="table-row" key={post.title}><div className="post-title-cell"><span className={`post-thumb ${post.status.toLowerCase()}`} /><strong>{post.title}</strong></div><span className="muted-cell">{post.type}</span><span className={`status-pill ${post.status.toLowerCase()}`}>{post.status}</span><span className="muted-cell">{post.updated}</span><span className="muted-cell">{post.author}</span><button className="row-menu" type="button">...</button></div>)}</div></div>
-      </section>
-    );
+    return <AdminPosts onNewPost={onNewPost} />;
   }
 
   if (section === "Calendar") {
     return (
-      <section className="workspace-view"><div className="workspace-heading"><div><div className="eyebrow">Editorial planning</div><h1>Publishing calendar</h1><p>Keep deadlines and scheduled stories visible at a glance.</p></div><button className="admin-primary" type="button" onClick={onNewPost}>+ Schedule post</button></div><div className="calendar-layout"><div className="admin-panel calendar-panel"><div className="calendar-top"><button type="button">&lt;</button><strong>September 2026</strong><button type="button">&gt;</button></div><div className="calendar-grid">{["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"].map((day) => <span className="calendar-day-name" key={day}>{day}</span>)}{Array.from({ length: 35 }, (_, index) => <button className={index === 13 || index === 16 ? "calendar-date has-event" : "calendar-date"} type="button" key={index}>{index < 5 ? "" : index - 5}</button>)}</div></div><div className="admin-panel upcoming-panel"><div className="eyebrow">Up next</div><h2>Scheduled stories</h2><div className="upcoming-item"><span className="schedule-date">14<span>SEP</span></span><div><strong>Remote internships accepting applications now</strong><small>09:00 AM · Opportunities</small></div></div><div className="upcoming-item"><span className="schedule-date">17<span>SEP</span></span><div><strong>How to build a portfolio with no experience</strong><small>12:30 PM · Guide</small></div></div></div></div></section>
+      <section className="workspace-view"><div className="workspace-heading"><div><div className="eyebrow">Editorial planning</div><h1>Publishing calendar</h1><p>Keep deadlines and scheduled stories visible at a glance.</p></div><button className="admin-primary" type="button" onClick={onNewPost}>+ Schedule post</button></div><div className="calendar-layout"><div className="admin-panel calendar-panel"><div className="calendar-top"><button type="button">&lt;</button><strong>September 2026</strong><button type="button">&gt;</button></div><div className="calendar-grid">{["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"].map((day) => <span className="calendar-day-name" key={day}>{day}</span>)}{Array.from({ length: 35 }, (_, index) => <button className={index === 13 || index === 16 ? "calendar-date has-event" : "calendar-date"} type="button" key={index}>{index < 5 ? "" : index - 5}</button>)}</div></div><div className="admin-panel upcoming-panel"><div className="eyebrow">Up next</div><h2>Scheduled stories</h2><div className="upcoming-item"><span className="schedule-date">14<span>SEP</span></span><div><strong>Remote internships accepting applications now</strong><small>09:00 AM Â· Opportunities</small></div></div><div className="upcoming-item"><span className="schedule-date">17<span>SEP</span></span><div><strong>How to build a portfolio with no experience</strong><small>12:30 PM Â· Guide</small></div></div></div></div></section>
     );
   }
 
   if (section === "Media") {
-    return (
-      <section className="workspace-view"><div className="workspace-heading"><div><div className="eyebrow">Asset library</div><h1>Media</h1><p>Upload, organize, and reuse images, audio, and video across posts.</p></div><button className="admin-primary" type="button" onClick={onNewPost}>+ Upload media</button></div><div className="media-filter"><button className="category-tab selected" type="button">All media</button><button className="category-tab" type="button">Images</button><button className="category-tab" type="button">Audio</button><button className="category-tab" type="button">Video</button></div><div className="media-grid">{["Campus discussion", "Autumn library", "Career conversation", "Audio interview"].map((assetName, index) => <article className="media-asset" key={assetName}><div className={`media-preview media-${index}`}><span>{index === 3 ? "♪" : index === 2 ? "▶" : "▧"}</span></div><div><strong>{assetName}</strong><small>{index === 3 ? "Audio · 4:18" : index === 2 ? "Video · 12:40" : "Image · 1.8 MB"}</small></div></article>)}</div></section>
-    );
+    return <AdminMedia />;
   }
 
   if (section === "Categories") {
@@ -61,7 +62,7 @@ export function AdminSectionView({ section, onNewPost }: AdminSectionViewProps) 
       <section className="workspace-view">
         <div className="workspace-heading"><div><div className="eyebrow">Community management</div><h1>Communities</h1><p>Shape the rooms where readers connect around shared interests.</p></div><button className="admin-primary" type="button">+ New community</button></div>
         <div className="community-admin-grid">
-          {communities.map((community) => <article className="admin-community-card" key={community.name}><div className={`community-art ${community.accent}`}><span aria-hidden="true">◌</span><span aria-hidden="true">◌</span><span aria-hidden="true">◌</span></div><div className="admin-community-body"><div><span className="status-pill published">Active</span><span className="community-member-count">{community.members}</span></div><h2>{community.name}</h2><p>{community.description}</p><div className="community-admin-actions"><button className="button-secondary" type="button">Manage</button><button className="row-menu" type="button">...</button></div></div></article>)}
+          {communities.map((community) => <article className="admin-community-card" key={community.name}><div className={`community-art ${community.accent}`}><span aria-hidden="true">â—Œ</span><span aria-hidden="true">â—Œ</span><span aria-hidden="true">â—Œ</span></div><div className="admin-community-body"><div><span className="status-pill published">Active</span><span className="community-member-count">{community.members}</span></div><h2>{community.name}</h2><p>{community.description}</p><div className="community-admin-actions"><button className="button-secondary" type="button">Manage</button><button className="row-menu" type="button">...</button></div></div></article>)}
         </div>
         <div className="admin-panel community-guidance"><div className="eyebrow">Community standards</div><h2>Keep every room useful</h2><p>Moderators can feature posts, pin opportunities, review reports, and update each community&apos;s description from this workspace.</p></div>
       </section>
@@ -69,5 +70,109 @@ export function AdminSectionView({ section, onNewPost }: AdminSectionViewProps) 
   }
 
   // Unknown section: fall back to Settings.
-  return <AdminSettings />;
+  return <AdminSettings onProfileSaved={onProfileSaved} />;
+}
+
+function AuditLogView() {
+  const [entries, setEntries] = useState<AuditLogEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [filter, setFilter] = useState("");
+  const [offset, setOffset] = useState(0);
+  const [refreshCount, setRefreshCount] = useState(0);
+  const [total, setTotal] = useState(0);
+  const pageSize = 50;
+
+  useEffect(() => {
+    let cancelled = false;
+    void fetchAuditLog(pageSize, filter || undefined, offset).then((result) => {
+      if (cancelled) return;
+      setError(!result);
+      if (result) {
+        setEntries(result.items);
+        setTotal(result.total);
+      }
+      setLoading(false);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [filter, offset, refreshCount]);
+
+  const changeFilter = (resource: string) => {
+    setLoading(true);
+    setFilter(resource);
+    setOffset(0);
+  };
+
+  return (
+    <section className="workspace-view">
+      <div className="workspace-heading">
+        <div>
+          <div className="eyebrow">Security trail</div>
+          <h1>Audit log</h1>
+          <p>Review successful and failed changes made through the admin API.</p>
+        </div>
+        <button className="button-secondary" type="button" onClick={() => { setLoading(true); setRefreshCount((count) => count + 1); }} disabled={loading}>Refresh</button>
+      </div>
+      <div className="workspace-toolbar">
+        <div className="admin-tabs">
+          {["", "post", "notification", "profile"].map((r) => (
+            <button
+              key={r || "all"}
+              className={filter === r ? "admin-tab active" : "admin-tab"}
+              type="button"
+              onClick={() => changeFilter(r)}
+            >
+              {r ? (r === "notification" ? "Notifications" : `${r.charAt(0).toUpperCase()}${r.slice(1)}s`) : "All"}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="admin-panel section-panel">
+        {loading ? (
+          <p className="audit-message" role="status">Loading audit trail...</p>
+        ) : error ? (
+          <p className="audit-message" role="alert">Could not load audit records. Check your connection and try again.</p>
+        ) : entries.length === 0 ? (
+          <p className="audit-message">No audit entries yet.</p>
+        ) : (
+          <div className="posts-table audit-table">
+            <div className="table-row table-header" role="row">
+              <span>Action</span>
+              <span>Actor</span>
+              <span>Result</span>
+              <span>When</span>
+            </div>
+            {entries.map((entry) => (
+              <div className="table-row" key={entry.id}>
+                <span className="muted-cell audit-action" title={entry.path}>
+                  <strong>{entry.action}</strong>
+                  <small>{entry.method} {entry.path}</small>
+                </span>
+                <span className="muted-cell">{entry.actorEmail}</span>
+                <span className={entry.success ? "audit-result success" : "audit-result failure"}>
+                  {entry.success ? "Success" : `Failed · ${entry.statusCode}`}
+                </span>
+                <time className="muted-cell" dateTime={entry.createdAt}>
+                  {new Date(entry.createdAt).toLocaleString()}
+                </time>
+              </div>
+            ))}
+          </div>
+        )}
+        <div className="audit-pagination">
+          <span>{total === 0 ? "0 records" : `${offset + 1}–${Math.min(offset + entries.length, total)} of ${total}`}</span>
+          <div>
+            <button className="button-secondary" type="button" onClick={() => { setLoading(true); setOffset(Math.max(0, offset - pageSize)); }} disabled={loading || offset === 0}>
+              Previous
+            </button>
+            <button className="button-secondary" type="button" onClick={() => { setLoading(true); setOffset(offset + pageSize); }} disabled={loading || offset + pageSize >= total}>
+              Next
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
 }

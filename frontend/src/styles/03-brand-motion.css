@@ -1,4 +1,4 @@
-/* 03-brand-motion.css - sticky header shrink, the animated eye logo and
+﻿/* 03-brand-motion.css - sticky header shrink, the animated eye logo and
    footer stability. Loaded by App.css. */
 
 /* Header: the logo stays put; every link lives in the dropdown panel. */
@@ -133,7 +133,7 @@ a, p, h1, h2, h3, span, strong, small, label, button {
 /* Shrink behaviour: hide the wordmark and keep just the icon. */
 /* Sticky so the shrink effect stays visible while scrolling. */
 .site-header {
-  position: sticky;
+  position: static;
   top: 0;
   z-index: 20;
   transition: height .32s cubic-bezier(.22,.61,.36,1), padding .32s cubic-bezier(.22,.61,.36,1), background .32s cubic-bezier(.22,.61,.36,1), box-shadow .32s cubic-bezier(.22,.61,.36,1), backdrop-filter .32s cubic-bezier(.22,.61,.36,1);

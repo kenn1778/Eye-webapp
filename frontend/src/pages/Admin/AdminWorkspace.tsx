@@ -1,6 +1,6 @@
-import { startTransition, useCallback, useEffect, useMemo, useState, type CSSProperties } from "react";
+﻿import { startTransition, useCallback, useEffect, useMemo, useState, type CSSProperties } from "react";
 import type { AdminInsights, AdminMetrics, AdminNotification, ActivityPoint, Story } from "../../types";
-import { emptyMetrics, seedAdminPosts, adminTabs } from "../../data/seedData";
+import { emptyMetrics, adminTabs } from "../../data/seedData";
 import { Brand } from "../../components/Brand";
 import { AdminEditor } from "../../components/AdminEditor";
 import { AdminSectionView } from "./AdminSectionView";
@@ -11,6 +11,8 @@ import {
   fetchInsights,
   fetchMetrics,
   fetchNotifications,
+  fetchPosts,
+  fetchAdminProfile,
   markAllNotificationsRead,
   markNotificationRead,
 } from "../../lib/adminApi";
@@ -31,7 +33,7 @@ const METRIC_CARDS: ReadonlyArray<{ label: string; value: keyof AdminMetrics; ac
 
 type AdminWorkspaceProps = {
   closeAdmin: () => void;
-  onPublish: (story: Story) => void;
+  onPublish: (story: Story) => Promise<boolean>;
 };
 
 export function AdminWorkspace({ closeAdmin, onPublish }: AdminWorkspaceProps) {
@@ -65,13 +67,17 @@ export function AdminWorkspace({ closeAdmin, onPublish }: AdminWorkspaceProps) {
   const [activity, setActivity] = useState<ActivityPoint[]>([]);
   const [notifications, setNotifications] = useState<AdminNotification[]>([]);
   const [unread, setUnread] = useState(0);
+  const [savedPosts, setSavedPosts] = useState<Awaited<ReturnType<typeof fetchPosts>>>(null);
+  const [adminName, setAdminName] = useState("Administrator");
 
   const refresh = useCallback(async () => {
-    const [nextMetrics, nextInsights, nextActivity, nextNotifications] = await Promise.all([
+    const [nextMetrics, nextInsights, nextActivity, nextNotifications, nextPosts, profile] = await Promise.all([
       fetchMetrics(),
       fetchInsights(),
       fetchActivity(ACTIVITY_DAYS),
       fetchNotifications(20),
+      fetchPosts("", 20, 0),
+      fetchAdminProfile(),
     ]);
 
     // Low priority so a background refresh never blocks typing or clicks.
@@ -79,6 +85,8 @@ export function AdminWorkspace({ closeAdmin, onPublish }: AdminWorkspaceProps) {
       if (nextMetrics) setMetrics(nextMetrics);
       if (nextInsights) setInsights(nextInsights);
       if (nextActivity) setActivity(nextActivity);
+      if (nextPosts) setSavedPosts(nextPosts);
+      if (profile) setAdminName(profile.name);
       if (nextNotifications) {
         setNotifications(nextNotifications.notifications);
         setUnread(nextNotifications.unread);
@@ -112,15 +120,15 @@ export function AdminWorkspace({ closeAdmin, onPublish }: AdminWorkspaceProps) {
 
   const visiblePosts = useMemo(
     () =>
-      seedAdminPosts.filter(
+      (savedPosts?.items ?? []).filter(
         (post) =>
-          (activeTab === "All posts" || post.status === activeTab) &&
+          (activeTab === "All posts" || post.status === activeTab.toLowerCase()) &&
           (!query.trim() ||
-            `${post.title} ${post.type} ${post.author}`
+            `${post.title} ${post.category}`
               .toLowerCase()
               .includes(query.toLowerCase())),
       ),
-    [activeTab, query],
+    [activeTab, query, savedPosts],
   );
 
   // On phones, picking a section should also close the drawer so the panel shows.
@@ -168,7 +176,7 @@ export function AdminWorkspace({ closeAdmin, onPublish }: AdminWorkspaceProps) {
           </button>
           <button className={`sidebar-item ${activeSection === "Posts" ? "selected" : ""}`} type="button" onClick={() => selectSection("Posts")}>
             <span className="sidebar-icon icon-posts" aria-hidden="true" />Posts{" "}
-            <span className="sidebar-count">{seedAdminPosts.length}</span>
+            <span className="sidebar-count">{savedPosts?.total ?? 0}</span>
           </button>
           <button className={`sidebar-item ${activeSection === "Calendar" ? "selected" : ""}`} type="button" onClick={() => selectSection("Calendar")}>
             <span className="sidebar-icon icon-calendar" aria-hidden="true" />Calendar
@@ -190,13 +198,16 @@ export function AdminWorkspace({ closeAdmin, onPublish }: AdminWorkspaceProps) {
           </button>
         </div>
         <div className="sidebar-bottom">
+          <button className={`sidebar-item ${activeSection === "Audit" ? "selected" : ""}`} type="button" onClick={() => selectSection("Audit")}>
+            <span className="sidebar-icon icon-calendar" aria-hidden="true" />Audit log
+          </button>
           <button className={`sidebar-item ${activeSection === "Settings" ? "selected" : ""}`} type="button" onClick={() => selectSection("Settings")}>
             <span className="sidebar-icon icon-settings" aria-hidden="true" />Settings
           </button>
           <button className="profile-row" type="button" onClick={requestLogout} aria-label="Log out of admin workspace">
-            <span className="avatar">AO</span>
+            <span className="avatar">{adminName.slice(0, 2).toUpperCase()}</span>
             <span>
-              <strong>Amara Osei</strong>
+              <strong>{adminName}</strong>
               <small>Administrator</small>
             </span>
             <span className="profile-more">...</span>
@@ -217,21 +228,21 @@ export function AdminWorkspace({ closeAdmin, onPublish }: AdminWorkspaceProps) {
               onMarkAllRead={handleMarkAllRead}
             />
             <button className="avatar avatar-top" type="button" onClick={requestLogout} aria-label="Log out of admin workspace">
-              AO
+              {adminName.slice(0, 2).toUpperCase()}
             </button>
           </div>
         </header>
         <main className="admin-content">
           {/* Overview renders here; other sections go through AdminSectionView. "New post" is excluded since it just opens the editor. */}
           {activeSection !== "Overview" && activeSection !== "New post" && (
-            <AdminSectionView section={activeSection} onNewPost={() => setShowEditor(true)} />
+            <AdminSectionView section={activeSection} onNewPost={() => setShowEditor(true)} onProfileSaved={setAdminName} />
           )}
           {activeSection === "Overview" && (
             <>
           <div className="admin-heading">
             <div>
               <div className="eyebrow">Saturday, 12 September 2026</div>
-              <h1>Good morning, Amara.</h1>
+              <h1>Good morning, {adminName}.</h1>
               <p>Here&apos;s what&apos;s moving across EYE today.</p>
             </div>
             <button
@@ -350,23 +361,23 @@ export function AdminWorkspace({ closeAdmin, onPublish }: AdminWorkspaceProps) {
                 <span />
               </div>
               {visiblePosts.map((post) => (
-                <div className="table-row" key={post.title}>
+                <div className="table-row" key={post.id}>
                   <div className="post-title-cell">
                     <span
-                      className={`post-thumb ${post.status.toLowerCase()}`}
+                      className={`post-thumb ${post.status}`}
                     />
                     <strong>{post.title}</strong>
                   </div>
-                  <span className="muted-cell">{post.type}</span>
+                  <span className="muted-cell">{post.category}</span>
                   <span>
                     <span
-                      className={`status-pill ${post.status.toLowerCase()}`}
+                      className={`status-pill ${post.status}`}
                     >
-                      {post.status}
+                      {post.status[0].toUpperCase() + post.status.slice(1)}
                     </span>
                   </span>
-                  <span className="muted-cell">{post.updated}</span>
-                  <span className="muted-cell">{post.author}</span>
+                  <span className="muted-cell">{new Date(post.updatedAt).toLocaleDateString()}</span>
+                  <span className="muted-cell">{adminName}</span>
                   <button className="row-menu" type="button">
                     ...
                   </button>
@@ -381,22 +392,26 @@ export function AdminWorkspace({ closeAdmin, onPublish }: AdminWorkspaceProps) {
       {showEditor && (
         <AdminEditor
           close={() => setShowEditor(false)}
-          onPublish={(story) => {
-            onPublish(story);
-            setSaved(true);
-            setShowEditor(false);
+          onPublish={async (story) => {
+            const success = await onPublish(story);
+            if (success) {
+              setSaved(true);
+              setShowEditor(false);
+              void refresh();
+            }
+            return success;
           }}
         />
       )}
       {saved && (
         <div className="toast" role="status">
-          Published to the public site.
+          Post saved successfully.
         </div>
       )}
       {showLogoutDialog && (
         <div className="modal-backdrop" role="presentation" onClick={() => setShowLogoutDialog(false)}>
           <section className="logout-dialog" role="dialog" aria-modal="true" aria-labelledby="logout-title" onClick={(event) => event.stopPropagation()}>
-            <div className="logout-icon">↗</div>
+            <div className="logout-icon">â†—</div>
             <div className="eyebrow">Admin session</div>
             <h2 id="logout-title">Log out of EYE?</h2>
             <p>Your publishing workspace will close. You can sign in again when you are ready.</p>

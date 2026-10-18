@@ -1,15 +1,19 @@
 import { useState } from "react";
 import type { Story } from "../types";
 import { seedStories } from "../data/seedData";
+import { uploadMediaFile } from "../lib/adminApi";
 
 type AdminEditorProps = {
   close: () => void;
-  onPublish: (story: Story) => void;
+  onPublish: (story: Story) => Promise<boolean | void> | boolean | void;
 };
 
+type MediaRole = "post-header" | "link-header" | "audio" | "video";
+
 export function AdminEditor({ close: closeEditor, onPublish }: AdminEditorProps) {
-    const [title, setTitle] = useState("");
+  const [title, setTitle] = useState("");
   const [excerpt, setExcerpt] = useState("");
+  const [content, setContent] = useState("");
   const [category, setCategory] = useState("Scholarships");
   const [sourceUrl, setSourceUrl] = useState("");
   const [actionUrl, setActionUrl] = useState("");
@@ -18,388 +22,133 @@ export function AdminEditor({ close: closeEditor, onPublish }: AdminEditorProps)
   const [tagInput, setTagInput] = useState("");
   const [slug, setSlug] = useState("new-scholarship-opportunity");
   const [featuredImageUrl, setFeaturedImageUrl] = useState("");
-  const [postHeaderFile, setPostHeaderFile] = useState<File>();
-  const [linkHeaderFile, setLinkHeaderFile] = useState<File>();
-  const [audioFile, setAudioFile] = useState<File>();
-  const [videoFile, setVideoFile] = useState<File>();
+  const [featuredMediaId, setFeaturedMediaId] = useState<string | null>(null);
+  const [mediaIds, setMediaIds] = useState<Partial<Record<MediaRole, string>>>({});
+  const [uploadedFiles, setUploadedFiles] = useState<Partial<Record<MediaRole, string>>>({});
+  const [uploadingFile, setUploadingFile] = useState(false);
   const [visibility, setVisibility] = useState("Public");
   const [publishMode, setPublishMode] = useState("Save draft");
-  const [autosave, setAutosave] = useState("Autosaved just now");
-  const [hasUnsavedChanges] = useState(true); // always true for this demo
+  const [autosave, setAutosave] = useState("Ready to save");
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
 
-    const sourceValid = !sourceUrl || /^https?:\/\//i.test(sourceUrl); // empty = valid, or must be http
+  const sourceValid = !sourceUrl || /^https?:\/\//i.test(sourceUrl);
   const actionValid = !actionUrl || /^https?:\/\//i.test(actionUrl);
-  // Featured images are injected into a CSS url(...) below; block javascript:/data: and anything non-http.
   const imageValid = !featuredImageUrl || /^https?:\/\//i.test(featuredImageUrl);
 
-  // Tags become lowercase-hyphen so chips and filtering stay consistent.
   const addTag = () => {
-    const normalizedTag = tagInput.trim().toLowerCase().replace(/\s+/g, "-"); // "My Tag" -> "my-tag"
-    if (normalizedTag && !tags.includes(normalizedTag)) setTags([...tags, normalizedTag]);
+    const normalizedTag = tagInput.trim().toLowerCase().replace(/\s+/g, "-");
+    if (normalizedTag && !tags.includes(normalizedTag)) setTags((current) => [...current, normalizedTag]);
     setTagInput("");
   };
 
   const close = () => {
-    if (
-      !hasUnsavedChanges ||
-      window.confirm("You have unsaved changes. Exit without saving?")
-    )
-      closeEditor();
+    if (window.confirm("Close the editor? Any unsaved changes will be lost.")) closeEditor();
   };
 
-  const publish = () =>
-    onPublish({
-      title: title || "New scholarship opportunity",
-      excerpt: excerpt || "A new opportunity is now available for readers.",
-      category,
-      meta: "Just published  /  12 Sep 2026",
-      image: featuredImageUrl || seedStories[1].image,
-      actionUrl: actionUrl || undefined,
-      actionLabel: actionLabel || "View opportunity",
-    });
+  const uploadFile = async (file: File, role: MediaRole) => {
+    setUploadingFile(true);
+    setSaveError("");
+    const asset = await uploadMediaFile(file, role === "post-header" ? title : "");
+    setUploadingFile(false);
+    if (!asset) {
+      setSaveError(`Could not upload ${file.name} to S3. Check storage configuration and bucket CORS.`);
+      return;
+    }
+    setMediaIds((current) => ({ ...current, [role]: asset.id }));
+    setUploadedFiles((current) => ({ ...current, [role]: asset.filename }));
+    if (role === "post-header") {
+      setFeaturedImageUrl(asset.url);
+      setFeaturedMediaId(asset.id);
+    }
+  };
 
-    return (
+  const publish = async () => {
+    setIsSaving(true);
+    setSaveError("");
+    try {
+      const status = publishMode === "Publish immediately" ? "published" : publishMode === "Schedule for later" ? "scheduled" : "draft";
+      const result = await onPublish({
+        title: title.trim(),
+        excerpt: excerpt.trim() || content.trim().slice(0, 200),
+        content: content.trim(),
+        category,
+        meta: status === "published" ? `Published ${new Date().toLocaleDateString()}` : status,
+        image: featuredImageUrl || seedStories[1].image,
+        actionUrl: actionUrl.trim() || undefined,
+        actionLabel: actionLabel || undefined,
+        status,
+        mediaAssetId: featuredMediaId ?? undefined,
+        linkHeaderAssetId: mediaIds["link-header"],
+        audioAssetId: mediaIds.audio,
+        videoAssetId: mediaIds.video,
+      });
+      if (result === false) setSaveError("The post could not be saved. Check the API/database connection and try again.");
+    } catch {
+      setSaveError("The post could not be saved. Check the API/database connection and try again.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const fileInput = (role: MediaRole, label: string, description: string, accept: string) => (
+    <label className="attachment-card" key={role}>
+      <span className="attachment-icon" aria-hidden="true">↑</span>
+      <strong>{label}</strong>
+      <small>{description}</small>
+      <input type="file" accept={accept} onChange={(event) => {
+        const file = event.target.files?.[0];
+        if (file) void uploadFile(file, role);
+        event.currentTarget.value = "";
+      }} />
+      <span className="file-name">{uploadedFiles[role] || "Choose a file (stored in S3)"}</span>
+    </label>
+  );
+
+  return (
     <div className="modal-backdrop" role="presentation" onClick={close}>
-      {/* clicking inside the box must not close it (stopPropagation) */}
-      <section
-        className="editor-modal"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="editor-title"
-        onClick={(event) => event.stopPropagation()}
-      >
+      <section className="editor-modal" role="dialog" aria-modal="true" aria-labelledby="editor-title" onClick={(event) => event.stopPropagation()}>
         <div className="modal-heading">
-          <div>
-            <div className="eyebrow">New content</div>
-            <h2 id="editor-title">Create a post</h2>
-            <p className="modal-subtitle">
-              Prepare the story, destination, and publishing details before it
-              goes live.
-            </p>
-          </div>
-          <button
-            className="modal-close"
-            type="button"
-            onClick={close}
-            aria-label="Close editor"
-          >
-            X
-          </button>
+          <div><div className="eyebrow">New content</div><h2 id="editor-title">Create a post</h2><p className="modal-subtitle">Prepare the story and media before publishing.</p></div>
+          <button className="modal-close" type="button" onClick={close} aria-label="Close editor">X</button>
         </div>
-        <div className="editor-status">
-          <span className="status-live">SAVED</span> {autosave}
-          <span className="revision-label">Revision 1</span>
-        </div>
-        <label className="editor-label">
-          Post title
-          <input
-            value={title}
-            placeholder="Give your story a clear, useful title"
-            maxLength={150}
-            onChange={(event) => {
-              setTitle(event.target.value);
-              setAutosave("Autosaving...");
-            }}
-            onBlur={() => setAutosave("Autosaved just now")}
-          />
-        </label>
-        <div className="permalink-row">
-          <span className="permalink-label">Permalink</span>
-          <span className="permalink-prefix">theeyes.org/post/</span>
-          <input
-            value={slug}
-            onChange={(event) =>
-              setSlug(
-                event.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-"),
-              )
-            }
-            aria-label="Post slug"
-          />
-          <button className="permalink-edit" type="button">
-            Edit
-          </button>
-        </div>
+        <div className="editor-status"><span className="status-live">{uploadingFile ? "UPLOADING" : featuredMediaId ? "S3 SAVED" : "DRAFT"}</span> {uploadingFile ? "Uploading media securely to S3..." : autosave}<span className="revision-label">Post data saves to the database</span></div>
+        <label className="editor-label">Post title<input required value={title} placeholder="Give your story a clear, useful title" maxLength={150} onChange={(event) => { setTitle(event.target.value); setAutosave("Changes ready to save"); }} /></label>
+        <div className="permalink-row"><span className="permalink-label">Permalink</span><span className="permalink-prefix">theeyes.org/post/</span><input value={slug} onChange={(event) => setSlug(event.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-"))} aria-label="Post slug" /><button className="permalink-edit" type="button">Edit</button></div>
         <div className="editor-two-col">
-          <label className="editor-label">
-            Content type
-            <select>
-              <option>Scholarship</option>
-              <option>News</option>
-              <option>Opportunity</option>
-              <option>Guide</option>
-              <option>Music</option>
-              <option>Video</option>
-              <option>Entertainment</option>
-            </select>
-          </label>
-          <label className="editor-label">
-            Category
-            <select
-              value={category}
-              onChange={(event) => setCategory(event.target.value)}
-            >
-              <option>Scholarships</option>
-              <option>Work</option>
-              <option>Culture</option>
-              <option>Scholarship tips</option>
-              <option>News</option>
-              <option>Opportunities</option>
-              <option>Guides</option>
-              <option>Music</option>
-              <option>Video</option>
-            </select>
-          </label>
+          <label className="editor-label">Content type<select><option>Scholarship</option><option>News</option><option>Opportunity</option><option>Guide</option><option>Music</option><option>Video</option><option>Entertainment</option></select></label>
+          <label className="editor-label">Category<select value={category} onChange={(event) => setCategory(event.target.value)}><option>Scholarships</option><option>Work</option><option>Culture</option><option>Scholarship tips</option><option>News</option><option>Opportunities</option><option>Guides</option><option>Music</option><option>Video</option></select></label>
         </div>
-        <label className="editor-label">
-          Excerpt
-          <textarea
-            value={excerpt}
-            onChange={(event) => setExcerpt(event.target.value)}
-            rows={3}
-            maxLength={400}
-            placeholder="A short summary for cards and search results"
-          />
-        </label>
-        <label className="editor-label">
-          Body content
-          <textarea
-            className="body-editor"
-            rows={6}
-            placeholder="Write the main story here. Add headings, links, quotes, and media."
-          />
-        </label>
-        <div className="editor-divider">
-          <span>Taxonomy and media</span>
-          <small>Organize the post for discovery.</small>
-        </div>
-        <label className="editor-label">
-          Tags
-          <div className="tag-input">
-            <div className="tag-list">
-              {tags.map((tag) => (
-                <button
-                  type="button"
-                  className="tag-chip"
-                  key={tag}
-                  onClick={() => setTags(tags.filter((item) => item !== tag))}
-                >
-                  {tag} x
-                </button>
-              ))}
-            </div>
-            <input
-              value={tagInput}
-              onChange={(event) => setTagInput(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") {
-                  event.preventDefault();
-                  addTag();
-                }
-              }}
-              onBlur={addTag}
-              placeholder="Add a tag and press Enter"
-            />
-          </div>
-          <small className="field-help">
-            Use focused terms readers may search for.
-          </small>
-        </label>
-        <label className="editor-label">
-          Featured image URL
-          <input
-            type="url"
-            value={featuredImageUrl}
-            onChange={(event) => setFeaturedImageUrl(event.target.value)}
-            placeholder="https://images.example.org/cover.jpg"
-            aria-invalid={!imageValid}
-          />
-          {!imageValid && (
-            <small className="field-help invalid">
-              Use a full URL beginning with http:// or https://.
-            </small>
-          )}
-        </label>
+        <label className="editor-label">Excerpt<textarea value={excerpt} onChange={(event) => setExcerpt(event.target.value)} rows={3} maxLength={400} placeholder="A short summary for cards and search results" /></label>
+        <label className="editor-label">Body content<textarea className="body-editor" rows={6} value={content} onChange={(event) => setContent(event.target.value)} placeholder="Write the main story here." /></label>
+        <div className="editor-divider"><span>Taxonomy and media</span><small>Uploads go to S3; media metadata and post links are stored in PostgreSQL.</small></div>
+        <label className="editor-label">Tags<div className="tag-input"><div className="tag-list">{tags.map((tag) => <button type="button" className="tag-chip" key={tag} onClick={() => setTags((current) => current.filter((item) => item !== tag))}>{tag} x</button>)}</div><input value={tagInput} onChange={(event) => setTagInput(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); addTag(); } }} onBlur={addTag} placeholder="Add a tag and press Enter" /></div><small className="field-help">Use focused terms readers may search for.</small></label>
+        <label className="editor-label">Featured image URL<input type="url" value={featuredImageUrl} onChange={(event) => { setFeaturedImageUrl(event.target.value); setFeaturedMediaId(null); }} placeholder="https://images.example.org/cover.jpg" aria-invalid={!imageValid} />{!imageValid && <small className="field-help invalid">Use a full URL beginning with http:// or https://.</small>}</label>
         <div className="attachment-grid" aria-label="Post media attachments">
-          <label className="attachment-card">
-            <span className="attachment-icon">?</span>
-            <strong>Post header</strong>
-            <small>Image or video shown at the top of the post.</small>
-            <input
-              type="file"
-              accept="image/*,video/*"
-              onChange={(event) => setPostHeaderFile(event.target.files?.[0])}
-            />
-            <span className="file-name">
-              {postHeaderFile?.name || "Attach image or video"}
-            </span>
-          </label>
-          <label className="attachment-card">
-            <span className="attachment-icon">?</span>
-            <strong>Link header</strong>
-            <small>Media preview displayed with the destination link.</small>
-            <input
-              type="file"
-              accept="image/*,video/*"
-              onChange={(event) => setLinkHeaderFile(event.target.files?.[0])}
-            />
-            <span className="file-name">
-              {linkHeaderFile?.name || "Attach link media"}
-            </span>
-          </label>
-          <label className="attachment-card">
-            <span className="attachment-icon">?</span>
-            <strong>Audio</strong>
-            <small>Attach an audio player to the published story.</small>
-            <input
-              type="file"
-              accept="audio/*"
-              onChange={(event) => setAudioFile(event.target.files?.[0])}
-            />
-            <span className="file-name">{audioFile?.name || "Attach audio"}</span>
-          </label>
-          <label className="attachment-card">
-            <span className="attachment-icon">?</span>
-            <strong>Video</strong>
-            <small>Attach a responsive video player to the post.</small>
-            <input
-              type="file"
-              accept="video/*"
-              onChange={(event) => setVideoFile(event.target.files?.[0])}
-            />
-            <span className="file-name">{videoFile?.name || "Attach video"}</span>
-          </label>
+          {fileInput("post-header", "Post header", "Image shown with the published post.", "image/*")}
+          {fileInput("link-header", "Link header", "Media preview attached to the official link.", "image/*,video/*")}
+          {fileInput("audio", "Audio", "Attach an audio file to this post.", "audio/*")}
+          {fileInput("video", "Video", "Attach a video file to this post.", "video/*")}
         </div>
-        {/* Preview only after the http/https check; the URL is injected into CSS url(). */}
-        {imageValid && featuredImageUrl && (
-          <div
-            className="featured-preview"
-            style={{ backgroundImage: `url(${featuredImageUrl})` }}
-            role="img"
-            aria-label="Featured image preview"
-          >
-            <span>Featured image preview</span>
-          </div>
-        )}
-        <div className="editor-divider">
-          <span>Link integration</span>
-          <small>Connect readers to the official source and next action.</small>
+        {imageValid && featuredImageUrl && <div className="featured-preview" style={{ backgroundImage: `url(${featuredImageUrl})` }} role="img" aria-label="Featured image preview"><span>Featured image preview</span></div>}
+        <div className="editor-divider"><span>Link integration</span><small>Connect readers to the official source and next action.</small></div>
+        <div className="editor-two-col">
+          <label className="editor-label">Source URL<input type="url" value={sourceUrl} onChange={(event) => setSourceUrl(event.target.value)} placeholder="https://official-source.org/notice" aria-invalid={!sourceValid} /><small className={sourceValid ? "field-help" : "field-help invalid"}>{sourceValid ? "Used for attribution." : "Use a full URL beginning with http:// or https://."}</small></label>
+          <label className="editor-label">Action URL<input type="url" value={actionUrl} onChange={(event) => setActionUrl(event.target.value)} placeholder="https://apply.example.org" aria-invalid={!actionValid} /><small className={actionValid ? "field-help" : "field-help invalid"}>{actionValid ? "Readers click this destination." : "Use a full URL beginning with http:// or https://."}</small></label>
         </div>
         <div className="editor-two-col">
-          <label className="editor-label">
-            Source URL
-            <input
-              type="url"
-              value={sourceUrl}
-              onChange={(event) => setSourceUrl(event.target.value)}
-              placeholder="https://official-source.org/notice"
-              aria-invalid={!sourceValid}
-            />
-            <small
-              className={sourceValid ? "field-help" : "field-help invalid"}
-            >
-              {sourceValid
-                ? "Used for attribution."
-                : "Use a full URL beginning with http:// or https://."}
-            </small>
-          </label>
-          <label className="editor-label">
-            Action URL
-            <input
-              type="url"
-              value={actionUrl}
-              onChange={(event) => setActionUrl(event.target.value)}
-              placeholder="https://apply.example.org"
-              aria-invalid={!actionValid}
-            />
-            <small
-              className={actionValid ? "field-help" : "field-help invalid"}
-            >
-              {actionValid
-                ? "Readers click this destination."
-                : "Use a full URL beginning with http:// or https://."}
-            </small>
-          </label>
+          <label className="editor-label">Action button label<select value={actionLabel} onChange={(event) => setActionLabel(event.target.value)}><option>Apply now</option><option>View official notice</option><option>Register</option><option>Read source</option></select></label>
+          <label className="editor-label">Visibility<select value={visibility} onChange={(event) => setVisibility(event.target.value)}><option>Public</option><option>Private</option><option>Password protected</option></select></label>
         </div>
         <div className="editor-two-col">
-          <label className="editor-label">
-            Action button label
-            <select
-              value={actionLabel}
-              onChange={(event) => setActionLabel(event.target.value)}
-            >
-              <option>Apply now</option>
-              <option>View official notice</option>
-              <option>Register</option>
-              <option>Read source</option>
-            </select>
-          </label>
-          <div className="url-preview">
-            <span className="preview-label">Reader preview</span>
-            <a
-              href={actionValid && actionUrl ? actionUrl : "#"}
-              target="_blank"
-              rel="noreferrer"
-              onClick={(event) => {
-                if (!actionValid || !actionUrl) event.preventDefault();
-              }}
-            >
-              {actionLabel} -&gt;
-            </a>
-          </div>
-        </div>
-        <div className="editor-divider">
-          <span>Publishing and SEO</span>
-          <small>Control visibility and search presentation.</small>
-        </div>
-        <div className="editor-two-col">
-          <label className="editor-label">
-            Visibility
-            <select
-              value={visibility}
-              onChange={(event) => setVisibility(event.target.value)}
-            >
-              <option>Public</option>
-              <option>Private</option>
-              <option>Password protected</option>
-            </select>
-          </label>
-          <label className="editor-label">
-            Publish
-            <select
-              value={publishMode}
-              onChange={(event) => setPublishMode(event.target.value)}
-            >
-              <option>Save draft</option>
-              <option>Publish immediately</option>
-              <option>Schedule for later</option>
-            </select>
-          </label>
-        </div>
-        <div className="editor-two-col">
-          <label className="editor-label">
-            Deadline
-            <input type="date" />
-          </label>
-          <label className="editor-label">
-            SEO description
-            <input placeholder="Describe this post in 150 characters" />
-          </label>
+          <label className="editor-label">Publish<select value={publishMode} onChange={(event) => setPublishMode(event.target.value)}><option>Save draft</option><option>Publish immediately</option><option>Schedule for later</option></select></label>
+          <label className="editor-label">Deadline<input type="date" /></label>
         </div>
         <div className="editor-actions">
-          <button className="button-secondary" type="button" onClick={close}>
-            Cancel
-          </button>
-          <button
-            className="admin-primary"
-            type="button"
-            disabled={!sourceValid || !actionValid || !imageValid}
-            onClick={publish}
-          >
-            {publishMode === "Publish immediately"
-              ? "Publish post"
-              : publishMode === "Schedule for later"
-                ? "Schedule post"
-                : "Save draft"}
+          <button className="button-secondary" type="button" onClick={close}>Cancel</button>
+          {saveError && <p className="field-help invalid" role="alert">{saveError}</p>}
+          <button className="admin-primary" type="button" disabled={!sourceValid || !actionValid || !imageValid || isSaving || uploadingFile || !title.trim() || !content.trim()} onClick={publish}>
+            {isSaving ? "Saving..." : publishMode === "Publish immediately" ? "Publish post" : publishMode === "Schedule for later" ? "Schedule post" : "Save draft"}
           </button>
         </div>
       </section>

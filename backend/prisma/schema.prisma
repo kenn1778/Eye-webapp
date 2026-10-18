@@ -16,6 +16,7 @@ model User {
   id           String   @id @default(cuid())
   email        String   @unique
   passwordHash String
+  name         String?
   createdAt    DateTime @default(now())
 
   stories      Story[]
@@ -37,13 +38,41 @@ model Story {
 }
 
 model Post {
-  id        String   @id @default(cuid())
-  title     String
-  content   String
-  authorId  String?
-  createdAt DateTime @default(now())
+  id          String    @id @default(cuid())
+  title       String
+  content     String
+  excerpt     String    @default("")
+  category    String    @default("Scholarships")
+  image       String    @default("")
+  actionUrl   String?
+  actionLabel String?
+  // draft | published | scheduled
+  status      String    @default("draft")
+  publishedAt DateTime?
+  deletedAt   DateTime?
+  authorId    String?
+  mediaAssetId String?
+  linkHeaderAssetId String?
+  audioAssetId String?
+  videoAssetId String?
+  linkHeaderUrl String?
+  audioUrl String?
+  videoUrl String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   author User? @relation(fields: [authorId], references: [id])
+  mediaAsset MediaAsset? @relation("PostFeaturedMedia", fields: [mediaAssetId], references: [id], onDelete: SetNull)
+  linkHeaderAsset MediaAsset? @relation("PostLinkHeaderMedia", fields: [linkHeaderAssetId], references: [id], onDelete: SetNull)
+  audioAsset MediaAsset? @relation("PostAudioMedia", fields: [audioAssetId], references: [id], onDelete: SetNull)
+  videoAsset MediaAsset? @relation("PostVideoMedia", fields: [videoAssetId], references: [id], onDelete: SetNull)
+
+  @@index([status, publishedAt])
+  @@index([deletedAt, createdAt])
+  @@index([mediaAssetId])
+  @@index([linkHeaderAssetId])
+  @@index([audioAssetId])
+  @@index([videoAssetId])
 }
 
 model Community {
@@ -55,6 +84,19 @@ model Community {
 
   owner        User?         @relation(fields: [ownerId], references: [id])
   chatMessages ChatMessage[]
+  memberships  CommunityMembership[]
+}
+
+model CommunityMembership {
+  id          String   @id @default(cuid())
+  visitorId   String
+  communityId String
+  createdAt   DateTime @default(now())
+
+  community Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+
+  @@unique([visitorId, communityId])
+  @@index([communityId, createdAt])
 }
 
 model ChatMessage {
@@ -73,12 +115,64 @@ model ChatMessage {
 
 model Review {
   id        String   @id @default(cuid())
+  name      String   @default("Reader")
   rating    Int
   comment   String?
+  published Boolean  @default(true)
   authorId  String?
   createdAt DateTime @default(now())
 
   author User? @relation(fields: [authorId], references: [id])
+
+  @@index([published, createdAt])
+}
+
+// Single-admin profile overlay supports persistent profile/password updates
+// even when the initial administrator is configured through environment vars.
+model AdminProfile {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String   @default("Administrator")
+  passwordHash String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+// Persistent team access entries. Invitations are tracked as pending because
+// this deployment has no mail provider or multi-user authentication flow yet.
+model Moderator {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  role      String   @default("Moderator")
+  status    String   @default("Invited")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, createdAt])
+}
+
+// Binary data lives in a private S3 bucket; only object metadata is kept in
+// Postgres so references remain available to every API instance/browser.
+model MediaAsset {
+  id           String   @id @default(cuid())
+  objectKey    String   @unique
+  originalName String
+  mimeType     String
+  sizeBytes    BigInt
+  status       String   @default("pending")
+  altText      String?
+  uploadedBy   String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  featuredPosts Post[] @relation("PostFeaturedMedia")
+  linkHeaderPosts Post[] @relation("PostLinkHeaderMedia")
+  audioPosts Post[] @relation("PostAudioMedia")
+  videoPosts Post[] @relation("PostVideoMedia")
+
+  @@index([status, createdAt])
+  @@index([uploadedBy, createdAt])
 }
 
 model NewsletterSubscriber {
@@ -126,4 +220,33 @@ model Subscription {
 
   // The dashboard and access checks filter by status and expiry.
   @@index([status, currentPeriodEnd])
+}
+
+// Audit log for every admin action. Records who did what, when, and on which
+// resource so the dashboard can show a full activity trail.
+model AuditLog {
+  id         String   @id @default(cuid())
+  // Admin user id (null if session predates user linking).
+  actorId    String?
+  actorEmail String
+  // HTTP method: "POST" | "PATCH" | "DELETE" | "GET"
+  method     String
+  // Route path, e.g. "/posts", "/moderators/:id"
+  path       String
+  // Resource type affected: "post" | "moderator" | "community" | "profile" | "notification"
+  resource   String
+  // Resource id if applicable.
+  resourceId String?
+  // Short human-readable description of the action.
+  action     String
+  // HTTP response outcome for the attempted action.
+  statusCode Int
+  success    Boolean  @default(true)
+  // Safe request metadata only (for example, changed field names).
+  meta       Json?
+  createdAt  DateTime @default(now())
+
+  @@index([actorEmail, createdAt])
+  @@index([resource, createdAt])
+  @@index([createdAt])
 }

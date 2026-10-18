@@ -36,6 +36,14 @@ export const config = {
   cookieSecure: toBool(process.env.COOKIE_SECURE, isProduction),
   // Postgres connection string used by Prisma (see prisma.config.ts).
   databaseUrl: process.env.DATABASE_URL ?? "",
+  awsRegion: process.env.AWS_REGION ?? "",
+  s3MediaBucket: process.env.S3_MEDIA_BUCKET ?? "",
+  s3MediaPublicBaseUrl: (process.env.S3_MEDIA_PUBLIC_BASE_URL ?? "").replace(/\/$/, ""),
+  s3BackupBucket: process.env.S3_BACKUP_BUCKET ?? "",
+  s3BackupPrefix: (process.env.S3_BACKUP_PREFIX ?? "postgres").replace(/^\/+|\/+$/g, ""),
+  s3Endpoint: process.env.S3_ENDPOINT ?? "",
+  s3ForcePathStyle: toBool(process.env.S3_FORCE_PATH_STYLE, false),
+  s3UploadUrlTtlSeconds: toInt(process.env.S3_UPLOAD_URL_TTL_SECONDS, 600),
   // Google Gemini powers the community chat assistant. Empty key disables the
   // assistant (the chat falls back to its built-in replies).
   geminiApiKey: process.env.GEMINI_API_KEY ?? "",

@@ -9,6 +9,8 @@ import { newsletterRouter } from "./newsletter.js";
 import { chatRouter } from "./chat.js";
 import { adminRouter } from "./admin.js";
 import { membershipRouter } from "./membership.js";
+import { publicRouter } from "./public.js";
+import { mediaAdminRouter, publicMediaRouter } from "./media.js";
 import { prisma, disconnectPrisma } from "./lib/prisma.js";
 import { logger } from "./lib/logger.js";
 import { cache } from "./lib/cache.js";
@@ -109,6 +111,9 @@ app.use("/api/v1/newsletter", newsletterRouter);
 app.use("/api/v1/chat", chatRouter);
 app.use("/api/v1/admin", adminRouter);
 app.use("/api/v1/membership", membershipRouter);
+app.use("/api/v1/public", publicRouter);
+app.use("/api/v1/admin/media", mediaAdminRouter);
+app.use("/api/v1/public/media", publicMediaRouter);
 
 app.use((_req, res) => res.status(404).json({ message: "Not found." }));
 

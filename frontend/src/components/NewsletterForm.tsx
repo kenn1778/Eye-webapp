@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
-import { readJson, writeJson } from "../lib/storage";
 
 function stripHtml(input: string): string {
   // eslint-disable-next-line no-control-regex -- intentional: strip ASCII control characters from email input
@@ -16,18 +15,12 @@ type Props = {
   showBenefits?: boolean;
 };
 
-const SUBSCRIBERS_KEY = "eye:subscribed";
-const DEMO_LATENCY_MS = 900;
 const SUCCESS_RESET_MS = 6000;
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function isValidEmail(value: string): boolean {
   return EMAIL_PATTERN.test(value.trim());
-}
-
-function isEmailList(value: unknown): value is string[] {
-  return Array.isArray(value) && value.every((item) => typeof item === "string");
 }
 
 export function NewsletterForm({
@@ -69,11 +62,6 @@ export function NewsletterForm({
     return data.message || "Check your email - we sent a confirmation link.";
   }
 
-  async function subscribeInDemoMode(): Promise<string> {
-    await new Promise((resolve) => window.setTimeout(resolve, DEMO_LATENCY_MS));
-    return "You are on the list. Check your inbox for a confirmation.";
-  }
-
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault();
     const sanitizedEmail = stripHtml(email.trim());
@@ -101,33 +89,15 @@ export function NewsletterForm({
       return;
     }
 
-    // Guard against duplicate signups from this browser.
-    const existing = readJson<string[]>([], SUBSCRIBERS_KEY, isEmailList);
-    if (existing.includes(address)) {
-      setStatus("error");
-      setMessage("You are already on the list. Check your inbox.");
-      return;
-    }
-
     setStatus("loading");
     setMessage("");
 
     try {
-      let confirmation: string;
-      try {
-        confirmation = await subscribeViaApi(apiBase ?? "", address);
-      } catch (error) {
-        if (error instanceof TypeError) {
-          confirmation = await subscribeInDemoMode();
-        } else {
-          throw error;
-        }
-      }
+      const confirmation = await subscribeViaApi(apiBase ?? "", address);
 
       setStatus("success");
       setMessage(confirmation);
 
-      writeJson(SUBSCRIBERS_KEY, [...existing, address]);
       setEmail("");
 
       resetTimerRef.current = window.setTimeout(() => {
@@ -218,7 +188,7 @@ export function NewsletterForm({
             <span>{message}</span>
           ) : (
             <span className="newsletter-pro-hint">
-              No spam. Unsubscribe anytime. View <Link to="/privacy">privacy</Link>.
+              No spam. Your email is stored securely. View <Link to="/privacy">privacy</Link>.
             </span>
           )}
         </div>
