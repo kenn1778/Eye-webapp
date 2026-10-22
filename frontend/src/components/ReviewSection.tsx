@@ -126,26 +126,41 @@ export function ReviewSection() {
     <section className="review-section" id="reviews" aria-labelledby="reviews-title">
       <div className="section-heading">
         <div>
-          <div className="eyebrow">From the readers</div>
+          <div className="eyebrow">Reader feedback</div>
           <h2 id="reviews-title">What visitors say</h2>
+          <p className="review-intro">Honest notes from people finding their next opportunity with EYE.</p>
         </div>
         <span className="section-number">04 / 04</span>
       </div>
 
       <div className="review-layout">
         <div className="review-summary">
-          <div className="review-score">{reviews.length === 0 ? "—" : average.toFixed(1)}</div>
-          <Stars value={Math.round(average)} />
-          <p className="review-count">
-            {reviews.length === 0
-              ? "No reviews yet"
-              : `${reviews.length} review${reviews.length === 1 ? "" : "s"} on this page`}
-          </p>
-          <p className="review-note">Reviews are shared with readers across devices.</p>
+          <div className="review-summary-top">
+            <span className="review-summary-label">Average rating</span>
+            <span className="review-summary-icon" aria-hidden="true">✦</span>
+          </div>
+          <div className="review-summary-score-row">
+            <div className="review-score">{reviews.length === 0 ? "—" : average.toFixed(1)}</div>
+            <div className="review-summary-detail">
+              <Stars value={Math.round(average)} />
+              <p className="review-count">
+                {reviews.length === 0
+                  ? "No reviews yet"
+                  : `Based on ${reviews.length} reader review${reviews.length === 1 ? "" : "s"}`}
+              </p>
+            </div>
+          </div>
+          <p className="review-note">Your perspective helps the EYE community grow.</p>
         </div>
 
         <form className="review-form" onSubmit={handleSubmit} aria-label="Leave a review">
-          <h3>Leave a review</h3>
+          <div className="review-form-heading">
+            <div>
+              <span className="review-form-kicker">Your experience</span>
+              <h3>Leave a review</h3>
+            </div>
+            <span className="review-form-private">Shared with readers</span>
+          </div>
           <label className="review-field">
             <span>Your name</span>
             <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Adjoa M." maxLength={40} />

@@ -1,6 +1,6 @@
 ﻿import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { readString, removeItem, writeString } from "../lib/storage";
+import { readString, writeString } from "../lib/storage";
 
 type Consent = "accepted" | "rejected";
 
@@ -29,6 +29,12 @@ export function CookieConsent() {
     return () => window.clearTimeout(timer);
   }, [consent]);
 
+  useEffect(() => {
+    const openPreferences = () => setShowSettings(true);
+    window.addEventListener("eye-open-cookie-settings", openPreferences);
+    return () => window.removeEventListener("eye-open-cookie-settings", openPreferences);
+  }, []);
+
   const save = (value: Consent) => {
     writeString(CONSENT_KEY, value);
     setConsent(value);
@@ -36,14 +42,13 @@ export function CookieConsent() {
     window.dispatchEvent(new CustomEvent(CONSENT_EVENT, { detail: value }));
   };
 
-  const resetChoice = () => {
-    removeItem(CONSENT_KEY);
-    setConsent(null);
-  };
-
-  // Hide completely after a choice is made. Banner only shows once per browser.
+  // Collapse after a choice, but retain a small control so the preference can be changed later.
   if (consent !== null && !showSettings) {
-    return null;
+    return (
+      <button className="cookie-settings-link" type="button" onClick={() => setShowSettings(true)}>
+        Cookie preferences
+      </button>
+    );
   }
 
   const isBannerVisible = (consent === null && isReady) || showSettings;
@@ -53,26 +58,38 @@ export function CookieConsent() {
   }
 
   return (
-    <div className="cookie-banner" role="dialog" aria-modal="true" aria-labelledby="cookie-title" aria-describedby="cookie-desc">
+    <div className="cookie-banner" role="dialog" aria-labelledby="cookie-title" aria-describedby="cookie-desc">
       <div className="cookie-card">
-        <h2 id="cookie-title" className="eyebrow">Cookies</h2>
-        <p id="cookie-desc">
-          We use strictly necessary cookies to run the site. With your consent, we use analytics to see what is useful.
-          No ads, no sale of data. See <Link to="/cookies">Cookies</Link> and <Link to="/privacy">Privacy</Link>.
-        </p>
-        <div className="cookie-actions">
-          <button className="button-secondary" type="button" onClick={() => save("rejected")}>Reject non-essential</button>
-          <button className="admin-primary" type="button" onClick={() => save("accepted")}>Accept</button>
-        </div>
-        <button className="cookie-manage" type="button" onClick={() => setShowSettings(!showSettings)}>
-          {showSettings ? "Close settings" : "Manage preferences"}
-        </button>
-        {showSettings && consent !== null && (
-          <div className="cookie-settings">
-            <p>
-              <strong>Current choice:</strong> {consent === "accepted" ? "Analytics allowed" : "Only necessary"}
+        <div className="cookie-main">
+          <div className="cookie-icon" aria-hidden="true">
+            <svg viewBox="0 0 32 32" fill="none"><path d="M26.7 16.3a10.8 10.8 0 1 1-11-11c-.3 3.7 2.8 6.8 6.5 6.5-.3 2.3 1.8 4.6 4.5 4.5Z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/><circle cx="11" cy="12" r="1.3" fill="currentColor"/><circle cx="17" cy="21" r="1.3" fill="currentColor"/><circle cx="10" cy="19" r="1.3" fill="currentColor"/></svg>
+          </div>
+          <div className="cookie-copy">
+            <span className="cookie-kicker">Your privacy</span>
+            <h2 id="cookie-title">A little choice about cookies</h2>
+            <p id="cookie-desc">
+              Necessary cookies keep EYE working. With your permission, analytics help us understand what readers find useful. No ads and no sale of your data. <Link to="/cookies">Cookie details</Link>
             </p>
-            <button className="button-secondary" type="button" onClick={resetChoice}>Reset choice</button>
+          </div>
+        </div>
+        <div className="cookie-controls">
+          {!showSettings && (
+            <div className="cookie-actions">
+              <button className="cookie-reject" type="button" onClick={() => save("rejected")}>Reject optional</button>
+              <button className="cookie-accept" type="button" onClick={() => save("accepted")}>Accept all</button>
+            </div>
+          )}
+          <button className="cookie-manage" type="button" aria-expanded={showSettings} onClick={() => setShowSettings(!showSettings)}>
+            {showSettings ? "Close preferences" : "Manage preferences"}
+          </button>
+        </div>
+        {showSettings && (
+          <div className="cookie-settings">
+            <p><strong>Necessary cookies</strong> are always on. Choose whether to allow optional analytics.{consent !== null && <> Current choice: {consent === "accepted" ? "analytics allowed" : "necessary only"}.</>}</p>
+            <div className="cookie-settings-actions">
+              <button className="cookie-reject" type="button" onClick={() => save("rejected")}>Necessary only</button>
+              <button className="cookie-accept" type="button" onClick={() => save("accepted")}>Allow analytics</button>
+            </div>
           </div>
         )}
       </div>

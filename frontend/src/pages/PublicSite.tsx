@@ -16,6 +16,9 @@ import { outboundRel } from "../lib/monetization";
 import { trackEvent } from "../lib/analytics";
 import { MEMBERSHIP_ENABLED } from "../config";
 import { fetchCommunityMembership, setCommunityMembership } from "../lib/adminApi";
+import scholarshipCommunityArt from "../../../pics-1/Scholarship seekers.png";
+import creativeCommunityArt from "../../../pics-1/Creative careers.png";
+import firstJobCommunityArt from "../../../pics-1/First job circle.png";
 
 type PublicSiteProps = {
   stories: Story[];
@@ -23,9 +26,27 @@ type PublicSiteProps = {
 };
 
 const heroWords = ["signal", "clarity", "momentum", "opportunity"];
+const communityArt: Record<string, { src: string; alt: string }> = {
+  "Scholarship seekers": {
+    src: scholarshipCommunityArt,
+    alt: "Students walking together on campus, representing a supportive scholarship-seeker community",
+  },
+  "Creative careers": {
+    src: creativeCommunityArt,
+    alt: "A busy creative studio with people collaborating across shared work tables",
+  },
+  "First job circle": {
+    src: firstJobCommunityArt,
+    alt: "Three early-career colleagues discussing work together and sharing guidance",
+  },
+};
 
 export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
   const [isShrunk, setIsShrunk] = useState(false);
+  const [activeNav, setActiveNav] = useState(() => {
+    const hash = window.location.hash.slice(1);
+    return ["stories", "opportunities", "communities", "about"].includes(hash) ? hash : "stories";
+  });
   const [wordIndex, setWordIndex] = useState(0);
   const [prevWordIndex, setPrevWordIndex] = useState(0);
   // Ref mirrors the index so the timer reads the live value instead of a stale state closure.
@@ -35,11 +56,28 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
   useEffect(() => {
     const onScroll = () => {
       setIsShrunk(window.scrollY > 32);
-      setShowBackToTop(window.scrollY > 600);
+      const nearPageEnd = window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 120;
+      setShowBackToTop(window.scrollY > 600 && !nearPageEnd);
     };
     // passive so the page keeps scrolling smoothly; we never call preventDefault here.
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    const sections = ["stories", "opportunities", "communities", "about"]
+      .map((id) => document.getElementById(id))
+      .filter((section): section is HTMLElement => section !== null);
+    const updateActiveSection = () => {
+      const activationPoint = window.innerHeight * 0.65;
+      const currentSection = sections
+        .filter((section) => section.getBoundingClientRect().top <= activationPoint)
+        .at(-1);
+      if (currentSection) setActiveNav(currentSection.id);
+    };
+    updateActiveSection();
+    window.addEventListener("scroll", updateActiveSection, { passive: true });
+    return () => window.removeEventListener("scroll", updateActiveSection);
   }, []);
 
   useEffect(() => {
@@ -190,12 +228,12 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
           <span className="nav-toggle-bars" aria-hidden="true"><span /><span /><span /></span>
         </button>
         <nav id="site-menu" className={menuOpen ? "main-nav is-open" : "main-nav"} aria-label="Main navigation">
-          <a className="active" href="#stories" onClick={() => setMenuOpen(false)}>
+          <a className={activeNav === "stories" ? "active" : ""} href="#stories" aria-current={activeNav === "stories" ? "location" : undefined} onClick={() => { setActiveNav("stories"); setMenuOpen(false); }}>
             Stories
           </a>
-          <a href="#opportunities" onClick={() => setMenuOpen(false)}>Opportunities</a>
-          <a href="#communities" onClick={() => setMenuOpen(false)}>Communities</a>
-          <a href="#about" onClick={() => setMenuOpen(false)}>About</a>
+          <a className={activeNav === "opportunities" ? "active" : ""} href="#opportunities" aria-current={activeNav === "opportunities" ? "location" : undefined} onClick={() => { setActiveNav("opportunities"); setMenuOpen(false); }}>Opportunities</a>
+          <a className={activeNav === "communities" ? "active" : ""} href="#communities" aria-current={activeNav === "communities" ? "location" : undefined} onClick={() => { setActiveNav("communities"); setMenuOpen(false); }}>Communities</a>
+          <a className={activeNav === "about" ? "active" : ""} href="#about" aria-current={activeNav === "about" ? "location" : undefined} onClick={() => { setActiveNav("about"); setMenuOpen(false); }}>About</a>
           {MEMBERSHIP_ENABLED && (
             <Link to="/pricing" onClick={() => setMenuOpen(false)}>Pricing</Link>
           )}
@@ -212,7 +250,7 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
           onMouseLeave={handleHeroLeave}
         >
           <HeroEye />
-          <div className="eyebrow">For the next chapter</div>
+          <div className="hero-kicker"><span aria-hidden="true" /> For the next chapter</div>
           <h1>
             Find the{" "}
             <span className="hero-rotator">
@@ -239,8 +277,11 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
               Explore stories <span aria-hidden="true">-&gt;</span>
             </a>
             <button className="text-button" type="button" onClick={() => document.getElementById("newsletter")?.scrollIntoView({ behavior: "smooth" })}>
-              Get the weekly brief <span aria-hidden="true">+</span>
+              Get the weekly brief <span aria-hidden="true">-&gt;</span>
             </button>
+          </div>
+          <div className="hero-proof" aria-label="What EYE covers">
+            <span>Scholarships</span><span>Work</span><span>Ideas</span><span>Culture</span>
           </div>
           <div className="hero-scroll-hint" aria-hidden="true">
             <span className="hero-scroll-mouse"><span /></span>
@@ -268,9 +309,10 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
         <Reveal>
         <section className="feature-section" id="stories">
           <div className="section-heading">
-            <div>
+            <div className="feature-section-heading">
               <div className="eyebrow">Editor&apos;s pick</div>
-              <h2>Start here</h2>
+              <h2>Start with a good story</h2>
+              <p>A handpicked read to help you find your next step.</p>
             </div>
             <span className="section-number">01 / 04</span>
           </div>
@@ -282,10 +324,14 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
               aria-label={featuredStory.title}
             />
             <div className="feature-content">
-              <span className="story-label">{featuredStory.category}</span>
+              <div className="feature-meta-row">
+                <span className="feature-pick-label"><span aria-hidden="true">✦</span> Featured story</span>
+                <span className="feature-category">{featuredStory.category}</span>
+              </div>
               {featuredStory.sponsored && <SponsoredBadge />}
               <h3>{featuredStory.title}</h3>
               <p>{featuredStory.excerpt}</p>
+              <div className="feature-story-meta">{featuredStory.meta}</div>
               {featuredStory.actionUrl ? (
                 <a
                   className="story-link"
@@ -304,23 +350,25 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
         </section>
         </Reveal>
         <Reveal>
-        <section className="latest-section" id="opportunities">
+        <section className="latest-section" id="opportunities" aria-labelledby="latest-title">
           <div className="latest-toolbar">
-            <div>
-              <div className="eyebrow">The latest</div>
-              <h2>Worth your attention</h2>
+            <div className="latest-heading">
+              <div className="eyebrow">Freshly curated</div>
+              <h2 id="latest-title">Worth your attention</h2>
+              <p>Ideas, opportunities, and stories selected for your next step.</p>
             </div>
-            <label className="search-field">
+            <label className="search-field" htmlFor="story-search">
               <span className="sr-only">Search stories</span>
               <input
+                id="story-search"
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
-                placeholder="Search stories"
+                placeholder="Search stories and topics"
               />
-              <span>/</span>
+              <svg aria-hidden="true" viewBox="0 0 20 20" fill="none"><circle cx="8.8" cy="8.8" r="5.8" stroke="currentColor" strokeWidth="1.6"/><path d="m13.2 13.2 4 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
             </label>
           </div>
-          <div className="category-tabs" role="tablist">
+          <div className="category-tabs" role="group" aria-label="Filter stories by category">
             {availableCategories.map((item) => (
               <button
                 className={
@@ -329,12 +377,15 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
                 key={item}
                 type="button"
                 onClick={() => setCategory(item)}
-                role="tab"
-                aria-selected={category === item}
+                aria-pressed={category === item}
               >
                 {item}
               </button>
             ))}
+          </div>
+          <div className="latest-results" aria-live="polite">
+            <span>{cardStories.length} {cardStories.length === 1 ? "story" : "stories"}</span>
+            {category !== "All stories" && <span className="latest-filter-label">in {category}</span>}
           </div>
           <div className="story-grid">
             {cardStories.map((story) => (
@@ -371,39 +422,59 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
               </article>
             ))}
           </div>
+          {cardStories.length === 0 && (
+            <div className="latest-empty-state">
+              <span className="latest-empty-icon" aria-hidden="true">⌕</span>
+              <h3>No stories found</h3>
+              <p>Try another search or choose a different category.</p>
+              <button type="button" onClick={() => { setQuery(""); setCategory("All stories"); }}>Clear filters</button>
+            </div>
+          )}
         </section>
         </Reveal>
         <AdSlot placement="in-content" />
         <Reveal>
         <section className="communities-section" id="communities" aria-labelledby="communities-title">
           <div className="section-heading">
-            <div><div className="eyebrow">Find your people</div><h2 id="communities-title">Communities</h2></div>
+            <div><div className="eyebrow">Better, together</div><h2 id="communities-title">Find your community</h2></div>
             <span className="section-number">03 / 03</span>
           </div>
-          <p className="communities-intro">Useful rooms for asking better questions, sharing leads, and finding momentum together.</p>
+          <div className="communities-intro-row">
+            <p className="communities-intro">Find people who understand your next step. Share useful leads, ask better questions, and build momentum together.</p>
+            <div className="community-values" aria-label="Community benefits">
+              <span>Share useful leads</span><span>Get support</span><span>Grow together</span>
+            </div>
+          </div>
           {communityMessage && <p className="review-error" role="alert">{communityMessage}</p>}
           <div className="community-grid">
             {communities.map((community) => {
               const isJoined = joinedCommunities.includes(community.name);
               return (
                 <article className="community-card" key={community.name}>
-                  <div className={`community-art ${community.accent}`}><span aria-hidden="true">â—Œ</span><span aria-hidden="true">â—Œ</span><span aria-hidden="true">â—Œ</span></div>
+                  <div className={`community-art ${community.accent}`}>
+                    <img className="community-art-image" src={communityArt[community.name].src} alt={communityArt[community.name].alt} />
+                  </div>
                   <div className="community-card-body">
-                    <span className="story-label">Community</span>
+                    <span className="community-card-label"><span aria-hidden="true" /> EYE community</span>
                     <h3>{community.name}</h3>
                     <p>{community.description}</p>
                     <div className="community-footer">
-                      <span>{communityCounts[community.name] ?? 0} members</span>
+                      <span className="community-member-count">
+                        <svg aria-hidden="true" viewBox="0 0 20 20" fill="none"><circle cx="7.4" cy="6.1" r="2.8" stroke="currentColor" strokeWidth="1.4"/><path d="M2.5 16c.3-2.7 2.2-4.3 4.9-4.3s4.6 1.6 4.9 4.3M13 4.3a2.4 2.4 0 0 1 0 4.6m1.2 2.7c1.9.4 3 1.8 3.3 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>
+                        {communityCounts[community.name] ?? 0} members
+                      </span>
                       {isJoined ? (
-                        <button type="button" className="chat-open-btn" onClick={() => setActiveChat(community)}>Open chat â†’</button>
+                        <button type="button" className="community-action-btn chat-open-btn" onClick={() => setActiveChat(community)}>Open chat <span aria-hidden="true">-&gt;</span></button>
                       ) : (
                         <button
+                          className="community-action-btn"
+                          aria-label={`Join ${community.name} and open chat`}
                           type="button"
                           onClick={async () => {
                             if (await toggleCommunity(community.name, true)) setActiveChat(community);
                           }}
                         >
-                          Join & chat â†’
+                          Join community <span aria-hidden="true">-&gt;</span>
                         </button>
                       )}
                     </div>
@@ -436,24 +507,25 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
       <section className="newsletter-section" id="newsletter" aria-labelledby="newsletter-title">
         <div className="newsletter-card">
           <div className="newsletter-card-left">
-            <div className="eyebrow">Weekly brief â€” every Monday 7am</div>
+            <div className="newsletter-eyebrow"><span className="newsletter-live-dot" aria-hidden="true" /> Weekly brief <span>Every Monday at 7am</span></div>
             <h2 id="newsletter-title">Get the opportunities that actually matter</h2>
             <p className="newsletter-card-copy">
-              One curated email. Scholarships, internships, and culture â€” filtered for builders, not browsers.
+              One curated email. Scholarships, internships, and culture — filtered for builders, not browsers.
               Join students and early-career builders across Ghana.
             </p>
             <NewsletterForm variant="card" buttonLabel="Join free" />
             <p className="newsletter-trust">
-              <span aria-hidden="true">ðŸ”’</span> No spam. Your email is stored securely. <Link to="/privacy">Privacy</Link> â€¢ See <a href="#stories">past briefs</a>
+              <svg aria-hidden="true" viewBox="0 0 16 16" fill="none"><path d="M8 1.5 13 3.4v3.8c0 3.1-2.1 5.8-5 7.3-2.9-1.5-5-4.2-5-7.3V3.4L8 1.5Z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round"/><path d="m5.7 7.8 1.5 1.5 3.2-3.2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              No spam. Your email is stored securely. <Link to="/privacy">Privacy</Link><span className="newsletter-trust-separator" aria-hidden="true">·</span><a href="#stories">See past briefs</a>
             </p>
           </div>
           <div className="newsletter-card-right" aria-hidden="true">
             <div className="newsletter-preview">
-              <div className="preview-header"><span className="preview-dot" /><span className="preview-dot" /><span className="preview-dot" /><span className="preview-subject">EYE â€” Weekly Brief #47</span></div>
+              <div className="preview-header"><span className="preview-brand-mark" aria-hidden="true">E</span><span className="preview-subject">EYE WEEKLY <span>ISSUE 47</span></span><span className="preview-date">MON, 7:00 AM</span></div>
               <div className="preview-line" style={{ width: "92%" }} />
               <div className="preview-line" style={{ width: "86%" }} />
               <div className="preview-line" style={{ width: "78%" }} />
-              <div className="preview-pill">3 scholarships closing this week â†’</div>
+              <div className="preview-pill"><span aria-hidden="true">✦</span> 3 scholarships closing this week</div>
             </div>
           </div>
         </div>
@@ -483,11 +555,14 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
           <a href="#newsletter">Newsletter</a>
         </nav>
         <div className="footer-newsletter">
+          <h3 className="footer-nav-title">The EYE weekly brief</h3>
+          <p className="footer-newsletter-copy">A thoughtful note with scholarships, first-job leads, and culture worth your time.</p>
           <NewsletterForm variant="footer" placeholder="you@example.com" buttonLabel="Subscribe" showBenefits={false} />
         </div>
         <PolicyBar />
         <div className="footer-meta">
           <span>Â© 2026 EYE. All rights reserved.</span>
+          <button className="footer-cookie-link" type="button" onClick={() => window.dispatchEvent(new Event("eye-open-cookie-settings"))}>Cookie preferences</button>
           <a href="mailto:teckennedy177@gmail.com">Contact</a>
         </div>
       </footer>

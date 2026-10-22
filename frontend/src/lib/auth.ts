@@ -25,8 +25,18 @@ export async function login(email: string, password: string): Promise<LoginResul
     });
     const data = await parseJson(response);
     if (!response.ok) {
-      const message = typeof data.message === "string" ? data.message : "Invalid email or password.";
-      return { ok: false, error: message };
+      // The API nests errors as { error: { message } }; older routes use a
+      // top-level message. A 5xx is never a credential problem, so do not tell
+      // the user their password is wrong when the server is misconfigured.
+      const nested = (data.error as { message?: unknown } | undefined)?.message;
+      const serverMessage =
+        (typeof data.message === "string" && data.message) ||
+        (typeof nested === "string" ? nested : "");
+      if (response.status >= 500) {
+        logError("auth", `Login failed with ${response.status}: ${serverMessage || "no message"}`);
+        return { ok: false, error: "Unable to sign in right now. Please try again." };
+      }
+      return { ok: false, error: serverMessage || "Invalid email or password." };
     }
     // Server may omit the user; reuse the submitted email so the UI still has
     // an identity to show.
