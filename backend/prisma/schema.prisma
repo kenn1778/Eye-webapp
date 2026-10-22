@@ -185,6 +185,19 @@ model NewsletterSubscriber {
   @@index([subscribedAt])
 }
 
+// Single-use links for the password reset flow. Only the SHA-256 hash of the
+// token is stored, so a leaked row cannot be replayed against the API.
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  email     String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([email, expiresAt])
+}
+
 // Admin-facing feed. Rows are created by domain events (a new subscriber, a new
 // community message) and read/dismissed state is persisted per row so the
 // dashboard can show an accurate unread count across sessions.

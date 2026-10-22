@@ -51,8 +51,17 @@ export function isAgentConfigured() {
 
 // Strip characters that could break out of the prompt framing. The community
 // name is user-supplied, so it is treated as untrusted too.
+// Also defends against prompt injection by stripping markdown, HTML, and instruction-like phrases.
 function sanitizeLabel(value) {
-  return String(value).replace(/[\r\n"`]+/g, " ").trim().slice(0, 60);
+  return String(value)
+    // Strip markdown, HTML, control characters, and common injection patterns
+    .replace(/[\r\n`*_#\[\]()<>|{}]+/g, " ")
+    // Strip potential instruction overrides
+    .replace(/(ignore|forget|disregard|override|system|prompt|instruction)/gi, "")
+    // Collapse whitespace
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 60);
 }
 
 // Ask Gemini for a reply. Returns null on any failure so callers can fall back
@@ -87,8 +96,28 @@ export async function generateReply({ community, text }) {
     },
   };
 
+  // Retry helper with exponential backoff for transient failures
+  async function fetchWithRetry(url, options, retries = 2) {
+    for (let i = 0; i <= retries; i++) {
+      try {
+        const response = await fetch(url, options);
+        if (!response.ok && i < retries) {
+          // Retry on 5xx errors
+          if (response.status >= 500) {
+            await new Promise(r => setTimeout(r, Math.pow(2, i) * 1000));
+            continue;
+          }
+        }
+        return response;
+      } catch (error) {
+        if (i === retries) throw error;
+        await new Promise(r => setTimeout(r, Math.pow(2, i) * 1000));
+      }
+    }
+  }
+
   try {
-    const response = await fetch(url, {
+    const response = await fetchWithRetry(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

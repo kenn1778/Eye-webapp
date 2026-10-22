@@ -23,6 +23,21 @@ services:
       retries: 5
     restart: unless-stopped
 
+  # One-shot release step. Runs `prisma migrate deploy` exactly once per deploy,
+  # then exits; the backend waits for it to finish so replicas never race.
+  migrate:
+    build:
+      context: ./backend
+      target: migrate
+    env_file:
+      - ./backend/.env
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/scholarship
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+
   backend:
     build: ./backend
     env_file:
@@ -36,6 +51,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
     ports:
       - "4000:4000"
     restart: unless-stopped

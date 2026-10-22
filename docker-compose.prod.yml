@@ -1,0 +1,65 @@
+# Production compose: managed Postgres/Redis, N backend replicas, and a
+# one-shot migration step that runs before any replica starts.
+#
+# Usage:
+#   docker compose -f docker-compose.prod.yml build
+#   docker compose -f docker-compose.prod.yml up -d
+#   docker compose -f docker-compose.prod.yml up -d --scale backend=3
+#
+# DATABASE_URL and REDIS_URL in backend/.env must point at the managed
+# instances. Migrations run once here; the backend image never migrates.
+
+services:
+  # Release step. `prisma migrate deploy` is idempotent, and because exactly one
+  # container runs it before the replicas start, concurrent Replicas can never
+  # race to apply the same migration.
+  migrate:
+    build:
+      context: ./backend
+      target: migrate
+    env_file:
+      - ./backend/.env
+    restart: "no"
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+
+  backend:
+    build: ./backend
+    env_file:
+      - ./backend/.env
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+    # Reachable on the compose network as backend:4000; the frontend nginx
+    # proxies /api and /healthz here. No host port, so replicas can scale.
+    expose:
+      - "4000"
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_ENABLE_ADMIN: ${VITE_ENABLE_ADMIN:-false}
+        VITE_ENABLE_MEMBERSHIP: ${VITE_ENABLE_MEMBERSHIP:-false}
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-}
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+
+  # Optional scheduled pg_dump backup. Run manually or from cron:
+  #   docker compose -f docker-compose.prod.yml run --rm backup
+  backup:
+    profiles: ["backup"]
+    build: ./backend
+    env_file:
+      - ./backend/.env
+    command: ["npm", "run", "backup:s3"]
+    restart: "no"

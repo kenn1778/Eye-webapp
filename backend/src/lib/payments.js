@@ -12,20 +12,34 @@ const PAYSTACK_BASE = "https://api.paystack.co";
 export const paymentsEnabled = Boolean(config.paystackSecretKey);
 
 async function paystackRequest(path, { method = "GET", body } = {}) {
-  const response = await fetch(`${PAYSTACK_BASE}${path}`, {
-    method,
-    headers: {
-      Authorization: `Bearer ${config.paystackSecretKey}`,
-      "Content-Type": "application/json",
-    },
-    body: body ? JSON.stringify(body) : undefined,
-  });
-
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok || data.status === false) {
-    throw new Error(data?.message || `Paystack request failed (${response.status})`);
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10000); // 10s timeout
+  
+  try {
+    const response = await fetch(`${PAYSTACK_BASE}${path}`, {
+      method,
+      headers: {
+        Authorization: `Bearer ${config.paystackSecretKey}`,
+        "Content-Type": "application/json",
+      },
+      body: body ? JSON.stringify(body) : undefined,
+      signal: controller.signal,
+    });
+    
+    clearTimeout(timeout);
+    
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || data.status === false) {
+      throw new Error(data?.message || `Paystack request failed (${response.status})`);
+    }
+    return data.data;
+  } catch (error) {
+    clearTimeout(timeout);
+    if (error.name === "AbortError") {
+      throw new Error("Paystack request timeout");
+    }
+    throw error;
   }
-  return data.data;
 }
 
 // Start a transaction and return the hosted checkout URL.

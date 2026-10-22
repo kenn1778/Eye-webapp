@@ -21,9 +21,11 @@ asset is attached to a published post.
    media bucket to allow `PUT` from the admin frontend origin and expose the
    `ETag` response header. CORS is not an access-control mechanism; signed URLs
    and IAM authorize uploads.
-4. Deploy the backend. Docker startup runs `prisma migrate deploy` before the
-   server begins accepting traffic. Non-Docker deployments must run
-   `npx prisma migrate deploy` from `backend/` as a release step.
+4. Deploy the backend. Migrations are a separate release step: the `migrate`
+   service (Docker Compose, `target: migrate` image) runs `prisma migrate
+   deploy` exactly once and the backend waits for it to finish, so replicas
+   never race. Non-Docker deployments must run `npx prisma migrate deploy`
+   from `backend/` before rolling out the new image.
 5. Install PostgreSQL client tools compatible with the server (`pg_dump`) on a
    trusted backup runner and provide `DATABASE_URL` plus the backup bucket's
    IAM role. Run `npm run backup:s3` from `backend/` to create a custom-format

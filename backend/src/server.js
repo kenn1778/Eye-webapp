@@ -3,6 +3,7 @@ import express from "express";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import helmet from "helmet";
+import rateLimit from "express-rate-limit";
 import { config, auditConfig } from "./config.js";
 import { authRouter } from "./auth.js";
 import { newsletterRouter } from "./newsletter.js";
@@ -15,6 +16,8 @@ import { prisma, disconnectPrisma } from "./lib/prisma.js";
 import { logger } from "./lib/logger.js";
 import { cache } from "./lib/cache.js";
 import { drain, registerEmailJobs } from "./lib/queue.js";
+import { checkS3Health } from "./lib/s3.js";
+import { createRateLimitStore } from "./lib/rate-limit.js";
 
 const app = express();
 
@@ -89,7 +92,17 @@ app.use(
   }),
 );
 
-app.get("/health", (_req, res) => res.json({ ok: true }));
+// Lightweight rate limit for health endpoints (100 req/min per IP)
+const healthLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: "Too many health check requests" },
+  store: createRateLimitStore("rl:health:"),
+});
+
+app.get("/health", healthLimiter, (_req, res) => res.json({ ok: true }));
 
 // Cheap dependency probes - never throw, just report "up"/"down".
 async function probeDatabase() {
@@ -101,9 +114,19 @@ async function probeDatabase() {
   }
 }
 
-app.get("/healthz", async (_req, res) => {
-  const [db, cacheHealth] = await Promise.all([probeDatabase(), cache.health()]);
-  res.json({ status: "ok", uptime: process.uptime(), db, cache: cacheHealth });
+app.get("/healthz", healthLimiter, async (_req, res) => {
+  const [db, cacheHealth, s3Health] = await Promise.all([
+    probeDatabase(),
+    cache.health(),
+    checkS3Health(),
+  ]);
+  res.json({ 
+    status: "ok", 
+    uptime: process.uptime(), 
+    db, 
+    cache: cacheHealth,
+    s3: s3Health,
+  });
 });
 
 app.use("/api/v1/auth", authRouter);
@@ -118,10 +141,23 @@ app.use("/api/v1/public/media", publicMediaRouter);
 app.use((_req, res) => res.status(404).json({ message: "Not found." }));
 
 // Last-resort error handler - never leaks a stack trace in production.
-app.use((error, _req, res, _next) => {
-  logger.error({ err: error.message }, "[eye:error]");
+app.use((error, req, res, _next) => {
+  logger.error({ err: error.message, stack: error.stack }, "[eye:error]");
+  
+  // Don't leak internal errors in production
+  const message = config.isProduction 
+    ? "Something went wrong." 
+    : error.message;
+  
+  // Include error code for client handling
+  const errorCode = error.code || error.status || "INTERNAL_ERROR";
+  
   res.status(error.status ?? 500).json({
-    message: config.isProduction ? "Something went wrong." : error.message,
+    error: {
+      message,
+      code: errorCode,
+      requestId: req.id, // For support correlation
+    },
   });
 });
 
@@ -137,7 +173,7 @@ if (problems.length > 0) {
   logger.warn(`${banner} - sign-in will be unavailable until fixed.`);
 }
 
-// Register the placeholder email handlers before any request can enqueue work.
+// Register the email job handlers before any request can enqueue work.
 registerEmailJobs();
 
 const server = app.listen(config.port, () => {

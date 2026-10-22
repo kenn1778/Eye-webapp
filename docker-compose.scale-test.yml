@@ -1,0 +1,14 @@
+# Test-only override used by scripts/test-scale-migration.ps1.
+#
+# docker-compose.yml publishes the API on a fixed host port, which prevents
+# running more than one backend replica on a single machine. This override
+# drops that mapping (the frontend still reaches the API over the Compose
+# network, load-balanced across replicas) so the migrate-then-start ordering
+# can be exercised with `--scale backend=3`.
+#
+# `!reset` needs Docker Compose v2.24+ (Docker Desktop ships newer).
+services:
+  backend:
+    ports: !reset []
+    expose:
+      - "4000"

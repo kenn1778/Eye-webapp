@@ -49,6 +49,24 @@ const idSchema = z.string().min(1).max(64);
 const asyncHandler = (handler) => (req, res, next) =>
   Promise.resolve(handler(req, res, next)).catch(next);
 
+// Sensitive field patterns that should never be logged in audit trail
+const SENSITIVE_FIELD_PATTERNS = [
+  /password/i,
+  /passwd/i,
+  /secret/i,
+  /token/i,
+  /hash/i,
+  /authorization/i,
+  /apikey/i,
+  /api_key/i,
+  /private/i,
+  /credential/i,
+];
+
+function isSensitiveField(fieldName) {
+  return SENSITIVE_FIELD_PATTERNS.some(pattern => pattern.test(fieldName));
+}
+
 export const adminRouter = Router();
 
 adminRouter.use(requireAuth, adminLimiter);
@@ -65,7 +83,7 @@ adminRouter.use((req, res, next) => {
   const action = `${resource}.${verb}`;
   const changedFields =
     req.body && typeof req.body === "object" && !Array.isArray(req.body)
-      ? Object.keys(req.body).slice(0, 50)
+      ? Object.keys(req.body).filter(key => !isSensitiveField(key)).slice(0, 50)
       : [];
 
   res.on("finish", () => {
