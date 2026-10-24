@@ -63,7 +63,42 @@ publicRouter.get("/posts", asyncHandler(async (_req, res) => {
     })) });
 }));
 
-publicRouter.get("/reviews", asyncHandler(async (_req, res) => {
+publicRouter.get("/posts/:id", asyncHandler(async (req, res) => {
+  const post = await prisma.post.findUnique({
+    where: { id: req.params.id, status: "published", deletedAt: null },
+    select: {
+      id: true,
+      title: true,
+      content: true,
+      excerpt: true,
+      category: true,
+      image: true,
+      actionUrl: true,
+      actionLabel: true,
+      mediaAssetId: true,
+      linkHeaderAssetId: true,
+      audioAssetId: true,
+      videoAssetId: true,
+      linkHeaderUrl: true,
+      audioUrl: true,
+      videoUrl: true,
+      publishedAt: true,
+      createdAt: true,
+    },
+  });
+  if (!post) return res.status(404).json({ message: "Post not found" });
+  res.set("Cache-Control", "no-store");
+  res.json({
+    ...post,
+    image: post.mediaAssetId ? publicMediaPath(post.mediaAssetId) : post.image,
+    linkHeaderUrl: post.linkHeaderAssetId ? publicMediaPath(post.linkHeaderAssetId) : post.linkHeaderUrl,
+    audioUrl: post.audioAssetId ? publicMediaPath(post.audioAssetId) : post.audioUrl,
+    videoUrl: post.videoAssetId ? publicMediaPath(post.videoAssetId) : post.videoUrl,
+  });
+}));
+
+publicRouter.get("/reviews")
+, asyncHandler(async (_req, res) => {
   const items = await prisma.review.findMany({
     where: { published: true },
     orderBy: { createdAt: "desc" },

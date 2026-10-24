@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
 import { Link } from "react-router-dom";
 import type { Story } from "../types";
 import { categories, communities } from "../data/seedData";
@@ -11,37 +11,47 @@ import { Reveal } from "../components/Reveal";
 import { ReviewSection } from "../components/ReviewSection";
 import { HeroEye } from "../components/HeroEye";
 import { AdSlot } from "../components/AdSlot";
+import { Pagination } from "../components/Pagination";
 import { SponsoredBadge } from "../components/SponsoredBadge";
 import { outboundRel } from "../lib/monetization";
 import { trackEvent } from "../lib/analytics";
 import { MEMBERSHIP_ENABLED } from "../config";
 import { fetchCommunityMembership, setCommunityMembership } from "../lib/adminApi";
-import scholarshipCommunityArt from "../../../pics-1/Scholarship seekers.png";
-import creativeCommunityArt from "../../../pics-1/Creative careers.png";
-import firstJobCommunityArt from "../../../pics-1/First job circle.png";
+import scholarshipCommunityArt from "../../../pics-1/Scholarship seekers.jpg";
+import creativeCommunityArt from "../../../pics-1/Creative careers.jpg";
+import firstJobCommunityArt from "../../../pics-1/First job circle.jpg";
 
 type PublicSiteProps = {
   stories: Story[];
   openAdmin: () => void;
+  isAdmin: boolean;
+  justPublished: boolean;
 };
 
 const heroWords = ["signal", "clarity", "momentum", "opportunity"];
-const communityArt: Record<string, { src: string; alt: string }> = {
+const PAGE_SIZE = 6;
+const communityArt: Record<string, { src: string; alt: string; width: number; height: number }> = {
   "Scholarship seekers": {
     src: scholarshipCommunityArt,
     alt: "Students walking together on campus, representing a supportive scholarship-seeker community",
+    width: 612,
+    height: 323,
   },
   "Creative careers": {
     src: creativeCommunityArt,
     alt: "A busy creative studio with people collaborating across shared work tables",
+    width: 500,
+    height: 333,
   },
   "First job circle": {
     src: firstJobCommunityArt,
     alt: "Three early-career colleagues discussing work together and sharing guidance",
+    width: 500,
+    height: 333,
   },
 };
 
-export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
+export function PublicSite({ stories, openAdmin, isAdmin, justPublished }: PublicSiteProps) {
   const [isShrunk, setIsShrunk] = useState(false);
   const [activeNav, setActiveNav] = useState(() => {
     const hash = window.location.hash.slice(1);
@@ -112,6 +122,7 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
 
   const [category, setCategory] = useState("All stories");
   const [query, setQuery] = useState("");
+  const [page, setPage] = useState(1);
   const [selectedStory, setSelectedStory] = useState<Story>();
   // <NewsletterForm /> owns its own state, so no newsletter state lives here.
   const [joinedCommunities, setJoinedCommunities] = useState<string[]>([]);
@@ -150,6 +161,11 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
   const featuredStory = stories[0];
   // Identity check works because both lists hold the same story objects.
   const cardStories = filtered.filter((story) => story !== featuredStory);
+  const totalPages = Math.max(1, Math.ceil(cardStories.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const pageStories = cardStories.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  const rangeStart = cardStories.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
+  const rangeEnd = Math.min(currentPage * PAGE_SIZE, cardStories.length);
 
   useEffect(() => {
     if (!activeChat) return;
@@ -227,13 +243,22 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
         >
           <span className="nav-toggle-bars" aria-hidden="true"><span /><span /><span /></span>
         </button>
-        <nav id="site-menu" className={menuOpen ? "main-nav is-open" : "main-nav"} aria-label="Main navigation">
-          <a className={activeNav === "stories" ? "active" : ""} href="#stories" aria-current={activeNav === "stories" ? "location" : undefined} onClick={() => { setActiveNav("stories"); setMenuOpen(false); }}>
+        <nav id="site-menu" className={menuOpen ? "main-nav is-open" : "main-nav"} 
+        aria-label="Main navigation">
+          <a className={activeNav === "stories" ? "active" : ""} 
+          href="#stories" aria-current={activeNav === "stories" ? "location" : undefined} 
+          onClick={() => { setActiveNav("stories"); setMenuOpen(false); }}>
             Stories
           </a>
-          <a className={activeNav === "opportunities" ? "active" : ""} href="#opportunities" aria-current={activeNav === "opportunities" ? "location" : undefined} onClick={() => { setActiveNav("opportunities"); setMenuOpen(false); }}>Opportunities</a>
-          <a className={activeNav === "communities" ? "active" : ""} href="#communities" aria-current={activeNav === "communities" ? "location" : undefined} onClick={() => { setActiveNav("communities"); setMenuOpen(false); }}>Communities</a>
-          <a className={activeNav === "about" ? "active" : ""} href="#about" aria-current={activeNav === "about" ? "location" : undefined} onClick={() => { setActiveNav("about"); setMenuOpen(false); }}>About</a>
+          <a className={activeNav === "opportunities" ? "active" : ""} 
+          href="#opportunities" aria-current={activeNav === "opportunities" ? "location" : undefined} 
+          onClick={() => { setActiveNav("opportunities"); setMenuOpen(false); }}>Opportunities</a>
+          <a className={activeNav === "communities" ? "active" : ""} 
+          href="#communities" aria-current={activeNav === "communities" ? "location" : undefined} 
+          onClick={() => { setActiveNav("communities"); setMenuOpen(false); }}>Communities</a>
+          <a className={activeNav === "about" ? "active" : ""} 
+          href="#about" aria-current={activeNav === "about" ? "location" : undefined} 
+          onClick={() => { setActiveNav("about"); setMenuOpen(false); }}>About</a>
           {MEMBERSHIP_ENABLED && (
             <Link to="/pricing" onClick={() => setMenuOpen(false)}>Pricing</Link>
           )}
@@ -253,7 +278,7 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
           <div className="hero-kicker"><span aria-hidden="true" /> For the next chapter</div>
           <h1>
             Find the{" "}
-            <span className="hero-rotator">
+            <span className="hero-rotator" style={{visibility:"hidden"}}>
               <span className="sr-only" aria-live="polite">{heroWords[wordIndex]}</span>
               {heroWords.map((word, i) => (
                 <span
@@ -288,8 +313,7 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
             <span className="hero-scroll-label">Scroll</span>
           </div>
         </section>
-        {/* Seed data ships four stories, so a fifth means a post was just published */}
-        {stories.length > 4 && (
+        {isAdmin && justPublished && (
           <section className="published-notice" aria-live="polite">
             <span className="status-live">LIVE NOW</span>
             <strong>Your new post is visible to readers.</strong>
@@ -317,12 +341,11 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
             <span className="section-number">01 / 04</span>
           </div>
           <article className="feature-story">
-            <div
-              className="feature-image"
-              style={{ backgroundImage: `url(${featuredStory.image})` }}
-              role="img"
-              aria-label={featuredStory.title}
-            />
+            <div className="feature-image">
+              {featuredStory.image && (
+                <img src={featuredStory.image} alt={featuredStory.title} fetchPriority="high" decoding="async" />
+              )}
+            </div>
             <div className="feature-content">
               <div className="feature-meta-row">
                 <span className="feature-pick-label"><span aria-hidden="true">✦</span> Featured story</span>
@@ -362,7 +385,7 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
               <input
                 id="story-search"
                 value={query}
-                onChange={(event) => setQuery(event.target.value)}
+                onChange={(event) => { setQuery(event.target.value); setPage(1); }}
                 placeholder="Search stories and topics"
               />
               <svg aria-hidden="true" viewBox="0 0 20 20" fill="none"><circle cx="8.8" cy="8.8" r="5.8" stroke="currentColor" strokeWidth="1.6"/><path d="m13.2 13.2 4 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
@@ -376,7 +399,7 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
                 }
                 key={item}
                 type="button"
-                onClick={() => setCategory(item)}
+                onClick={() => { setCategory(item); setPage(1); }}
                 aria-pressed={category === item}
               >
                 {item}
@@ -384,22 +407,19 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
             ))}
           </div>
           <div className="latest-results" aria-live="polite">
-            <span>{cardStories.length} {cardStories.length === 1 ? "story" : "stories"}</span>
+            <span>{cardStories.length === 0 ? "No stories" : "Showing " + rangeStart + "-" + rangeEnd + " of " + cardStories.length + (cardStories.length === 1 ? " story" : " stories")}</span>
             {category !== "All stories" && <span className="latest-filter-label">in {category}</span>}
           </div>
           <div className="story-grid">
-            {cardStories.map((story) => (
+            {pageStories.map((story) => (
               <article className="story-card" key={story.title} onClick={() => setSelectedStory(story)}>
-                <div
-                  className="story-card-image"
-                  style={{ backgroundImage: `url(${story.image})` }}
-                  role="img"
-                  aria-label={story.title}
-                />
+                <div className="story-card-image">
+                  {story.image && <img src={story.image} alt="" loading="lazy" decoding="async" />}
+                </div>
                 <div className="story-card-content">
                   <span className="story-label">{story.category}</span>
                   {story.sponsored && <SponsoredBadge />}
-                  <h3>{story.title}</h3>
+                  <Link to={`/story/${story.id}`} className="story-link"><h3>{story.title}</h3></Link>
                   <p>{story.excerpt}</p>
                   {story.actionUrl && (
                     <a
@@ -422,12 +442,21 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
               </article>
             ))}
           </div>
+          <Pagination
+            page={currentPage}
+            totalPages={totalPages}
+            onPageChange={(nextPage) => {
+              setPage(nextPage);
+              document.getElementById("opportunities")?.scrollIntoView({ behavior: "smooth", block: "start" });
+            }}
+            label="Stories pagination"
+          />
           {cardStories.length === 0 && (
             <div className="latest-empty-state">
               <span className="latest-empty-icon" aria-hidden="true">⌕</span>
               <h3>No stories found</h3>
               <p>Try another search or choose a different category.</p>
-              <button type="button" onClick={() => { setQuery(""); setCategory("All stories"); }}>Clear filters</button>
+              <button type="button" onClick={() => { setQuery(""); setCategory("All stories"); setPage(1); }}>Clear filters</button>
             </div>
           )}
         </section>
@@ -452,7 +481,7 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
               return (
                 <article className="community-card" key={community.name}>
                   <div className={`community-art ${community.accent}`}>
-                    <img className="community-art-image" src={communityArt[community.name].src} alt={communityArt[community.name].alt} />
+                    <img className="community-art-image" src={communityArt[community.name].src} alt={communityArt[community.name].alt} width={communityArt[community.name].width} height={communityArt[community.name].height} loading="lazy" decoding="async" />
                   </div>
                   <div className="community-card-body">
                     <span className="community-card-label"><span aria-hidden="true" /> EYE community</span>
@@ -502,7 +531,18 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
         />
       )}
 
-      {selectedStory && <div className="client-modal-backdrop" role="presentation" onClick={() => setSelectedStory(undefined)}><article className="story-reader" role="dialog" aria-modal="true" aria-labelledby="story-reader-title" onClick={(event) => event.stopPropagation()}><button ref={readerCloseRef} className="reader-close" type="button" onClick={() => setSelectedStory(undefined)} aria-label="Close story">X</button><div className="reader-image" style={{ backgroundImage: `url(${selectedStory.image})` }} role="img" aria-label={selectedStory.title} /><div className="reader-content"><span className="story-label">{selectedStory.category}</span>{selectedStory.sponsored && <SponsoredBadge />}<h2 id="story-reader-title">{selectedStory.title}</h2><div className="story-meta">{selectedStory.meta}</div><p>{selectedStory.excerpt}</p>{selectedStory.content ? selectedStory.content.split(/\n{2,}/).filter(Boolean).map((paragraph, index) => <p key={`${selectedStory.id ?? selectedStory.title}-${index}`}>{paragraph}</p>) : <p>Explore the details, deadlines, and next steps in this published story.</p>}{selectedStory.linkHeaderUrl && <img className="reader-linked-media" src={selectedStory.linkHeaderUrl} alt="Post attachment" loading="lazy" />}{selectedStory.audioUrl && <audio className="reader-audio" controls preload="none" src={selectedStory.audioUrl}>Your browser does not support audio playback.</audio>}{selectedStory.videoUrl && <video className="reader-video" controls preload="metadata" src={selectedStory.videoUrl}>Your browser does not support video playback.</video>}{selectedStory.actionUrl && <a className="button button-dark" href={selectedStory.actionUrl} target="_blank" rel={outboundRel(selectedStory.actionUrl)} onClick={() => trackEvent("Outbound link", { url: selectedStory.actionUrl ?? "" })}>{selectedStory.actionLabel || "Open opportunity"} -&gt;</a>}</div></article></div>}
+      {selectedStory && <div className="client-modal-backdrop" role="presentation" 
+      onClick={() => setSelectedStory(undefined)}><article className="story-reader" 
+      role="dialog" aria-modal="true" aria-labelledby="story-reader-title" 
+      onClick={(event) => event.stopPropagation()}><button ref={readerCloseRef} 
+      className="reader-close" type="button" 
+      onClick={() => setSelectedStory(undefined)} aria-label="Close story">X</button><div className="reader-image"
+      style={{ backgroundImage: `url(${selectedStory.image})` }} role="img" 
+      aria-label={selectedStory.title} /><div className="reader-content"><span 
+      className="story-label">{selectedStory.category}</span>{selectedStory.sponsored && <SponsoredBadge />}<h2 id="story-reader-title">{selectedStory.title}</h2><div 
+      className="story-meta">{selectedStory.meta}</div><p>{selectedStory.excerpt}</p>{selectedStory.content ? selectedStory.content.split(/\n{2,}/).filter(Boolean).map((paragraph, index) => <p key={`${selectedStory.id ?? selectedStory.title}-${index}`}>{paragraph}</p>) :
+      <p>Explore the details, deadlines, and next steps in this published story.</p>}{selectedStory.linkHeaderUrl && <img className="reader-linked-media" src={selectedStory.linkHeaderUrl} alt="Post attachment" loading="lazy" />}{selectedStory.audioUrl && 
+      <audio className="reader-audio" controls preload="none" src={selectedStory.audioUrl}>Your browser does not support audio playback.</audio>}{selectedStory.videoUrl && <video className="reader-video" controls preload="metadata" src={selectedStory.videoUrl}>Your browser does not support video playback.</video>}{selectedStory.actionUrl && <a className="button button-dark" href={selectedStory.actionUrl} target="_blank" rel={outboundRel(selectedStory.actionUrl)} onClick={() => trackEvent("Outbound link", { url: selectedStory.actionUrl ?? "" })}>{selectedStory.actionLabel || "Open opportunity"} -&gt;</a>}</div></article></div>}
       <Reveal>
       <section className="newsletter-section" id="newsletter" aria-labelledby="newsletter-title">
         <div className="newsletter-card">
@@ -510,12 +550,17 @@ export function PublicSite({ stories, openAdmin }: PublicSiteProps) {
             <div className="newsletter-eyebrow"><span className="newsletter-live-dot" aria-hidden="true" /> Weekly brief <span>Every Monday at 7am</span></div>
             <h2 id="newsletter-title">Get the opportunities that actually matter</h2>
             <p className="newsletter-card-copy">
-              One curated email. Scholarships, internships, and culture — filtered for builders, not browsers.
-              Join students and early-career builders across Ghana.
+              One curated email. Scholarships, internships, and culture  filtered for builders, not browsers.
+              Join students and early career builders across Africa.
             </p>
+            
             <NewsletterForm variant="card" buttonLabel="Join free" />
             <p className="newsletter-trust">
-              <svg aria-hidden="true" viewBox="0 0 16 16" fill="none"><path d="M8 1.5 13 3.4v3.8c0 3.1-2.1 5.8-5 7.3-2.9-1.5-5-4.2-5-7.3V3.4L8 1.5Z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round"/><path d="m5.7 7.8 1.5 1.5 3.2-3.2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              <svg aria-hidden="true" viewBox="0 0 16 16" fill="none"><path 
+              d="M8 1.5 13 3.4v3.8c0 3.1-2.1 5.8-5 7.3-2.9-1.5-5-4.2-5-7.3V3.4L8 1.5Z" 
+              stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round"/><path 
+              d="m5.7 7.8 1.5 1.5 3.2-3.2" stroke="currentColor" strokeWidth="1.3" 
+              strokeLinecap="round" strokeLinejoin="round"/></svg>
               No spam. Your email is stored securely. <Link to="/privacy">Privacy</Link><span className="newsletter-trust-separator" aria-hidden="true">·</span><a href="#stories">See past briefs</a>
             </p>
           </div>

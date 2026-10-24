@@ -4,14 +4,16 @@ import "./App.css";
 import type { Story } from "./types";
 import { seedStories } from "./data/seedData";
 import { PublicSite } from "./pages/PublicSite";
+import StoryPage from "./pages/StoryPage";
 import { PrivacyPolicy } from "./pages/Legal/PrivacyPolicy";
 import { Terms } from "./pages/Legal/Terms";
 import { RefundPolicy } from "./pages/Legal/RefundPolicy";
 import { CookiesPolicy } from "./pages/Legal/CookiesPolicy";
 import { CookieConsent } from "./components/CookieConsent";
 import { ADMIN_ENABLED, MEMBERSHIP_ENABLED } from "./config";
+import SubscribePopup from "./components/SubscribePopup";
 import { getSession, logout } from "./lib/auth";
-import { createPost, fetchPublicPosts } from "./lib/adminApi";
+import { createPost, fetchPublicPosts, type PostRecord } from "./lib/adminApi";
 
 const AdminLogin = lazy(() =>
   import("./pages/Admin/AdminLogin").then((module) => ({ default: module.AdminLogin })),
@@ -23,6 +25,54 @@ const Pricing = lazy(() =>
   import("./pages/Pricing").then((module) => ({ default: module.Pricing })),
 );
 
+const PUBLIC_STORIES_CACHE_KEY = "eye:public-stories:v1";
+
+function toStory(post: PostRecord): Story {
+  return {
+    id: post.id,
+    title: post.title,
+    excerpt: post.excerpt,
+    content: post.content,
+    category: post.category,
+    meta: `Published ${new Date(post.updatedAt).toLocaleDateString()}`,
+    image: post.image,
+    actionUrl: post.actionUrl ?? undefined,
+    actionLabel: post.actionLabel ?? undefined,
+    status: "published",
+    mediaAssetId: post.mediaAssetId ?? undefined,
+    linkHeaderAssetId: post.linkHeaderAssetId ?? undefined,
+    audioAssetId: post.audioAssetId ?? undefined,
+    videoAssetId: post.videoAssetId ?? undefined,
+    linkHeaderUrl: post.linkHeaderUrl,
+    audioUrl: post.audioUrl,
+    videoUrl: post.videoUrl,
+  };
+}
+
+function readCachedStories(): Story[] {
+  try {
+    const raw = window.localStorage.getItem(PUBLIC_STORIES_CACHE_KEY);
+    if (!raw) return [];
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((item): item is Story => {
+      if (typeof item !== "object" || item === null) return false;
+      const story = item as Partial<Story>;
+      return typeof story.title === "string" && typeof story.excerpt === "string" &&
+        typeof story.category === "string" && typeof story.image === "string" && typeof story.meta === "string";
+    });
+  } catch {
+    return [];
+  }
+}
+
+function writeCachedStories(stories: Story[]) {
+  try {
+    window.localStorage.setItem(PUBLIC_STORIES_CACHE_KEY, JSON.stringify(stories));
+  } catch {
+    return;
+  }
+}
 // First-paint loader - the eye blink covers the gap before the app mounts.
 function EyeLoader() {
   return (
@@ -61,14 +111,14 @@ function AppRoutes() {
   // null until the session check resolves, so an already-authenticated user
   // never sees the login form flash.
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-  const [publishedStories, setPublishedStories] = useState<Story[]>([]);
+  const [publishedStories, setPublishedStories] = useState<Story[]>(readCachedStories);
+  const [postsReady, setPostsReady] = useState(publishedStories.length > 0);
+  const [initialDelayDone, setInitialDelayDone] = useState(publishedStories.length > 0);
+  const [justPublished, setJustPublished] = useState(false);
 
-  // Newest admin-published stories lead; seed content fills the rest on first run.
-  const allStories = [...publishedStories, ...seedStories];
+  const allStories = publishedStories.length > 0 ? publishedStories : seedStories;
 
   useEffect(() => {
-    // Guard against a late response setting state after unmount (React 18 dev
-    // double-invokes effects, so this runs twice).
     let cancelled = false;
     getSession().then((user) => {
       if (!cancelled) setIsAuthenticated(!!user);
@@ -79,32 +129,39 @@ function AppRoutes() {
   }, []);
 
   useEffect(() => {
+    if (initialDelayDone) return;
+    const timer = window.setTimeout(() => setInitialDelayDone(true), 450);
+    return () => window.clearTimeout(timer);
+  }, [initialDelayDone]);
+
+  useEffect(() => {
+    if (!justPublished) return;
+    const timer = window.setTimeout(() => setJustPublished(false), 12000);
+    return () => window.clearTimeout(timer);
+  }, [justPublished]);
+
+  useEffect(() => {
     let cancelled = false;
+    const failSafe = window.setTimeout(() => {
+      if (!cancelled) setPostsReady(true);
+    }, 5000);
+    const finish = () => {
+      if (cancelled) return;
+      window.clearTimeout(failSafe);
+      setPostsReady(true);
+    };
     void fetchPublicPosts().then((posts) => {
-      if (cancelled || !posts) return;
-      const stories = posts.map((post) => ({
-        id: post.id,
-        title: post.title,
-        excerpt: post.excerpt,
-        content: post.content,
-        category: post.category,
-        meta: `Published ${new Date(post.updatedAt).toLocaleDateString()}`,
-        image: post.image,
-        actionUrl: post.actionUrl ?? undefined,
-        actionLabel: post.actionLabel ?? undefined,
-        status: "published" as const,
-        mediaAssetId: post.mediaAssetId ?? undefined,
-        linkHeaderAssetId: post.linkHeaderAssetId ?? undefined,
-        audioAssetId: post.audioAssetId ?? undefined,
-        videoAssetId: post.videoAssetId ?? undefined,
-        linkHeaderUrl: post.linkHeaderUrl,
-        audioUrl: post.audioUrl,
-        videoUrl: post.videoUrl,
-      }));
-      setPublishedStories(stories);
-    });
+      if (cancelled) return;
+      if (posts) {
+        const stories = posts.map(toStory);
+        setPublishedStories(stories);
+        writeCachedStories(stories);
+      }
+      finish();
+    }).catch(finish);
     return () => {
       cancelled = true;
+      window.clearTimeout(failSafe);
     };
   }, []);
 
@@ -136,23 +193,11 @@ function AppRoutes() {
     });
     if (!saved) return false;
     if (saved.status === "published") {
-      const publishedStory: Story = {
-        id: saved.id,
-        title: saved.title,
-        excerpt: saved.excerpt,
-        content: saved.content,
-        category: saved.category,
-        meta: `Published ${new Date(saved.updatedAt).toLocaleDateString()}`,
-        image: saved.image,
-        actionUrl: saved.actionUrl ?? undefined,
-        actionLabel: saved.actionLabel ?? undefined,
-        mediaAssetId: saved.mediaAssetId ?? undefined,
-        linkHeaderAssetId: saved.linkHeaderAssetId ?? undefined,
-        audioAssetId: saved.audioAssetId ?? undefined,
-        videoAssetId: saved.videoAssetId ?? undefined,
-        status: "published",
-      };
-      setPublishedStories((prev) => [publishedStory, ...prev.filter((item) => item.id !== publishedStory.id)]);
+      const publishedStory = toStory(saved);
+      const nextStories = [publishedStory, ...publishedStories.filter((item) => item.id !== publishedStory.id)];
+      setPublishedStories(nextStories);
+      writeCachedStories(nextStories);
+      setJustPublished(true);
       navigate("/", { replace: true });
     }
     return true;
@@ -168,10 +213,25 @@ function AppRoutes() {
 
   return (
     <>
-      <Suspense fallback={<EyeLoader />}>
+      <Suspense fallback={<EyeLoader />}> <SubscribePopup />
         <Routes>
-          <Route path="/" element={<PublicSite stories={allStories} openAdmin={openAdmin} />} />
+          <Route
+            path="/"
+            element={
+              postsReady && initialDelayDone ? (
+                <PublicSite
+                  stories={allStories}
+                  openAdmin={openAdmin}
+                  isAdmin={isAuthenticated === true}
+                  justPublished={justPublished}
+                />
+              ) : (
+                <EyeLoader />
+              )
+            }
+          />
           {MEMBERSHIP_ENABLED && <Route path="/pricing" element={<Pricing />} />}
+          <Route path="/story/:id" element={<StoryPage />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/refund" element={<RefundPolicy />} />
@@ -213,16 +273,6 @@ function AppRoutes() {
 }
 
 export default function App() {
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    // Fixed 2.1s so the loader animation matches the eye blink in EyeLoader.
-    const timeoutId = window.setTimeout(() => setIsLoading(false), 2100);
-    return () => window.clearTimeout(timeoutId);
-  }, []);
-
-  if (isLoading) return <EyeLoader />;
-
   return (
     <BrowserRouter>
       <AppRoutes />

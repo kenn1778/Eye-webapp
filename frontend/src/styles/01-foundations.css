@@ -1,10 +1,10 @@
-﻿/* 01-foundations.css - tokens, reset, typography, layout and the public/admin
+/* 01-foundations.css - tokens, reset, typography, layout and the public/admin
    shells. Loaded by App.css, which sets the order. */
 
 /* overflow-x:clip kills stray overflow without creating a scroll container, so sticky headers keep working. */
-.site-shell { max-width: 1440px; margin: 0 auto; overflow-x: clip; overflow-y: visible; background: #f3f1e9; min-height: 100dvh; display: flex; flex-direction: column; min-width: 0; }
+.site-shell { max-width: 1440px; margin: 0 auto; overflow-x: clip; overflow-y: visible; background: #f3f1e9; min-height: 100dvh; display: flex; flex-direction: column; min-width: 0; } .site-shell > main { flex: 1 1 auto; }
 
-.site-header { height: 86px; padding: 0 5.5vw; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 24px; border-bottom: 1px solid #cdd1c7; }
+.site-header { height: 86px; padding: 0 5.5vw; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 24px; border-bottom: 1px solid #cdd1c7; position: sticky; top: 0; background: #f3f1e9; z-index: 1000; }
 
 .brand, .footer-brand { display: inline-flex; align-items: center; gap: 10px; font-size: 17px; font-weight: 800; letter-spacing: -.04em; text-decoration: none; }
 
@@ -744,11 +744,11 @@ h2 { margin-top: 8px; color: #1d2925; font-size: clamp(30px, 4vw, 50px); line-he
 
 .menu-toggle span { width: 16px; height: 1.5px; display: block; background: var(--badge-green-dark); transition: transform .25s ease, opacity .25s ease; }
 
-.sidebar-closed .menu-toggle span:first-child { transform: translateY(5.5px) rotate(45deg); }
+.sidebar-open .menu-toggle span:first-child { transform: translateY(5.5px) rotate(45deg); }
 
-.sidebar-closed .menu-toggle span:nth-child(2) { opacity: 0; }
+.sidebar-open .menu-toggle span:nth-child(2) { opacity: 0; }
 
-.sidebar-closed .menu-toggle span:last-child { transform: translateY(-5.5px) rotate(-45deg); }
+.sidebar-open .menu-toggle span:last-child { transform: translateY(-5.5px) rotate(-45deg); }
 
 .sidebar-overlay { display: none; }
 
@@ -756,7 +756,7 @@ h2 { margin-top: 8px; color: #1d2925; font-size: clamp(30px, 4vw, 50px); line-he
 
 @media (max-width: 760px) {
 
-  .admin-sidebar { position: fixed; z-index: 20; top: 0; bottom: 0; left: 0; width: min(var(--sidebar-width), 86vw); flex-basis: auto; box-shadow: 18px 0 38px rgba(21, 31, 26, .2); }
+  .admin-sidebar { position: fixed; z-index: 20; top: 0; bottom: 0; left: 0; width: min(var(--sidebar-width), 86vw); flex-basis: auto; overflow-y: auto; overscroll-behavior: contain; padding-bottom: calc(18px + env(safe-area-inset-bottom)); box-shadow: 18px 0 38px rgba(21, 31, 26, .2); }
 
   .sidebar-closed .admin-sidebar { width: min(var(--sidebar-width), 86vw); transform: translateX(-105%); padding-right: 17px; padding-left: 17px; }
 
@@ -768,7 +768,9 @@ h2 { margin-top: 8px; color: #1d2925; font-size: clamp(30px, 4vw, 50px); line-he
 
   .admin-main { width: 100%; }
 
-  .menu-toggle { margin-right: 14px; }
+  .menu-toggle { width: 40px; height: 40px; margin-right: 10px; }
+
+  .back-public { margin-right: auto; }
 
 }
 
@@ -1161,7 +1163,7 @@ html, body, #root { min-height: 100%; }
 
 html { overflow-x: hidden; }
 
-body { overflow-x: hidden; overflow-wrap: anywhere; }
+body { overflow-x: hidden; overflow-wrap: anywhere; background: #f3f1e9; }
 
 h1, h2, h3, p, label, strong, small, button, a { max-width: 100%; overflow-wrap: anywhere; }
 

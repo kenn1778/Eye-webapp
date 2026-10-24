@@ -207,15 +207,7 @@
 .hero-proof span { padding: 7px 10px; color: #55695a; border: 1px solid rgba(95, 138, 99, .16); border-radius: 999px; background: rgba(255,255,255,.38); font-size: 9px; font-weight: 700; letter-spacing: .02em; }
 
 /* -- Hero: cursor parallax on the orbit circle -- */
-.hero-eye {
-  width: clamp(320px, 38vw, 570px);
-  height: clamp(320px, 38vw, 570px);
-  top: 50%;
-  right: clamp(20px, 5vw, 88px);
-  z-index: 0;
-  transform: translate(var(--orbit-x), calc(-50% + var(--orbit-y)));
-  transition: transform .18s ease-out;
-}
+.hero-eye { position: absolute; width: 390px; height: 390px; right: 6%; top: 22px; display: flex; align-items: center; justify-content: center; pointer-events: none; z-index: 0; }
 .hero-eye::before { position: absolute; inset: 12%; content: ''; border: 1px solid rgba(79, 123, 87, .13); border-radius: 50%; box-shadow: 0 0 0 26px rgba(79, 123, 87, .035), 0 0 0 54px rgba(79, 123, 87, .025); }
 .hero-eye svg { position: relative; z-index: 1; filter: drop-shadow(0 18px 24px rgba(55, 95, 62, .12)); }
 
@@ -238,27 +230,11 @@
 .intro-band h1 { max-width: 720px; }
 
 /* -- Hero: scroll hint -- */
-.hero-scroll-hint {
-  position: absolute;
-  left: 50%;
-  bottom: 24px;
-  transform: translateX(-50%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  color: #637468;
-  font-family: 'DM Mono', monospace;
-  font-size: 9px;
-  letter-spacing: .16em;
-  text-transform: uppercase;
-  opacity: .85;
-  z-index: 1;
-}
+/* .hero-scroll-hint { ... } */
 
 @media (max-width: 1024px) {
   .intro-band { min-height: 620px; padding-inline: 7vw; }
-  .hero-eye { width: 340px; height: 340px; right: 0; opacity: .74; }
+  .hero-eye { position: absolute; width: 390px; height: 390px; right: 6%; top: 22px; display: flex; align-items: center; justify-content: center; pointer-events: none; z-index: 0; }
   .intro-band h1 { max-width: 650px; font-size: clamp(58px, 8.4vw, 92px); }
 }
 @media (max-width: 760px) {
@@ -269,9 +245,9 @@
   .intro-actions { position: relative; z-index: 1; flex-direction: row; align-items: center; flex-wrap: wrap; gap: 9px; margin-top: 24px; }
   .intro-actions .button-dark, .intro-actions .text-button { width: auto; min-height: 46px; }
   .hero-proof { gap: 6px; margin-top: 22px; }
-  .hero-eye { width: 170px; height: 170px; top: 20px; right: 0; opacity: .22; transform: translate(var(--orbit-x), var(--orbit-y)); }
+  .hero-eye { position: absolute; width: 390px; height: 390px; right: 6%; top: 22px; display: flex; align-items: center; justify-content: center; pointer-events: none; z-index: 0; }
   .hero-eye::before { display: none; }
-  .hero-scroll-hint { display: none; }
+  /* .hero-scroll-hint { ... } */
 }
 @media (max-width: 420px) {
   .intro-band { padding: 66px 18px 64px; }
@@ -279,22 +255,8 @@
   .intro-actions { align-items: stretch; flex-direction: column; }
   .intro-actions .button-dark, .intro-actions .text-button { width: 100%; justify-content: space-between; }
 }
-.hero-scroll-mouse {
-  width: 22px;
-  height: 34px;
-  display: flex;
-  justify-content: center;
-  padding-top: 6px;
-  border: 1.5px solid rgba(29, 41, 37, .4);
-  border-radius: 999px;
-}
-.hero-scroll-mouse span {
-  width: 3px;
-  height: 7px;
-  border-radius: 99px;
-  background: #1d2925;
-  animation: scroll-dot 1.8s ease-in-out infinite;
-}
+/* .hero-scroll-mouse { ... } */
+/* .hero-scroll-mouse span { ... } */
 @keyframes scroll-dot {
   0% { transform: translateY(0); opacity: 1; }
   70% { transform: translateY(10px); opacity: 0; }
@@ -691,7 +653,7 @@
   .review-summary { gap: 18px; }
   .review-section .section-heading { align-items: flex-start; flex-direction: column; gap: 16px; }
   .review-form, .review-summary { padding: 20px; }
-  .hero-scroll-hint { display: none; }
+  /* .hero-scroll-hint { ... } */
 }
 @media (max-width: 380px) {
   .community-footer { align-items: flex-start; flex-direction: column; }
@@ -708,9 +670,9 @@
 /* Reduced motion: reveal instantly, no parallax drift */
 @media (prefers-reduced-motion: reduce) {
   .reveal { opacity: 1; transform: none; transition: none; }
-  .hero-eye { transition: none; }
+  .hero-eye { position: absolute; width: 390px; height: 390px; right: 6%; top: 22px; display: flex; align-items: center; justify-content: center; pointer-events: none; z-index: 0; }
   .hero-word { transition: none; }
-  .hero-scroll-mouse span { animation: none; }
+  /* .hero-scroll-mouse span { ... } */
 }
 
 /* Full-page fallback shown when a render throws. */
