@@ -1,32 +1,32 @@
 {
-  "name": "frontend",
-  "private": true,
-  "version": "0.0.0",
-  "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build && node scripts/check-bundle-secrets.mjs",
-    "check:secrets": "node scripts/check-bundle-secrets.mjs",
-    "lint": "oxlint",
-    "preview": "vite preview",
-    "typecheck": "tsc -b",
-    "test": "playwright test",
-    "test:visual": "playwright test",
-    "test:visual:update": "playwright test --update-snapshots"
-  },
-  "dependencies": {
-    "react": "^19.2.8",
-    "react-dom": "^19.2.8",
-    "react-router-dom": "^7.18.3"
-  },
-  "devDependencies": {
-    "@playwright/test": "^1.63.0",
-    "@types/node": "^26.5.1",
-    "@types/react": "^19.2.18",
-    "@types/react-dom": "^19.2.7",
-    "@vitejs/plugin-react": "^6.1.1",
-    "oxlint": "^1.81.0",
-    "typescript": "^7.0.2",
-    "vite": "^8.3.0"
-  }
+    "name":  "frontend",
+    "private":  true,
+    "version":  "0.0.0",
+    "type":  "module",
+    "scripts":  {
+                    "dev":  "vite",
+                    "build":  "node scripts/generate-sitemap.mjs \u0026\u0026 tsc -b \u0026\u0026 vite build \u0026\u0026 node scripts/check-bundle-secrets.mjs",
+                    "check:secrets":  "node scripts/check-bundle-secrets.mjs",
+                    "lint":  "oxlint",
+                    "preview":  "vite preview",
+                    "typecheck":  "tsc -b",
+                    "test":  "playwright test",
+                    "test:visual":  "playwright test",
+                    "test:visual:update":  "playwright test --update-snapshots"
+                },
+    "dependencies":  {
+                         "react":  "^19.2.8",
+                         "react-dom":  "^19.2.8",
+                         "react-router-dom":  "^7.18.3"
+                     },
+    "devDependencies":  {
+                            "@playwright/test":  "^1.63.0",
+                            "@types/node":  "^26.5.1",
+                            "@types/react":  "^19.2.18",
+                            "@types/react-dom":  "^19.2.7",
+                            "@vitejs/plugin-react":  "^6.1.1",
+                            "oxlint":  "^1.81.0",
+                            "typescript":  "^7.0.2",
+                            "vite":  "^8.3.0"
+                        }
 }

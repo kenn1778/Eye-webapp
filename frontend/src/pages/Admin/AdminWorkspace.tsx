@@ -1,4 +1,4 @@
-﻿import { startTransition, useCallback, useEffect, useMemo, useState, type CSSProperties } from "react";
+import { startTransition, useCallback, useEffect, useMemo, useState, type CSSProperties } from "react";
 import type { AdminInsights, AdminMetrics, AdminNotification, ActivityPoint, Story } from "../../types";
 import { emptyMetrics, adminTabs } from "../../data/seedData";
 import { Brand } from "../../components/Brand";
@@ -22,6 +22,7 @@ const MAX_SIDEBAR_WIDTH = 360;
 const DEFAULT_SIDEBAR_WIDTH = 240;
 
 const POLL_INTERVAL_MS = 30_000;
+const RECENT_POSTS_LIMIT = 5;
 const ACTIVITY_DAYS = 14;
 
 const METRIC_CARDS: ReadonlyArray<{ label: string; value: keyof AdminMetrics; accent?: boolean }> = [
@@ -320,8 +321,8 @@ export function AdminWorkspace({ closeAdmin, onPublish }: AdminWorkspaceProps) {
                 <div className="eyebrow">Content desk</div>
                 <h2>Recent posts</h2>
               </div>
-              <button className="panel-link" type="button">
-                View all -&gt;
+              <button className="panel-link" type="button" onClick={() => selectSection("Posts")}>
+                View all posts -&gt;
               </button>
             </div>
             <div className="post-toolbar">
@@ -360,7 +361,7 @@ export function AdminWorkspace({ closeAdmin, onPublish }: AdminWorkspaceProps) {
                 <span>Author</span>
                 <span />
               </div>
-              {visiblePosts.map((post) => (
+              {visiblePosts.slice(0, RECENT_POSTS_LIMIT).map((post) => (
                 <div className="table-row" key={post.id}>
                   <div className="post-title-cell">
                     <span

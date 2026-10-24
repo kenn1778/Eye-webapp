@@ -1,0 +1,70 @@
+import { Router } from "express";
+import rateLimit from "express-rate-limit";
+import { z } from "zod";
+import { prisma } from "./lib/prisma.js";
+import { createRateLimitStore } from "./lib/rate-limit.js";
+import { publicMediaPath } from "./lib/s3.js";
+
+// Express 4 does not forward rejected promises to error middleware, so an async
+// handler that throws would hang the request. Wrap every route so a database
+// outage becomes a clean 500 instead.
+const asyncHandler = (handler) => (req, res, next) =>
+  Promise.resolve(handler(req, res, next)).catch(next);
+
+export const publicRouter = Router();
+
+const reviewLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  store: createRateLimitStore("rl:reviews:"),
+});
+
+const visitorIdSchema = z.string().uuid();
+const reviewSchema = z.object({
+  name: z.string().trim().min(1).max(40),
+  rating: z.number().int().min(1).max(5),
+  comment: z.string().trim().min(5).max(400),
+});
+
+// Published public content only; trashed and draft entries never leak here.
+publicRouter.get("/posts", asyncHandler(async (_req, res) => {
+    const posts = await prisma.post.findMany({
+      where: { status: "published", deletedAt: null },
+      orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }],
+      select: {
+        id: true,
+        title: true,
+        content: true,
+        excerpt: true,
+        category: true,
+        image: true,
+        actionUrl: true,
+        actionLabel: true,
+        mediaAssetId: true,
+        linkHeaderAssetId: true,
+        audioAssetId: true,
+        videoAssetId: true,
+        linkHeaderUrl: true,
+        audioUrl: true,
+        videoUrl: true,
+        publishedAt: true,
+        createdAt: true,
+      },
+    });
+    res.set("Cache-Control", "no-store");
+    res.json({ items: posts.map((post) => ({
+      ...post,
+      image: post.mediaAssetId ? publicMediaPath(post.mediaAssetId) : post.image,
+      linkHeaderUrl: post.linkHeaderAssetId ? publicMediaPath(post.linkHeaderAssetId) : post.linkHeaderUrl,
+      audioUrl: post.audioAssetId ? publicMediaPath(post.audioAssetId) : post.audioUrl,
+      videoUrl: post.videoAssetId ? publicMediaPath(post.videoAssetId) : post.videoUrl,
+    })) });
+}));
+
+publicRouter.get("/reviews", asyncHandler(async (_req, res) => {
+  const items = await prisma.review.findMany({
+    where: { published: true },
+    orderBy: { createdAt: "desc" },
+    take: 100,

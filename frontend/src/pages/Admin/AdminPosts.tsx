@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { deletePost, fetchPosts, restorePost, updatePost, type PostRecord } from "../../lib/adminApi";
+import { Pagination } from "../../components/Pagination";
 
 const FILTERS = ["all", "published", "draft", "scheduled", "trash"] as const;
+const PAGE_SIZE = 10;
 
 type PostForm = Pick<PostRecord, "title" | "content" | "excerpt" | "category" | "image" | "actionUrl" | "actionLabel" | "status">;
 
@@ -20,6 +22,7 @@ export function AdminPosts({ onNewPost }: { onNewPost: () => void }) {
   const [filter, setFilter] = useState<(typeof FILTERS)[number]>("all");
   const [posts, setPosts] = useState<PostRecord[]>([]);
   const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<PostForm>(emptyForm);
@@ -28,8 +31,14 @@ export function AdminPosts({ onNewPost }: { onNewPost: () => void }) {
   const [error, setError] = useState("");
 
   const load = useCallback(async () => {
-    const result = await fetchPosts(search, 100, 0, filter === "all" ? undefined : filter);
+    setLoading(true);
+    const result = await fetchPosts(search, PAGE_SIZE, (page - 1) * PAGE_SIZE, filter === "all" ? undefined : filter);
     if (result) {
+      const lastPage = Math.max(1, Math.ceil(result.total / PAGE_SIZE));
+      if (page > lastPage) {
+        setPage(lastPage);
+        return;
+      }
       setPosts(result.items);
       setTotal(result.total);
       setError("");
@@ -37,13 +46,18 @@ export function AdminPosts({ onNewPost }: { onNewPost: () => void }) {
       setError("Could not load posts. Check the API/database connection and try again.");
     }
     setLoading(false);
-  }, [filter, search]);
+  }, [filter, search, page]);
 
   useEffect(() => {
     let cancelled = false;
-    void fetchPosts(search, 100, 0, filter === "all" ? undefined : filter).then((result) => {
+    void fetchPosts(search, PAGE_SIZE, (page - 1) * PAGE_SIZE, filter === "all" ? undefined : filter).then((result) => {
       if (cancelled) return;
       if (result) {
+        const lastPage = Math.max(1, Math.ceil(result.total / PAGE_SIZE));
+        if (page > lastPage) {
+          setPage(lastPage);
+          return;
+        }
         setPosts(result.items);
         setTotal(result.total);
         setError("");
@@ -53,7 +67,13 @@ export function AdminPosts({ onNewPost }: { onNewPost: () => void }) {
       setLoading(false);
     });
     return () => { cancelled = true; };
-  }, [filter, search]);
+  }, [filter, search, page]);
+
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages);
+  }, [page, totalPages]);
 
   const startEdit = (post: PostRecord) => {
     setEditingId(post.id);
@@ -116,9 +136,9 @@ export function AdminPosts({ onNewPost }: { onNewPost: () => void }) {
       </div>
       <div className="workspace-toolbar">
         <div className="admin-tabs" role="tablist" aria-label="Filter posts">
-          {FILTERS.map((item) => <button key={item} className={filter === item ? "admin-tab active" : "admin-tab"} type="button" role="tab" aria-selected={filter === item} onClick={() => setFilter(item)}>{item === "all" ? "All posts" : item[0].toUpperCase() + item.slice(1)}</button>)}
+          {FILTERS.map((item) => <button key={item} className={filter === item ? "admin-tab active" : "admin-tab"} type="button" role="tab" aria-selected={filter === item} onClick={() => { setFilter(item); setPage(1); setLoading(true); }}>{item === "all" ? "All posts" : item[0].toUpperCase() + item.slice(1)}</button>)}
         </div>
-        <label className="admin-search"><span className="sr-only">Search saved posts</span><input value={search} onChange={(event) => { setLoading(true); setSearch(event.target.value); }} placeholder="Search saved posts" /></label>
+        <label className="admin-search"><span className="sr-only">Search saved posts</span><input value={search} onChange={(event) => { setLoading(true); setSearch(event.target.value); setPage(1); }} placeholder="Search saved posts" /></label>
       </div>
       {error && <p className="field-help invalid" role="alert">{error}</p>}
       {editingId && (
@@ -155,6 +175,18 @@ export function AdminPosts({ onNewPost }: { onNewPost: () => void }) {
               </span>
             </div>)}
           </div>
+        )}
+        {!loading && posts.length > 0 && (
+          <Pagination
+            page={page}
+            totalPages={totalPages}
+            onPageChange={(nextPage) => {
+              setPage(nextPage);
+              document.querySelector(".admin-content")?.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+            label="Posts pagination"
+            className="pagination-admin"
+          />
         )}
       </div>
     </section>

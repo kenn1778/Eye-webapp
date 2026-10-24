@@ -1,8 +1,10 @@
-﻿/* 03-brand-motion.css - sticky header shrink, the animated eye logo and
+/* 03-brand-motion.css - sticky header shrink, the animated eye logo and
    footer stability. Loaded by App.css. */
 
 /* Header: the logo stays put; every link lives in the dropdown panel. */
 .nav-toggle {
+  grid-column: 3;
+  justify-self: end;
   display: inline-grid;
   place-items: center;
   width: 44px;
@@ -516,11 +518,12 @@ a, p, h1, h2, h3, span, strong, small, label, button {
 @media (max-width: 760px) {
   .site-footer {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-areas: "brand" "explore" "newsletter" "policies" "meta";
-    gap: 24px;
+    grid-template-areas: "brand" "newsletter" "policies" "meta";
+    gap: 20px;
     padding: 34px 20px calc(20px + env(safe-area-inset-bottom, 0px));
     text-align: left;
   }
+  .site-footer > .footer-nav { display: none; }
   .footer-meta {
     justify-content: space-between;
     flex-wrap: wrap;
