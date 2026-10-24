@@ -18,6 +18,8 @@ export function AdminSettings({ onProfileSaved }: { onProfileSaved?: (name: stri
   const [newPassword, setNewPassword] = useState("");
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<TeamRole>("Moderator");
+  const [requestEmail, setRequestEmail] = useState("");
+  const [requestOpen, setRequestOpen] = useState(false);
   const [members, setMembers] = useState<ModeratorRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -84,6 +86,25 @@ export function AdminSettings({ onProfileSaved }: { onProfileSaved?: (name: stri
     setMessage(result);
   };
 
+  const requestModerator = async (event: FormEvent) => {
+    event.preventDefault();
+    setError("");
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ""}/api/v1/admin/moderators/request`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ email: requestEmail.trim().toLowerCase() }),
+      });
+      if (!res.ok) throw new Error("Request failed");
+      setMessage("Moderator request email sent. Link expires in 5 minutes.");
+      setRequestOpen(false);
+      setRequestEmail("");
+    } catch {
+      setError("Could not send moderator request. Check API connection.");
+    }
+  };
+
   const addModerator = async (event: FormEvent) => {
     event.preventDefault();
     setError("");
@@ -138,10 +159,26 @@ export function AdminSettings({ onProfileSaved }: { onProfileSaved?: (name: stri
         </form>
       </div>
       <div className="admin-panel team-panel">
+        <button className="button-secondary" type="button" onClick={() => setRequestOpen(true)} style={{marginBottom:12}}>Request moderator via email</button>
         <div className="team-heading"><div><div className="eyebrow">Owner controls</div><h2>Team access</h2><p>Saved invitations are pending until a separate moderator sign-in and email delivery are configured.</p></div><span className="owner-badge">Owner</span></div>
         <form className="invite-row" onSubmit={addModerator}><input required type="email" value={inviteEmail} onChange={(event) => setInviteEmail(event.target.value)} placeholder="colleague@example.com" aria-label="Team member email" /><select value={inviteRole} onChange={(event) => setInviteRole(event.target.value as TeamRole)} aria-label="Team member role"><option>Moderator</option><option>Administrator</option></select><button className="admin-primary" type="submit">Add team member</button></form>
         {loading ? <p className="audit-message" role="status">Loading team...</p> : members.length === 0 ? <p className="audit-message">No team invitations yet.</p> : <div className="team-list">{members.map((member) => <div className="team-member" key={member.id}><span className="avatar">{member.name.slice(0, 2).toUpperCase()}</span><div className="team-member-info"><strong>{member.name}</strong><small>{member.email}</small></div><span className={`status-pill ${member.status === "Active" ? "published" : "scheduled"}`}>{member.status}</span><select aria-label={`Role for ${member.email}`} value={member.role} onChange={(event) => void changeRole(member, event.target.value as TeamRole)}><option>Moderator</option><option>Administrator</option></select><button className="button-secondary" type="button" onClick={() => void removeMember(member)}>Remove</button></div>)}</div>}
       </div>
-    </section>
+            {requestOpen && (
+          <div className="modal-backdrop" onClick={() => setRequestOpen(false)}>
+            <div className="modal" onClick={e => e.stopPropagation()}>
+              <h3>Request moderator access</h3>
+              <p>Enter email to send a 5-minute approval link.</p>
+              <form onSubmit={requestModerator}>
+                <input required type="email" value={requestEmail} onChange={e => setRequestEmail(e.target.value)} placeholder="user@example.com" />
+                <div style={{marginTop:12, display:"flex", gap:8}}>
+                  <button className="admin-primary" type="submit">Send request</button>
+                  <button className="button-secondary" type="button" onClick={() => setRequestOpen(false)}>Cancel</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+      </section>
   );
 }

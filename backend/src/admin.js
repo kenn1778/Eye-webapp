@@ -564,6 +564,56 @@ adminRouter.get(
   }),
 );
 
+
+adminRouter.post(
+  "/moderators/request",
+  asyncHandler(async (req, res) => {
+    const parsed = z.object({ email: z.string().email().max(254) }).safeParse(req.body);
+    if (!parsed.success) return res.status(400).json({ message: "Enter a valid email." });
+    const email = parsed.data.email.trim().toLowerCase();
+    const token = require("jsonwebtoken").sign({ email, role: "moderator" }, config.jwtSecret, { expiresIn: "5m" });
+    const link = `${config.publicBaseUrl || ""}/admin/moderators/accept?token=${encodeURIComponent(token)}`;
+    // Send email
+    try {
+      const { emailService } = await import("./lib/email.js");
+      await emailService.send({
+        to: email,
+        subject: "Moderator request approval",
+        text: `Click to accept moderator request: ${link}\nThis link expires in 5 minutes.`,
+        html: `<p>Click to accept moderator request: <a href="${link}">${link}</a></p><p>This link expires in 5 minutes.</p>`,
+        tag: "moderator-request",
+      });
+    } catch (e) {
+      // Log but continue
+    }
+    res.json({ message: "Request sent", expiresIn: 300 });
+  }),
+);
+
+
+adminRouter.get(
+  "/moderators/accept",
+  asyncHandler(async (req, res) => {
+    const token = req.query.token;
+    if (!token || typeof token !== "string") return res.status(400).json({ message: "Missing token." });
+    try {
+      const jwt = require("jsonwebtoken");
+      const payload = jwt.verify(token, config.jwtSecret);
+      if (!payload.email || payload.role !== "moderator") return res.status(400).json({ message: "Invalid token." });
+      const email = String(payload.email).toLowerCase();
+      const existing = await prisma.moderator.findUnique({ where: { email } });
+      if (existing) {
+        await prisma.moderator.update({ where: { email }, data: { status: "Active" } });
+      } else {
+        await prisma.moderator.create({ data: { email, name: email.split("@")[0], role: "Moderator", status: "Active" } });
+      }
+      res.json({ message: "Moderator activated", email });
+    } catch (e) {
+      return res.status(400).json({ message: "Invalid or expired token." });
+    }
+  }),
+);
+
 const moderatorCreateSchema = z.object({
   email: z.string().email().max(254),
   name: z.string().trim().min(1).max(100).optional(),
