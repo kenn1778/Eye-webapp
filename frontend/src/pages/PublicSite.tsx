@@ -167,6 +167,11 @@ export function PublicSite({ stories, openAdmin, isAdmin, justPublished }: Publi
   const rangeStart = cardStories.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
   const rangeEnd = Math.min(currentPage * PAGE_SIZE, cardStories.length);
 
+
+  useEffect(() => {
+    setPage(1);
+  }, [category, query]);
+
   useEffect(() => {
     if (!activeChat) return;
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setActiveChat(null); };
@@ -278,7 +283,7 @@ export function PublicSite({ stories, openAdmin, isAdmin, justPublished }: Publi
           <div className="hero-kicker"><span aria-hidden="true" /> For the next chapter</div>
           <h1>
             Find the{" "}
-            <span className="hero-rotator" style={{visibility:"hidden"}}>
+            <span className="hero-rotator">
               <span className="sr-only" aria-live="polite">{heroWords[wordIndex]}</span>
               {heroWords.map((word, i) => (
                 <span
