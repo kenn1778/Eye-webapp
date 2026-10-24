@@ -13,6 +13,7 @@ import { CookieConsent } from "./components/CookieConsent";
 import { ADMIN_ENABLED, MEMBERSHIP_ENABLED } from "./config";
 import SubscribePopup from "./components/SubscribePopup";
 import { getSession, logout } from "./lib/auth";
+import { ModeratorAccept } from "./pages/Admin/ModeratorAccept";
 import { createPost, fetchPublicPosts, type PostRecord } from "./lib/adminApi";
 
 const AdminLogin = lazy(() =>
@@ -238,6 +239,10 @@ function AppRoutes() {
           <Route path="/cookies" element={<CookiesPolicy />} />
           {ADMIN_ENABLED && (
             <>
+              <Route
+                path="/admin/moderators/accept"
+                element={<ModeratorAccept />}
+              />
               <Route
                 path="/admin/login"
                 element={
