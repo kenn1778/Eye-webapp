@@ -5,6 +5,7 @@ import jwt from "jsonwebtoken";
 import rateLimit from "express-rate-limit";
 import { z } from "zod";
 import { config } from "./config.js";
+import { logger } from "./lib/logger.js";
 import { prisma } from "./lib/prisma.js";
 import { enqueue } from "./lib/queue.js";
 import { createRateLimitStore } from "./lib/rate-limit.js";
@@ -165,6 +166,7 @@ authRouter.post("/login", loginLimiter, async (req, res) => {
   const passwordMatches = passwordHash ? await bcrypt.compare(password, passwordHash) : false;
   // Same message either way so attackers can't tell which field was wrong.
   if (!passwordMatches) {
+    logger.warn({ email: normalizedEmail, ip: req.ip }, "[eye:auth] failed login");
     return res.status(401).json({ message: "Invalid email or password." });
   }
 
@@ -222,7 +224,7 @@ authRouter.post("/forgot-password", resetLimiter, async (req, res) => {
     }
   } catch (error) {
     // A mail or database hiccup must not change the response shape.
-    console.warn(`[eye:auth] password reset request failed: ${error.code ?? error.message}`);
+    logger.warn({ email, error: error.code ?? error.message }, "[eye:auth] password reset request failed");
   }
 
   return res.json(generic);
@@ -244,7 +246,7 @@ authRouter.post("/reset-password", resetSubmitLimiter, async (req, res) => {
   try {
     record = await prisma.passwordResetToken.findUnique({ where: { tokenHash: hashResetToken(token) } });
   } catch (error) {
-    console.warn(`[eye:auth] password reset lookup failed: ${error.code ?? error.message}`);
+    logger.warn({ error: error.code ?? error.message }, "[eye:auth] password reset lookup failed");
     return res.status(503).json({ message: "Password reset is temporarily unavailable. Please try again." });
   }
 
@@ -267,7 +269,7 @@ authRouter.post("/reset-password", resetSubmitLimiter, async (req, res) => {
     });
     if (!updated) return res.status(400).json(invalid);
   } catch (error) {
-    console.warn(`[eye:auth] password reset failed: ${error.code ?? error.message}`);
+    logger.warn({ error: error.code ?? error.message }, "[eye:auth] password reset failed");
     return res.status(503).json({ message: "Password reset is temporarily unavailable. Please try again." });
   }
 
