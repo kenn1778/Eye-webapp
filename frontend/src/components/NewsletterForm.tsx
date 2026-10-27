@@ -118,9 +118,9 @@ export function NewsletterForm({
     <div className={`newsletter-pro newsletter-pro--${variant}`}>
       {showBenefits && variant === "card" && (
         <ul className="newsletter-benefits" aria-label="What you get">
-          <li><span aria-hidden="true">&check;</span> Curated scholarships &amp; deadlines</li>
-          <li><span aria-hidden="true">&check;</span> First-job &amp; internship leads</li>
-          <li><span aria-hidden="true">&check;</span> Culture, audio &amp; ideas &mdash; one email / week</li>
+          <li><span aria-hidden="true">&#10003;</span> Curated scholarships &amp; deadlines</li>
+          <li><span aria-hidden="true">&#10003;</span> First-job &amp; internship leads</li>
+          <li><span aria-hidden="true">&#10003;</span> Culture, audio &amp; ideas &mdash; one email / week</li>
         </ul>
       )}
 
@@ -172,7 +172,7 @@ export function NewsletterForm({
             aria-busy={isLoading}
           >
             {isLoading && <span className="btn-spinner" aria-hidden="true" />}
-            {isSuccess && <span aria-hidden="true">&check;</span>}
+            {isSuccess && <span aria-hidden="true">&#10003;</span>}
             <span>{isLoading ? "Joining..." : isSuccess ? "Done" : buttonLabel}</span>
             {!isLoading && !isSuccess && <span aria-hidden="true">&rarr;</span>}
           </button>

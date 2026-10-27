@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useState } from "react";
-import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import "./App.css";
 import type { Story } from "./types";
 import { seedStories } from "./data/seedData";
@@ -86,15 +86,15 @@ function EyeLoader() {
                 <path d="M12 51 C38 18 62 10 80 10 C101 10 126 23 148 51 C126 78 102 90 80 90 C58 90 34 79 12 51Z" />
               </clipPath>
             </defs>
-            <path className="eye-outline" d="M12 51 C38 18 62 10 80 10 C101 10 126 23 148 51 C126 78 102 90 80 90 C58 90 34 79 12 51Z" fill="#6c9a70" fillOpacity=".12" stroke="#4f7b57" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round"/>
+            <path className="eye-outline" d="M12 51 C38 18 62 10 80 10 C101 10 126 23 148 51 C126 78 102 90 80 90 C58 90 34 79 12 51Z" fill="#14b8a6" fillOpacity=".12" stroke="#0d9488" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round"/>
             <g className="eye-iris-group">
-              <ellipse className="eye-iris" cx="80" cy="51" rx="28" ry="31" fill="#4f7b57"/>
-              <ellipse className="eye-pupil" cx="80" cy="51" rx="12" ry="15" fill="#e9efbd"/>
-              <circle className="eye-glint" cx="84" cy="45" r="4" fill="#f8f9f4"/>
+              <ellipse className="eye-iris" cx="80" cy="51" rx="28" ry="31" fill="#0d9488"/>
+              <ellipse className="eye-pupil" cx="80" cy="51" rx="12" ry="15" fill="#ccfbf1"/>
+              <circle className="eye-glint" cx="84" cy="45" r="4" fill="#f0fdfa"/>
             </g>
             <g className="eye-lids" clipPath="url(#eyeLoaderClip)">
-              <rect className="eye-lid eye-lid-top" x="10" y="10" width="140" height="41" fill="#f3f1e9" />
-              <rect className="eye-lid eye-lid-bottom" x="10" y="51" width="140" height="41" fill="#f3f1e9" />
+              <rect className="eye-lid eye-lid-top" x="10" y="10" width="140" height="41" fill="#f8faf9" />
+              <rect className="eye-lid eye-lid-bottom" x="10" y="51" width="140" height="41" fill="#f8faf9" />
             </g>
           </svg>
         </span>
@@ -105,6 +105,14 @@ function EyeLoader() {
       </div>
     </div>
   );
+}
+
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
+  }, [pathname]);
+  return null;
 }
 
 function AppRoutes() {
@@ -214,6 +222,7 @@ function AppRoutes() {
 
   return (
     <>
+      <ScrollToTop />
       <Suspense fallback={<EyeLoader />}> <SubscribePopup />
         <Routes>
           <Route

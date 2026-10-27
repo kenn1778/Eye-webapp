@@ -95,16 +95,40 @@ export default function StoryPage() {
   if (notFound || !story) return <Navigate to="/" replace />;
 
   return (
-    <main className="story-page">
-      <Link to="/" className="back-link">← Back to stories</Link>
-      <article>
-        <h1>{story.title}</h1>
+    <main className="story-page page-fade">
+      <header className="story-hero">
+        <div className="story-hero-inner">
+          <Link to="/" className="story-back">&larr; Back to stories</Link>
+          <span className="story-label">{story.category}</span>
+          <h1>{story.title}</h1>
+          <div className="story-meta">
+            <span>{story.meta || "Published on EYE"}</span>
+            <span aria-hidden="true">&middot;</span>
+            <span>{story.category}</span>
+          </div>
+        </div>
+      </header>
+      <article className="story-article">
         {story.image && (
-          <img src={story.image} alt={story.title} loading="eager" decoding="async" />
+          <div className="story-hero-image">
+            <img src={story.image} alt={story.title} loading="eager" decoding="async" />
+          </div>
         )}
-        <div className="story-content">
-          <p>{story.excerpt}</p>
-          <p>{story.content || ""}</p>
+        <div className="story-body">
+          <p className="story-lede">{story.excerpt}</p>
+          {(story.content || "").split(/\n{2,}/).filter(Boolean).map((paragraph, index) => (
+            <p key={index}>{paragraph}</p>
+          ))}
+          {story.actionUrl && (
+            <a
+              className="button button-dark story-cta"
+              href={story.actionUrl}
+              target="_blank"
+              rel="noreferrer noopener"
+            >
+              {story.actionLabel || "Open opportunity"} <span aria-hidden="true">&rarr;</span>
+            </a>
+          )}
         </div>
       </article>
     </main>
