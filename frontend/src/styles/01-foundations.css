@@ -58,13 +58,13 @@
 
 .eyebrow, .story-label, .section-number, .story-meta { font-family: 'DM Mono', monospace; text-transform: uppercase; letter-spacing: .11em; font-size: 10px; }
 
-.eyebrow { color: #d45b3c; font-weight: 500; }
+.eyebrow { color: lch(16.49% 38.27 40.26); font-weight: 500; }
 
 h1, h2, h3, p { margin: 0; }
 
 h1 { max-width: 720px; margin: 18px 0 20px; color: #1d2925; font-size: clamp(52px, 7.5vw, 108px); line-height: .94; letter-spacing: -.075em; font-weight: 700; position: relative; z-index: 1; }
 
-h1 em { color: #d45b3c; font-family: 'Playfair Display', serif; font-weight: 600; letter-spacing: -.07em; }
+h1 em { color: #631502; font-family: 'Playfair Display', serif; font-weight: 600; letter-spacing: -.07em; }
 
 .intro-copy { max-width: 410px; color: #536259; font-size: 15px; line-height: 1.65; position: relative; z-index: 1; }
 
@@ -78,7 +78,7 @@ h1 em { color: #d45b3c; font-family: 'Playfair Display', serif; font-weight: 600
 
 .text-button { padding: 0; color: #1d2925; border: 0; border-bottom: 1px solid #89968a; background: transparent; cursor: pointer; font-size: 12px; font-weight: 700; }
 
-.notice { margin-top: 18px; color: #d45b3c; font-size: 12px; font-weight: 700; }
+.notice { margin-top: 18px; color: #811b01; font-size: 12px; font-weight: 700; }
 
 .feature-section, .latest-section { padding: 82px 12vw; }
 
@@ -86,7 +86,7 @@ h1 em { color: #d45b3c; font-family: 'Playfair Display', serif; font-weight: 600
 
 h2 { margin-top: 8px; color: #1d2925; font-size: clamp(30px, 4vw, 50px); line-height: 1; letter-spacing: -.07em; }
 
-.section-number { color: #859187; }
+.section-number { color: #859187; }  
 
 .feature-story { display: grid; grid-template-columns: 1.2fr 1fr; min-height: 375px; background: #1d2925; }
 
@@ -94,7 +94,7 @@ h2 { margin-top: 8px; color: #1d2925; font-size: clamp(30px, 4vw, 50px); line-he
 
 .feature-content { display: flex; flex-direction: column; justify-content: center; padding: 45px 55px; color: #eaf0df; }
 
-.story-label { color: #e2f04a; }
+.story-label { color: #fc8803; }
 
 .feature-content h3 { max-width: 430px; margin: 17px 0 16px; font-size: clamp(28px, 3.6vw, 47px); line-height: 1.02; letter-spacing: -.065em; }
 
@@ -102,7 +102,7 @@ h2 { margin-top: 8px; color: #1d2925; font-size: clamp(30px, 4vw, 50px); line-he
 
 .story-link { width: fit-content; display: flex; gap: 35px; margin-top: 28px; color: #eaf0df; font-size: 12px; font-weight: 700; text-decoration: none; }
 
-.story-link:hover { color: #e2f04a; }
+.story-link:hover { color: #f8930f; }
 
 .latest-section { padding: clamp(54px, 7vw, 88px) clamp(20px, 8vw, 128px); background: #f7f8f5; }
 

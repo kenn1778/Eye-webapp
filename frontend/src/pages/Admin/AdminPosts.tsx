@@ -164,11 +164,12 @@ export function AdminPosts({ onNewPost }: { onNewPost: () => void }) {
       <div className="admin-panel section-panel">
         {loading ? <p className="audit-message" role="status">Loading posts...</p> : posts.length === 0 ? <p className="audit-message">No {filter === "all" ? "saved" : filter} posts found.</p> : (
           <div className="posts-table">
-            <div className="table-row table-header"><span>Post</span><span>Category</span><span>Status</span><span>Updated</span><span>Actions</span></div>
+            <div className="table-row table-header"><span>Post</span><span>Category</span><span>Status</span><span>Views</span><span>Updated</span><span>Actions</span></div>
             {posts.map((post) => <div className="table-row admin-post-row" key={post.id}>
               <div className="post-title-cell"><strong>{post.title}</strong><small>{post.excerpt}</small></div>
               <span className="muted-cell">{post.category}</span>
               <span className={`status-pill ${post.deletedAt ? "draft" : post.status}`}>{post.deletedAt ? "Trash" : post.status}</span>
+              <span className="muted-cell views-cell">{post.viewCount ?? 0}</span>
               <time className="muted-cell" dateTime={post.updatedAt}>{new Date(post.updatedAt).toLocaleDateString()}</time>
               <span className="admin-post-actions">
                 {post.deletedAt ? <button className="button-secondary" type="button" onClick={() => void restore(post)}>Restore</button> : <><button className="button-secondary" type="button" onClick={() => startEdit(post)}>Edit</button><button className="button-secondary" type="button" onClick={() => void moveToTrash(post)}>Trash</button></>}

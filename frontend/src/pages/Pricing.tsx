@@ -100,7 +100,7 @@ export function Pricing() {
       <main className="pricing-page">
         <div className="pricing-header">
           <div className="eyebrow">Membership</div>
-          <h1>Go further with EYE Premium</h1>
+          <h1>Go further with Expl00r Premium</h1>
           <p className="pricing-lede">
             Early access to scholarships, personalised matches, deadline reminders, and the full archive.
           </p>

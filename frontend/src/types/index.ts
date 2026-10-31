@@ -21,6 +21,8 @@ export type Story = {
   linkHeaderUrl?: string | null;
   audioUrl?: string | null;
   videoUrl?: string | null;
+  // Read counter pinged by the story page; powers the popular/trending lists.
+  views?: number;
 };
 
 export type Community = {
@@ -47,6 +49,9 @@ export type AdminMetrics = {
   chatMessages: number;
   reviews: number;
   unreadNotifications: number;
+  views: number;
+  messages: number;
+  unreadMessages: number;
 };
 
 // A single row in the admin notification feed, as returned by the API.
@@ -65,6 +70,8 @@ export type AdminInsights = {
   chat: { total: number; last7Days: number; last30Days: number };
   reviews: { total: number; averageRating: number };
   posts: { total: number };
+  views: { total: number };
+  messages: { total: number; last7Days: number; last30Days: number };
   topCommunities: { name: string; messages: number }[];
 };
 
@@ -74,6 +81,28 @@ export type ActivityPoint = {
   subscribers: number;
   chat: number;
   reviews: number;
+  views: number;
+};
+
+// An inbound message from the public contact form, as shown in the admin inbox.
+export type AdminContactMessage = {
+  id: string;
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+  handled: boolean;
+  createdAt: string;
+};
+
+// The public author card, editable from the admin workspace.
+export type AdminAuthorProfile = {
+  name: string;
+  role: string;
+  bio: string;
+  email: string;
+  avatarUrl: string | null;
+  updatedAt?: string;
 };
 
 export type TeamRole = "Moderator" | "Administrator";

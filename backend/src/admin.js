@@ -139,7 +139,7 @@ adminRouter.get(
 adminRouter.get(
   "/metrics",
   asyncHandler(async (_req, res) => {
-    const [posts, stories, subscribers, chatMessages, reviews, unreadNotifications] =
+    const [posts, stories, subscribers, chatMessages, reviews, unreadNotifications, viewAggregate, messages, unreadMessages] =
       await Promise.all([
         prisma.post.count({ where: { deletedAt: null } }),
         prisma.story.count(),
@@ -147,9 +147,22 @@ adminRouter.get(
         prisma.chatMessage.count(),
         prisma.review.count(),
         prisma.notification.count({ where: { read: false } }),
+        prisma.post.aggregate({ where: { deletedAt: null }, _sum: { viewCount: true } }),
+        prisma.contactMessage.count(),
+        prisma.contactMessage.count({ where: { handled: false } }),
       ]);
 
-    res.json({ posts, stories, subscribers, chatMessages, reviews, unreadNotifications });
+    res.json({
+      posts,
+      stories,
+      subscribers,
+      chatMessages,
+      reviews,
+      unreadNotifications,
+      views: viewAggregate._sum.viewCount ?? 0,
+      messages,
+      unreadMessages,
+    });
   }),
 );
 
@@ -174,6 +187,10 @@ adminRouter.get(
       reviewAggregate,
       postsTotal,
       topCommunities,
+      viewsTotal,
+      messagesTotal,
+      messages7,
+      messages30,
     ] = await Promise.all([
       prisma.newsletterSubscriber.count(),
       prisma.newsletterSubscriber.count({ where: { subscribedAt: { gte: since7 } } }),
@@ -192,6 +209,10 @@ adminRouter.get(
         ORDER BY messages DESC
         LIMIT 5
       `,
+      prisma.post.aggregate({ where: { deletedAt: null }, _sum: { viewCount: true } }),
+      prisma.contactMessage.count(),
+      prisma.contactMessage.count({ where: { createdAt: { gte: since7 } } }),
+      prisma.contactMessage.count({ where: { createdAt: { gte: since30 } } }),
     ]);
 
     const payload = {
@@ -204,6 +225,8 @@ adminRouter.get(
           : 0,
       },
       posts: { total: postsTotal },
+      views: { total: viewsTotal._sum.viewCount ?? 0 },
+      messages: { total: messagesTotal, last7Days: messages7, last30Days: messages30 },
       topCommunities: topCommunities.map((row) => ({
         name: row.name,
         messages: Number(row.messages),
@@ -233,7 +256,8 @@ adminRouter.get(
       SELECT to_char(d.day, 'YYYY-MM-DD') AS date,
              COALESCE(s.count, 0)::int AS subscribers,
              COALESCE(c.count, 0)::int AS chat,
-             COALESCE(r.count, 0)::int AS reviews
+             COALESCE(r.count, 0)::int AS reviews,
+             COALESCE(v.count, 0)::int AS views
       FROM generate_series(
              date_trunc('day', now()) - (${days}::int - 1) * interval '1 day',
              date_trunc('day', now()),
@@ -257,6 +281,12 @@ adminRouter.get(
         WHERE "createdAt" >= date_trunc('day', now()) - (${days}::int - 1) * interval '1 day'
         GROUP BY 1
       ) r ON r.day = d.day
+      LEFT JOIN (
+        SELECT date_trunc('day', "createdAt") AS day, COUNT(*) AS count
+        FROM "PostView"
+        WHERE "createdAt" >= date_trunc('day', now()) - (${days}::int - 1) * interval '1 day'
+        GROUP BY 1
+      ) v ON v.day = d.day
       ORDER BY d.day
     `;
 
@@ -267,6 +297,7 @@ adminRouter.get(
         subscribers: Number(row.subscribers),
         chat: Number(row.chat),
         reviews: Number(row.reviews),
+        views: Number(row.views),
       })),
     };
 
@@ -659,6 +690,122 @@ adminRouter.delete(
     const result = await prisma.moderator.deleteMany({ where: { id: parsedId.data } });
     if (!result.count) return res.status(404).json({ message: "Moderator not found." });
     res.json({ ok: true });
+  }),
+);
+
+// CONTACT MESSAGES - the admin side of the public contact form.
+const messagesQuerySchema = z.object({
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+  offset: z.coerce.number().int().min(0).default(0),
+  handled: boolFromQuery,
+});
+
+adminRouter.get(
+  "/messages",
+  asyncHandler(async (req, res) => {
+    const parsed = messagesQuerySchema.safeParse(req.query);
+    if (!parsed.success) return res.status(400).json({ message: "Invalid query." });
+    const { limit, offset, handled } = parsed.data;
+
+    const where = handled === undefined ? {} : { handled };
+    const [items, total, unread] = await Promise.all([
+      prisma.contactMessage.findMany({
+        where,
+        orderBy: { createdAt: "desc" },
+        take: limit,
+        skip: offset,
+      }),
+      prisma.contactMessage.count({ where }),
+      prisma.contactMessage.count({ where: { handled: false } }),
+    ]);
+    res.json({ items, total, unread });
+  }),
+);
+
+adminRouter.post(
+  "/messages/:id/handled",
+  asyncHandler(async (req, res) => {
+    const parsedId = idSchema.safeParse(req.params.id);
+    if (!parsedId.success) return res.status(400).json({ message: "Invalid id." });
+    const parsedBody = z.object({ handled: z.boolean().default(true) }).safeParse(req.body ?? {});
+    const handled = parsedBody.success ? parsedBody.data.handled : true;
+    // updateMany so a stale id is a no-op instead of a 500.
+    const result = await prisma.contactMessage.updateMany({
+      where: { id: parsedId.data },
+      data: { handled },
+    });
+    if (!result.count) return res.status(404).json({ message: "Message not found." });
+    res.json({ ok: true, handled });
+  }),
+);
+
+adminRouter.delete(
+  "/messages/:id",
+  asyncHandler(async (req, res) => {
+    const parsedId = idSchema.safeParse(req.params.id);
+    if (!parsedId.success) return res.status(400).json({ message: "Invalid id." });
+    const result = await prisma.contactMessage.deleteMany({ where: { id: parsedId.data } });
+    if (!result.count) return res.status(404).json({ message: "Message not found." });
+    res.json({ ok: true });
+  }),
+);
+
+// AUTHOR PROFILE - the public author card the landing page renders. A single
+// row is created on first read (same defaults as the public endpoint) so the
+// editor always has something to work with.
+const authorProfileSelect = {
+  name: true,
+  role: true,
+  bio: true,
+  email: true,
+  avatarUrl: true,
+  updatedAt: true,
+};
+
+async function findOrCreateAuthorProfile() {
+  const existing = await prisma.authorProfile.findFirst({ orderBy: { createdAt: "asc" } });
+  if (existing) return existing;
+  return prisma.authorProfile.create({
+    data: {
+      name: process.env.AUTHOR_NAME ?? "Alozie Izuchukwu Johnkennedy",
+      role: "Founder and editor",
+      bio: "Writes about scholarships, first jobs, and building a career on your own terms.",
+      email: config.adminEmail || "teckennedy177@gmail.com",
+    },
+  });
+}
+
+adminRouter.get(
+  "/author",
+  asyncHandler(async (_req, res) => {
+    const profile = await findOrCreateAuthorProfile();
+    res.json(profile);
+  }),
+);
+
+const authorUpdateSchema = z.object({
+  name: z.string().trim().min(1).max(100),
+  role: z.string().trim().min(1).max(120),
+  bio: z.string().trim().min(1).max(600),
+  email: z.string().trim().email().max(200),
+  avatarUrl: z.string().url().max(2048).nullable().optional(),
+});
+
+adminRouter.patch(
+  "/author",
+  asyncHandler(async (req, res) => {
+    const parsed = authorUpdateSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ message: "Provide a name, role, bio, and a valid email." });
+    }
+    const current = await findOrCreateAuthorProfile();
+    const { avatarUrl, ...fields } = parsed.data;
+    const profile = await prisma.authorProfile.update({
+      where: { id: current.id },
+      data: { ...fields, ...(avatarUrl === undefined ? {} : { avatarUrl }) },
+      select: authorProfileSelect,
+    });
+    res.json(profile);
   }),
 );
 

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
+import { showEyeTransition } from "./EyeTransition";
 
 function stripHtml(input: string): string {
   // eslint-disable-next-line no-control-regex -- intentional: strip ASCII control characters from email input
@@ -99,6 +100,10 @@ export function NewsletterForm({
       setMessage(confirmation);
 
       setEmail("");
+
+      // The blinking eye covers the handoff between "submitting" and the
+      // confirmation state so the swap never flashes.
+      showEyeTransition(1500);
 
       resetTimerRef.current = window.setTimeout(() => {
         resetTimerRef.current = null;

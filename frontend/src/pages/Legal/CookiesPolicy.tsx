@@ -64,7 +64,7 @@ export function CookiesPolicy() {
           <p>Questions? <a href="mailto:teckennedy177@gmail.com">teckennedy177@gmail.com</a></p>
         </section>
       </main>
-      <footer className="site-footer"><Brand /><p>© 2026 EYE</p><div className="footer-meta"><Link to="/privacy">Privacy</Link><Link to="/terms">Terms</Link></div></footer>
+      <footer className="site-footer"><Brand /><p>© 2026 Expl00r</p><div className="footer-meta"><Link to="/privacy">Privacy</Link><Link to="/terms">Terms</Link></div></footer>
     </div>
   );
 }

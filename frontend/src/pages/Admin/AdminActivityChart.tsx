@@ -1,6 +1,6 @@
 import type { ActivityPoint } from "../../types";
 
-type SeriesKey = "subscribers" | "chat" | "reviews";
+type SeriesKey = "subscribers" | "chat" | "reviews" | "views";
 
 type AdminActivityChartProps = {
   series: ActivityPoint[];
@@ -12,6 +12,7 @@ const HEIGHT = 240;
 const PAD = { top: 18, right: 14, bottom: 30, left: 38 };
 
 const SERIES: ReadonlyArray<{ key: SeriesKey; label: string; color: string }> = [
+  { key: "views", label: "Post views", color: "#c9702c" },
   { key: "chat", label: "Chat messages", color: "#5f8a63" },
   { key: "subscribers", label: "Subscribers", color: "#d45b3c" },
   { key: "reviews", label: "Reviews", color: "#5f779d" },
@@ -27,7 +28,7 @@ export function AdminActivityChart({ series }: AdminActivityChartProps) {
   if (series.length === 0) {
     return (
       <p className="chart-empty">
-        No activity yet. New subscribers, messages, and reviews will appear here.
+        No activity yet. Post views, subscribers, messages, and reviews will appear here.
       </p>
     );
   }
@@ -35,7 +36,7 @@ export function AdminActivityChart({ series }: AdminActivityChartProps) {
   const innerW = WIDTH - PAD.left - PAD.right;
   const innerH = HEIGHT - PAD.top - PAD.bottom;
   const baseline = PAD.top + innerH;
-  const max = Math.max(1, ...series.flatMap((point) => [point.subscribers, point.chat, point.reviews]));
+  const max = Math.max(1, ...series.flatMap((point) => [point.subscribers, point.chat, point.reviews, point.views ?? 0]));
   const stepX = series.length > 1 ? innerW / (series.length - 1) : 0;
 
   const x = (index: number) => PAD.left + index * stepX;
@@ -58,7 +59,7 @@ export function AdminActivityChart({ series }: AdminActivityChartProps) {
       <svg
         viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
         role="img"
-        aria-label="Daily activity for subscribers, chat messages, and reviews"
+        aria-label="Daily activity for post views, subscribers, chat messages, and reviews"
         preserveAspectRatio="xMidYMid meet"
       >
         <defs>

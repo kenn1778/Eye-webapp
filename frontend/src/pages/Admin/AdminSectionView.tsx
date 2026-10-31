@@ -4,6 +4,8 @@ import { communities } from "../../data/seedData";
 import { AdminSettings } from "./AdminSettings";
 import { AdminPosts } from "./AdminPosts";
 import { AdminMedia } from "./AdminMedia";
+import { AdminMessages } from "./AdminMessages";
+import { AdminAuthorProfileEditor } from "./AdminAuthorProfile";
 
 type AdminSectionViewProps = {
   section: string;
@@ -39,6 +41,14 @@ export function AdminSectionView({ section, onNewPost, onProfileSaved }: AdminSe
 
   if (section === "Posts") {
     return <AdminPosts onNewPost={onNewPost} />;
+  }
+
+  if (section === "Messages") {
+    return <AdminMessages />;
+  }
+
+  if (section === "Author profile") {
+    return <AdminAuthorProfileEditor />;
   }
 
   if (section === "Calendar") {

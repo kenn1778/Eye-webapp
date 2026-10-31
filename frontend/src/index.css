@@ -24,12 +24,12 @@ html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
   scrollbar-width: thin;
-  scrollbar-color: #0d9488 #eef1ef;
+  scrollbar-color: #012c29 #eef1ef;
 }
 html::-webkit-scrollbar { width: 10px; height: 10px; }
 html::-webkit-scrollbar-track { background: #eef1ef; }
-html::-webkit-scrollbar-thumb { background: #0d9488; border: 2px solid #eef1ef; border-radius: 99px; }
-html::-webkit-scrollbar-thumb:hover { background: #0f766e; }
+html::-webkit-scrollbar-thumb { background: #001d1a; border: 2px solid #eef1ef; border-radius: 99px; }
+html::-webkit-scrollbar-thumb:hover { background: #000f0e; }
 body {
   margin: 0;
   min-width: 320px;
@@ -69,12 +69,12 @@ a { color: inherit; }
 input, textarea, select, button { max-width: 100%; }
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(13, 148, 136, .5) transparent;
+  scrollbar-color: rgba(0, 82, 75, 0.5) transparent;
 }
 *::-webkit-scrollbar { width: 8px; height: 8px; }
 *::-webkit-scrollbar-track { background: transparent; }
-*::-webkit-scrollbar-thumb { background: #0d9488; border: 2px solid transparent; background-clip: padding-box; border-radius: 99px; }
-*::-webkit-scrollbar-thumb:hover { background: #0f766e; background-clip: padding-box; }
+*::-webkit-scrollbar-thumb { background: #01302c; border: 2px solid transparent; background-clip: padding-box; border-radius: 99px; }
+*::-webkit-scrollbar-thumb:hover { background: #041413; background-clip: padding-box; }
 :where(.story-card-content, .feature-content, .community-card-body, .reader-content, .admin-content, .editor-modal, .story-reader, .posts-table) {
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: auto;
@@ -95,7 +95,7 @@ input, textarea, select, button { max-width: 100%; }
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
 /* Keyboard-only focus ring; mouse clicks stay clean. */
-:focus-visible { outline: 2px solid #0d9488; outline-offset: 2px; }
+:focus-visible { outline: 2px solid #008b7e; outline-offset: 2px; }
 :focus:not(:focus-visible) { outline: none; }
 /* Step the root size up on very large displays so the layout does not shrink into a corner. */
 @media (min-width: 1920px) {

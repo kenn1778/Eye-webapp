@@ -73,7 +73,7 @@ export default function SubscribePopup() {
     <div className="subscribe-overlay" role="dialog" aria-modal="true" aria-labelledby="subscribe-title">
       <div className="subscribe-card" ref={dialogRef}>
         <button className="subscribe-close" aria-label="Close" onClick={close}>×</button>
-        <h3 id="subscribe-title">Get early access & updates</h3>
+        <h3 id="subscribe-title">Get Early Access & Updates</h3>
         <p>Subscribe for scholarship alerts, application tips and new posts straight to your inbox.</p>
         <form onSubmit={submit} className="subscribe-form">
           <label htmlFor="subscribe-email" className="sr-only">Email</label>

@@ -7,6 +7,9 @@ export const emptyMetrics: AdminMetrics = {
   chatMessages: 0,
   reviews: 0,
   unreadNotifications: 0,
+  views: 0,
+  messages: 0,
+  unreadMessages: 0,
 };
 
 // Starter content until the API is wired up.

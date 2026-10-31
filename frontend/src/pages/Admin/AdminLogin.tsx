@@ -66,7 +66,7 @@ export function AdminLogin({ onLogin, onBack }: AdminLoginProps) {
   return (
     <div className="login-shell">
       <main className="login-card">
-        <button className="login-back" type="button" onClick={onBack}>&lt;- Back to EYE</button>
+        <button className="login-back" type="button" onClick={onBack}>&lt;- Back to Expl00r</button>
         <div className="login-brand"><Brand /></div>
         <div className="eyebrow">Private workspace</div>
         <h1>Welcome back.</h1>

@@ -60,14 +60,18 @@ model Post {
   videoUrl String?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+  // Aggregated by POST /posts/:id/view; powers the popular/trending lists.
+  viewCount   Int       @default(0)
 
   author User? @relation(fields: [authorId], references: [id])
+  views  PostView[]
   mediaAsset MediaAsset? @relation("PostFeaturedMedia", fields: [mediaAssetId], references: [id], onDelete: SetNull)
   linkHeaderAsset MediaAsset? @relation("PostLinkHeaderMedia", fields: [linkHeaderAssetId], references: [id], onDelete: SetNull)
   audioAsset MediaAsset? @relation("PostAudioMedia", fields: [audioAssetId], references: [id], onDelete: SetNull)
   videoAsset MediaAsset? @relation("PostVideoMedia", fields: [videoAssetId], references: [id], onDelete: SetNull)
 
   @@index([status, publishedAt])
+  @@index([status, viewCount])
   @@index([deletedAt, createdAt])
   @@index([mediaAssetId])
   @@index([linkHeaderAssetId])
@@ -262,4 +266,47 @@ model AuditLog {
   @@index([actorEmail, createdAt])
   @@index([resource, createdAt])
   @@index([createdAt])
+}
+
+// One row per (post, visitor) view. Anonymous pings (no visitorId) always
+// insert a row; identified pings are deduplicated by the unique constraint so
+// refreshes do not inflate the counters.
+model PostView {
+  id        String   @id @default(cuid())
+  postId    String
+  visitorId String?
+  createdAt DateTime @default(now())
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, visitorId])
+  @@index([postId, createdAt])
+  @@index([createdAt])
+}
+
+// Inbound messages from the public contact form. The admin dashboard learns
+// about new messages through a "system" notification.
+model ContactMessage {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  subject   String   @default("")
+  message   String
+  handled   Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+// Public author card. A single row is created on first read so the site can
+// later expose profile editing without another deploy.
+model AuthorProfile {
+  id        String   @id @default(cuid())
+  name      String
+  role      String   @default("Founder and editor")
+  bio       String   @default("")
+  email     String   @default("")
+  avatarUrl String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

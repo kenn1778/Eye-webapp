@@ -14,12 +14,12 @@ export function Terms() {
         <div className="legal-header">
           <div className="eyebrow">Legal • Last updated: 12 September 2026</div>
           <h1>Terms & Conditions</h1>
-          <p>Rules for using EYE. By browsing or subscribing, you agree to these terms.</p>
+          <p>Rules for using Expl00r. By browsing or subscribing, you agree to these terms.</p>
         </div>
 
         <section>
-          <h2>1. About EYE</h2>
-          <p>EYE publishes summaries and links to scholarships, internships, jobs, and cultural opportunities. We do not award funding and are not affiliated with the institutions listed unless explicitly stated.</p>
+          <h2>1. About Expl00r</h2>
+          <p>Expl00r publishes summaries and links to scholarships, internships, jobs, and cultural opportunities. We do not award funding and are not affiliated with the institutions listed unless explicitly stated.</p>
           <div className="legal-notice">
             <strong>Disclaimer:</strong> Listings are for information only. Eligibility, deadlines, and funding amounts change frequently. Always verify on the <em>official source</em> linked in each post before applying. We are not responsible for decisions, costs, or outcomes based on summaries.
           </div>
@@ -29,14 +29,14 @@ export function Terms() {
           <h2>2. Acceptable use</h2>
           <ul>
             <li>Do not scrape, overload, or attempt to bypass security.</li>
-            <li>Do not use content to mislead others or impersonate EYE.</li>
+            <li>Do not use content to mislead others or impersonate Expl00r.</li>
             <li>Respect intellectual property — you may share links, but do not republish full articles without permission.</li>
           </ul>
         </section>
 
         <section>
           <h2>3. Intellectual property</h2>
-          <p>Our original text, design, and EYE logo are © 2026 EYE. Third-party images are licensed via Unsplash (Unsplash License) and remain property of their creators. Google Fonts (Manrope, DM Mono, Playfair Display) are under the SIL Open Font License. If you own content and want it removed, email <a href="mailto:teckennedy177@gmail.com">teckennedy177@gmail.com</a>.</p>
+          <p>Our original text, design, and Expl00r logo are © 2026 Expl00r. Third-party images are licensed via Unsplash (Unsplash License) and remain property of their creators. Google Fonts (Manrope, DM Mono, Playfair Display) are under the SIL Open Font License. If you own content and want it removed, email <a href="mailto:teckennedy177@gmail.com">teckennedy177@gmail.com</a>.</p>
         </section>
 
         <section>
@@ -78,7 +78,7 @@ export function Terms() {
 
         </section>
       </main>
-      <footer className="site-footer"><Brand /><p>© 2026 EYE</p><div className="footer-meta"><Link to="/privacy">Privacy</Link><Link to="/terms">Terms</Link></div></footer>
+      <footer className="site-footer"><Brand /><p>© 2026 Expl00r</p><div className="footer-meta"><Link to="/privacy">Privacy</Link><Link to="/terms">Terms</Link></div></footer>
     </div>
   );
 }

@@ -1,21 +1,34 @@
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState, type ReactNode } from "react";
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import "./App.css";
 import type { Story } from "./types";
 import { seedStories } from "./data/seedData";
-import { PublicSite } from "./pages/PublicSite";
-import StoryPage from "./pages/StoryPage";
-import { PrivacyPolicy } from "./pages/Legal/PrivacyPolicy";
-import { Terms } from "./pages/Legal/Terms";
-import { RefundPolicy } from "./pages/Legal/RefundPolicy";
-import { CookiesPolicy } from "./pages/Legal/CookiesPolicy";
 import { CookieConsent } from "./components/CookieConsent";
+import { EyeTransition } from "./components/EyeTransition";
 import { ADMIN_ENABLED, MEMBERSHIP_ENABLED } from "./config";
 import SubscribePopup from "./components/SubscribePopup";
 import { getSession, logout } from "./lib/auth";
-import { ModeratorAccept } from "./pages/Admin/ModeratorAccept";
 import { createPost, fetchPublicPosts, type PostRecord } from "./lib/adminApi";
 
+const PublicSite = lazy(() =>
+  import("./pages/PublicSite").then((module) => ({ default: module.PublicSite })),
+);
+const StoryPage = lazy(() => import("./pages/StoryPage"));
+const PrivacyPolicy = lazy(() =>
+  import("./pages/Legal/PrivacyPolicy").then((module) => ({ default: module.PrivacyPolicy })),
+);
+const Terms = lazy(() =>
+  import("./pages/Legal/Terms").then((module) => ({ default: module.Terms })),
+);
+const RefundPolicy = lazy(() =>
+  import("./pages/Legal/RefundPolicy").then((module) => ({ default: module.RefundPolicy })),
+);
+const CookiesPolicy = lazy(() =>
+  import("./pages/Legal/CookiesPolicy").then((module) => ({ default: module.CookiesPolicy })),
+);
+const ModeratorAccept = lazy(() =>
+  import("./pages/Admin/ModeratorAccept").then((module) => ({ default: module.ModeratorAccept })),
+);
 const AdminLogin = lazy(() =>
   import("./pages/Admin/AdminLogin").then((module) => ({ default: module.AdminLogin })),
 );
@@ -47,6 +60,7 @@ function toStory(post: PostRecord): Story {
     linkHeaderUrl: post.linkHeaderUrl,
     audioUrl: post.audioUrl,
     videoUrl: post.videoUrl,
+    views: post.viewCount ?? 0,
   };
 }
 
@@ -75,9 +89,9 @@ function writeCachedStories(stories: Story[]) {
   }
 }
 // First-paint loader - the eye blink covers the gap before the app mounts.
-function EyeLoader() {
+function EyeLoader({ leaving = false }: { leaving?: boolean }) {
   return (
-    <div className="eye-loader" role="status" aria-live="polite" aria-busy="true" aria-label="Loading EYE">
+    <div className={`eye-loader ${leaving ? "is-leaving" : ""}`} role="status" aria-live="polite" aria-busy="true" aria-label="Loading Exploor">
       <div className="eye-loader-card">
         <span className="brand-icon is-loading" aria-hidden="true">
           <svg className="eye-svg is-loading" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 100" role="img" aria-hidden="true">
@@ -86,20 +100,20 @@ function EyeLoader() {
                 <path d="M12 51 C38 18 62 10 80 10 C101 10 126 23 148 51 C126 78 102 90 80 90 C58 90 34 79 12 51Z" />
               </clipPath>
             </defs>
-            <path className="eye-outline" d="M12 51 C38 18 62 10 80 10 C101 10 126 23 148 51 C126 78 102 90 80 90 C58 90 34 79 12 51Z" fill="#14b8a6" fillOpacity=".12" stroke="#0d9488" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round"/>
+            <path className="eye-outline" d="M12 51 C38 18 62 10 80 10 C101 10 126 23 148 51 C126 78 102 90 80 90 C58 90 34 79 12 51Z" fill="#0d9488" fillOpacity=".12" stroke="#0d9488" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round"/>
             <g className="eye-iris-group">
-              <ellipse className="eye-iris" cx="80" cy="51" rx="28" ry="31" fill="#0d9488"/>
+              <ellipse className="eye-iris" cx="80" cy="51" rx="28" ry="31" fill="#14b8a6"/>
               <ellipse className="eye-pupil" cx="80" cy="51" rx="12" ry="15" fill="#ccfbf1"/>
               <circle className="eye-glint" cx="84" cy="45" r="4" fill="#f0fdfa"/>
             </g>
             <g className="eye-lids" clipPath="url(#eyeLoaderClip)">
-              <rect className="eye-lid eye-lid-top" x="10" y="10" width="140" height="41" fill="#f8faf9" />
-              <rect className="eye-lid eye-lid-bottom" x="10" y="51" width="140" height="41" fill="#f8faf9" />
+              <rect className="eye-lid eye-lid-top" x="10" y="10" width="140" height="41" fill="currentColor" />
+              <rect className="eye-lid eye-lid-bottom" x="10" y="51" width="140" height="41" fill="currentColor" />
             </g>
           </svg>
         </span>
         <div className="eye-loader-text">
-          <span className="eyebrow">EYE</span>
+          <span className="eyebrow">Expl00r</span>
           <span className="loader-dots" aria-hidden="true"><span></span><span></span><span></span></span>
         </div>
       </div>
@@ -115,6 +129,18 @@ function ScrollToTop() {
   return null;
 }
 
+// Remounts its subtree when the top-level page segment changes so each page
+// fades in on arrival, while admin sub-navigation keeps its state.
+function PageTransition({ children }: { children: ReactNode }) {
+  const { pathname } = useLocation();
+  const pageKey = pathname.split("/")[1] || "home";
+  return (
+    <div className="page-transition" key={pageKey}>
+      {children}
+    </div>
+  );
+}
+
 function AppRoutes() {
   const navigate = useNavigate();
   // null until the session check resolves, so an already-authenticated user
@@ -124,8 +150,17 @@ function AppRoutes() {
   const [postsReady, setPostsReady] = useState(publishedStories.length > 0);
   const [initialDelayDone, setInitialDelayDone] = useState(publishedStories.length > 0);
   const [justPublished, setJustPublished] = useState(false);
+  const [bootVeil, setBootVeil] = useState(true);
 
   const allStories = publishedStories.length > 0 ? publishedStories : seedStories;
+  const bootReady = postsReady && initialDelayDone;
+
+  // Let the veil fade over the finished page instead of snapping away.
+  useEffect(() => {
+    if (!bootReady) return;
+    const timer = window.setTimeout(() => setBootVeil(false), 520);
+    return () => window.clearTimeout(timer);
+  }, [bootReady]);
 
   useEffect(() => {
     let cancelled = false;
@@ -224,63 +259,67 @@ function AppRoutes() {
     <>
       <ScrollToTop />
       <Suspense fallback={<EyeLoader />}> <SubscribePopup />
-        <Routes>
-          <Route
-            path="/"
-            element={
-              postsReady && initialDelayDone ? (
-                <PublicSite
-                  stories={allStories}
-                  openAdmin={openAdmin}
-                  isAdmin={isAuthenticated === true}
-                  justPublished={justPublished}
+        <PageTransition>
+          <Routes>
+            <Route
+              path="/"
+              element={
+                <>
+                  {bootReady && (
+                    <PublicSite
+                      stories={allStories}
+                      openAdmin={openAdmin}
+                      isAdmin={isAuthenticated === true}
+                      justPublished={justPublished}
+                    />
+                  )}
+                  {bootVeil && <EyeLoader leaving={bootReady} />}
+                </>
+              }
+            />
+            {MEMBERSHIP_ENABLED && <Route path="/pricing" element={<Pricing />} />}
+            <Route path="/story/:id" element={<StoryPage />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/refund" element={<RefundPolicy />} />
+            <Route path="/cookies" element={<CookiesPolicy />} />
+            {ADMIN_ENABLED && (
+              <>
+                <Route
+                  path="/admin/moderators/accept"
+                  element={<ModeratorAccept />}
                 />
-              ) : (
-                <EyeLoader />
-              )
-            }
-          />
-          {MEMBERSHIP_ENABLED && <Route path="/pricing" element={<Pricing />} />}
-          <Route path="/story/:id" element={<StoryPage />} />
-          <Route path="/privacy" element={<PrivacyPolicy />} />
-          <Route path="/terms" element={<Terms />} />
-          <Route path="/refund" element={<RefundPolicy />} />
-          <Route path="/cookies" element={<CookiesPolicy />} />
-          {ADMIN_ENABLED && (
-            <>
-              <Route
-                path="/admin/moderators/accept"
-                element={<ModeratorAccept />}
-              />
-              <Route
-                path="/admin/login"
-                element={
-                  isAuthenticated === null ? (
-                    <EyeLoader />
-                  ) : isAuthenticated ? (
-                    <Navigate to="/admin" replace />
-                  ) : (
-                    <AdminLogin onLogin={handleLogin} onBack={() => navigate("/")} />
-                  )
-                }
-              />
-              <Route
-                path="/admin/*"
-                element={
-                  isAuthenticated === null ? (
-                    <EyeLoader />
-                  ) : isAuthenticated ? (
-                    <AdminWorkspace closeAdmin={handleLogout} onPublish={handlePublish} />
-                  ) : (
-                    <Navigate to="/admin/login" replace />
-                  )
-                }
-              />
-            </>
-          )}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+                <Route
+                  path="/admin/login"
+                  element={
+                    isAuthenticated === null ? (
+                      <EyeLoader />
+                    ) : isAuthenticated ? (
+                      <Navigate to="/admin" replace />
+                    ) : (
+                      <AdminLogin onLogin={handleLogin} onBack={() => navigate("/")} />
+                    )
+                  }
+                />
+                <Route
+                  path="/admin/*"
+                  element={
+                    isAuthenticated === null ? (
+                      <EyeLoader />
+                    ) : isAuthenticated ? (
+                      <AdminWorkspace closeAdmin={handleLogout} onPublish={handlePublish} />
+                    ) : (
+                      <Navigate to="/admin/login" replace />
+                    )
+                  }
+                />
+              </>
+            )}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </PageTransition>
       </Suspense>
+      <EyeTransition />
       <CookieConsent />
     </>
   );

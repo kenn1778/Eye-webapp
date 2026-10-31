@@ -2,6 +2,7 @@ import { startTransition, useCallback, useEffect, useMemo, useState, type CSSPro
 import type { AdminInsights, AdminMetrics, AdminNotification, ActivityPoint, Story } from "../../types";
 import { emptyMetrics, adminTabs } from "../../data/seedData";
 import { Brand } from "../../components/Brand";
+import { ThemeToggle } from "../../components/ThemeToggle";
 import { AdminEditor } from "../../components/AdminEditor";
 import { AdminSectionView } from "./AdminSectionView";
 import { AdminNotifications } from "./AdminNotifications";
@@ -27,8 +28,10 @@ const ACTIVITY_DAYS = 14;
 
 const METRIC_CARDS: ReadonlyArray<{ label: string; value: keyof AdminMetrics; accent?: boolean }> = [
   { label: "Subscribers", value: "subscribers", accent: true },
-  { label: "Chat messages", value: "chatMessages" },
+  { label: "Post views", value: "views" },
   { label: "Posts", value: "posts" },
+  { label: "Messages", value: "messages" },
+  { label: "Chat messages", value: "chatMessages" },
   { label: "Unread alerts", value: "unreadNotifications" },
 ];
 
@@ -179,6 +182,13 @@ export function AdminWorkspace({ closeAdmin, onPublish }: AdminWorkspaceProps) {
             <span className="sidebar-icon icon-posts" aria-hidden="true" />Posts{" "}
             <span className="sidebar-count">{savedPosts?.total ?? 0}</span>
           </button>
+          <button className={`sidebar-item ${activeSection === "Messages" ? "selected" : ""}`} type="button" onClick={() => selectSection("Messages")}>
+            <span className="sidebar-icon icon-messages" aria-hidden="true" />Messages
+            {metrics.unreadMessages > 0 && <span className="sidebar-count alert">{metrics.unreadMessages}</span>}
+          </button>
+          <button className={`sidebar-item ${activeSection === "Author profile" ? "selected" : ""}`} type="button" onClick={() => selectSection("Author profile")}>
+            <span className="sidebar-icon icon-author" aria-hidden="true" />Author profile
+          </button>
           <button className={`sidebar-item ${activeSection === "Calendar" ? "selected" : ""}`} type="button" onClick={() => selectSection("Calendar")}>
             <span className="sidebar-icon icon-calendar" aria-hidden="true" />Calendar
           </button>
@@ -228,6 +238,7 @@ export function AdminWorkspace({ closeAdmin, onPublish }: AdminWorkspaceProps) {
               onRead={handleReadNotification}
               onMarkAllRead={handleMarkAllRead}
             />
+            <ThemeToggle variant="admin" />
             <button className="avatar avatar-top" type="button" onClick={requestLogout} aria-label="Log out of admin workspace">
               {adminName.slice(0, 2).toUpperCase()}
             </button>
@@ -244,7 +255,7 @@ export function AdminWorkspace({ closeAdmin, onPublish }: AdminWorkspaceProps) {
             <div>
               <div className="eyebrow">Saturday, 12 September 2026</div>
               <h1>Good morning, {adminName}.</h1>
-              <p>Here&apos;s what&apos;s moving across EYE today.</p>
+              <p>Here&apos;s what&apos;s moving across Expl00r today.</p>
             </div>
             <button
               className="admin-primary"
@@ -284,6 +295,18 @@ export function AdminWorkspace({ closeAdmin, onPublish }: AdminWorkspaceProps) {
                 <strong>{insights?.chat.total ?? metrics.chatMessages}</strong>
                 <span className="insight-delta">
                   {insights ? `+${insights.chat.last7Days} this week` : "Awaiting data"}
+                </span>
+              </div>
+              <div className="insight-tile">
+                <span className="insight-label">Post views</span>
+                <strong>{insights?.views.total ?? metrics.views}</strong>
+                <span className="insight-delta">All-time reads</span>
+              </div>
+              <div className="insight-tile">
+                <span className="insight-label">Contact messages</span>
+                <strong>{insights?.messages.total ?? metrics.messages}</strong>
+                <span className="insight-delta">
+                  {insights ? `+${insights.messages.last7Days} this week` : "Awaiting data"}
                 </span>
               </div>
               <div className="insight-tile">
@@ -357,6 +380,7 @@ export function AdminWorkspace({ closeAdmin, onPublish }: AdminWorkspaceProps) {
                 <span>Post</span>
                 <span>Type</span>
                 <span>Status</span>
+                <span>Views</span>
                 <span>Last updated</span>
                 <span>Author</span>
                 <span />
@@ -377,6 +401,7 @@ export function AdminWorkspace({ closeAdmin, onPublish }: AdminWorkspaceProps) {
                       {post.status[0].toUpperCase() + post.status.slice(1)}
                     </span>
                   </span>
+                  <span className="muted-cell views-cell">{post.viewCount ?? 0}</span>
                   <span className="muted-cell">{new Date(post.updatedAt).toLocaleDateString()}</span>
                   <span className="muted-cell">{adminName}</span>
                   <button className="row-menu" type="button">
@@ -414,7 +439,7 @@ export function AdminWorkspace({ closeAdmin, onPublish }: AdminWorkspaceProps) {
           <section className="logout-dialog" role="dialog" aria-modal="true" aria-labelledby="logout-title" onClick={(event) => event.stopPropagation()}>
             <div className="logout-icon">â†—</div>
             <div className="eyebrow">Admin session</div>
-            <h2 id="logout-title">Log out of EYE?</h2>
+            <h2 id="logout-title">Log out of Expl00r?</h2>
             <p>Your publishing workspace will close. You can sign in again when you are ready.</p>
             <div className="logout-actions"><button className="button-secondary" type="button" onClick={() => setShowLogoutDialog(false)}>Stay signed in</button><button className="admin-primary" type="button" onClick={closeAdmin}>Log out</button></div>
           </section>

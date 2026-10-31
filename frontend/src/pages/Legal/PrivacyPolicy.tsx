@@ -16,7 +16,7 @@ export function PrivacyPolicy() {
         <div className="legal-header">
           <div className="eyebrow">Legal • Effective: 12 September 2026 • Version 2.0</div>
           <h1>Privacy Policy</h1>
-          <p>EYE (“we”, “us”) respects your privacy. This policy explains what we collect, why, how long we keep it, and your rights under the Nigeria Data Protection Act 2023 (NDPA), EU GDPR, and California CCPA/CPRA. Read it with our <Link to="/terms">Terms</Link> and <Link to="/cookies">Cookies Policy</Link>.</p>
+          <p>Expl00r (“we”, “us”) respects your privacy. This policy explains what we collect, why, how long we keep it, and your rights under the Nigeria Data Protection Act 2023 (NDPA), EU GDPR, and California CCPA/CPRA. Read it with our <Link to="/terms">Terms</Link> and <Link to="/cookies">Cookies Policy</Link>.</p>
           <div className="legal-notice">
             <strong>Plain English summary:</strong> We only collect your email if you ask for the weekly brief. We do not sell data, we do not track you across sites without consent, and you can delete your data anytime via <a href="mailto:teckennedy177@gmail.com">teckennedy177@gmail.com</a>.
           </div>
@@ -120,7 +120,7 @@ export function PrivacyPolicy() {
         <section id="contact">
           <h2>12. Contact & controller</h2>
           <div className="legal-contact-card">
-            <p><strong>Data controller:</strong> EYE — Scholarship & Opportunities Publication</p>
+            <p><strong>Data controller:</strong> Expl00r — Scholarship & Opportunities Publication</p>
             <p><strong>Controller:</strong></p>
             <p>Alozie Izuchukwu Johnkennedy<br/>
             No. 14 Lawal Street, Alimosho, Akowonjo, Lagos State, Nigeria<br/>
@@ -132,7 +132,7 @@ export function PrivacyPolicy() {
 
         </section>
       </main>
-      <footer className="site-footer"><Brand /><p>© 2026 EYE</p><div className="footer-meta"><Link to="/privacy">Privacy</Link><Link to="/terms">Terms</Link><Link to="/cookies">Cookies</Link><Link to="/refund">Refund</Link></div></footer>
+      <footer className="site-footer"><Brand /><p>© 2026 Expl00r</p><div className="footer-meta"><Link to="/privacy">Privacy</Link><Link to="/terms">Terms</Link><Link to="/cookies">Cookies</Link><Link to="/refund">Refund</Link></div></footer>
     </div>
   );
 }
