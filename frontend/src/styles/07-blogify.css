@@ -323,9 +323,10 @@
 
 .bf-burger {
   display: none;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: center;
   justify-content: center;
-  gap: 5px;
+  gap: 9px;
   width: 42px;
   height: 42px;
   padding: 10px;
@@ -335,17 +336,27 @@
   cursor: pointer;
 }
 
-.bf-burger span {
+.bf-burger-icon {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+}
+
+.bf-burger-icon span {
   display: block;
+  width: 22px;
   height: 2px;
   border-radius: 2px;
   background: var(--bf-ink);
   transition: transform .25s var(--bf-ease), opacity .2s var(--bf-ease);
 }
 
-.bf-burger[aria-expanded="true"] span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
-.bf-burger[aria-expanded="true"] span:nth-child(2) { opacity: 0; }
-.bf-burger[aria-expanded="true"] span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+.bf-burger-label { display: none; }
+
+.bf-burger[aria-expanded="true"] .bf-burger-icon span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.bf-burger[aria-expanded="true"] .bf-burger-icon span:nth-child(2) { opacity: 0; }
+.bf-burger[aria-expanded="true"] .bf-burger-icon span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
 
 /* Header search bar */
 .bf-searchbar {
@@ -679,6 +690,7 @@ body.bf-menu-lock { overflow: hidden; }
   background: var(--bf-line-soft);
   cursor: pointer;
   overflow: hidden;
+  order: 1;
 }
 
 .bf-post-media img {
@@ -721,10 +733,16 @@ body.bf-menu-lock { overflow: hidden; }
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  order: 2;
 }
 
 .bf-post-title a { color: inherit; text-decoration: none; }
 .bf-post-title a:hover { color: var(--bf-accent-dark); }
+
+/* Excerpt and the "Read More" pill only appear in the mobile feed layout
+   (see the mobile refit at the end of 08-theme.css). */
+.bf-post-excerpt { display: none; }
+.bf-post-readmore { display: none; }
 
 .bf-post-meta {
   display: flex;
@@ -734,12 +752,18 @@ body.bf-menu-lock { overflow: hidden; }
   color: var(--bf-muted);
   font: 500 12px/1 var(--bf-sans);
   white-space: nowrap;
+  order: 3;
 }
 
-.bf-post-meta > span:first-child {
+.bf-post-date {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+.bf-post-date svg { width: 14px; height: 14px; flex: 0 0 auto; }
 
 .bf-empty {
   padding: 40px 20px;

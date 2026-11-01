@@ -1,4 +1,4 @@
-﻿// Typed client for the admin API. Every call is best-effort: on any failure we
+// Typed client for the admin API. Every call is best-effort: on any failure we
 // return null and the dashboard keeps its last known (or empty) state, so a
 // flaky network never blanks the workspace.
 
@@ -570,7 +570,7 @@ export async function fetchAuditLog(
   };
 }
 
-// ---------- Public content API (Exploor landing page) ----------
+// ---------- Public content API (Xplore landing page) ----------
 
 export type PublicCategory = { name: string; count: number };
 

@@ -92,7 +92,7 @@ export function EyeTransition() {
           </svg>
         </span>
         <div className="eye-loader-text">
-          <span className="eyebrow">Expl00r</span>
+          <span className="eyebrow">Xplore</span>
           <span className="loader-dots" aria-hidden="true"><span /><span /><span /></span>
         </div>
       </div>

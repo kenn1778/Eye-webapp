@@ -71,9 +71,9 @@ export function PublicDiscover({
         <p className="bf-author-hi">Hi, I&apos;m {authorFirstName}</p>
         <p className="bf-author-bio">{authorBio}</p>
         <div className="bf-author-social">
-          <a href="https://x.com" target="_blank" rel="noreferrer" aria-label="Exploor on X"><SocialIcon kind="x" /></a>
-          <a href="https://instagram.com" target="_blank" rel="noreferrer" aria-label="Exploor on Instagram"><SocialIcon kind="instagram" /></a>
-          <a href="https://linkedin.com" target="_blank" rel="noreferrer" aria-label="Exploor on LinkedIn"><SocialIcon kind="linkedin" /></a>
+          <a href="https://x.com" target="_blank" rel="noreferrer" aria-label="Xplore on X"><SocialIcon kind="x" /></a>
+          <a href="https://instagram.com" target="_blank" rel="noreferrer" aria-label="Xplore on Instagram"><SocialIcon kind="instagram" /></a>
+          <a href="https://linkedin.com" target="_blank" rel="noreferrer" aria-label="Xplore on LinkedIn"><SocialIcon kind="linkedin" /></a>
           <a href={`mailto:${authorEmail}`} aria-label="Email the editor"><SocialIcon kind="mail" /></a>
         </div>
       </div>

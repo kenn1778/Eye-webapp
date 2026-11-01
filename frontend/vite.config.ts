@@ -14,4 +14,19 @@ export default defineConfig({
       },
     },
   },
+  build: {
+    target: 'es2020',
+    cssCodeSplit: true,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return;
+          if (id.includes('react') || id.includes('scheduler')) return 'react';
+          return 'vendor';
+        },
+      },
+    },
+    // Reduce initial JS payload
+    chunkSizeWarningLimit: 500,
+  },
 })

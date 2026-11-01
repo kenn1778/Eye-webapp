@@ -4,13 +4,17 @@
  */
 export function Brand() {
   return (
-    <img
-      className="brand brand-gif"
-      src="/exploor-logo.gif"
-      alt="Exploor"
-      width={40}
-      height={40}
-      decoding="async"
-    />
+    <picture>
+      <source srcSet="/exploor-logo.webp" type="image/webp" />
+      <img
+        className="brand brand-gif"
+        src="/exploor-logo.gif"
+        alt="Xplore"
+        width={40}
+        height={40}
+        decoding="async"
+        fetchPriority="high"
+      />
+    </picture>
   );
 }

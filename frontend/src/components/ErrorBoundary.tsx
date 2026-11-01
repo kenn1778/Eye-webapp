@@ -2,19 +2,23 @@
 // Catches rendering errors and displays a user‑friendly fallback.
 // It logs the error to the console and optionally to analytics.
 // The fallback UI is focusable and announces itself via aria‑live.
-import { Component } from 'react';
+import { Component, type ReactNode } from 'react';
+
+interface Props {
+  children?: ReactNode;
+}
 
 interface State {
   hasError: boolean;
 }
 
-export class ErrorBoundary extends Component<{}, State> {
-  constructor(props: {}) {
+export class ErrorBoundary extends Component<Props, State> {
+  constructor(props: Props) {
     super(props);
     this.state = { hasError: false };
   }
 
-  static getDerivedStateFromError(_: Error) {
+  static getDerivedStateFromError() {
     return { hasError: true };
   }
 

@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, Link, Navigate } from "react-router-dom";
 import type { Story } from "../types";
 import { pingPostView } from "../lib/adminApi";
@@ -42,7 +42,7 @@ export default function StoryPage() {
     async function load() {
       setLoading(true);
       try {
-        const res = await fetch(`${API_BASE}/api/v1/posts/${id}`, { credentials: "include" });
+        const res = await fetch(`${API_BASE}/api/v1/public/posts/${id}`, { credentials: "include" });
         if (res.status === 404) { if (!cancelled) setNotFound(true); return; } if (!res.ok) throw new Error("Failed to load post");
         const post = await res.json();
         if (!post) {
@@ -68,7 +68,7 @@ export default function StoryPage() {
 
   useEffect(() => {
     if (!story) return;
-    document.title = `${story.title} | Expl00r`;
+    document.title = `${story.title} | Xplore`;
     const desc = story.excerpt || story.title;
     const meta = document.querySelector('meta[name="description"]') as HTMLMetaElement | null;
     if (meta) meta.content = desc;
@@ -91,13 +91,13 @@ export default function StoryPage() {
       description: desc,
       datePublished: new Date().toISOString(),
       image: story.image || undefined,
-      author: { "@type": "Organization", name: "Expl00r" },
+      author: { "@type": "Organization", name: "Xplore" },
       url: `${window.location.origin}/story/${story.id}`
     });
     document.head.appendChild(script);
 
     return () => {
-      document.title = "Expl00r | Share ideas, Inspire Minds";
+      document.title = "Xplore | Share ideas, Inspire Minds";
     };
   }, [story]);
 

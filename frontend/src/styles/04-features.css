@@ -115,10 +115,10 @@
   height: 100%;
 }
 .eye-loader .eye-svg.is-loading .eye-lid-top {
-  animation: eye-blink-top 0.62s cubic-bezier(0.4, 0, 0.2, 1) infinite !important;
+  animation: eye-blink-top 0.62s cubic-bezier(0.4, 0, 0.2, 1) -0.45s infinite !important;
 }
 .eye-loader .eye-svg.is-loading .eye-lid-bottom {
-  animation: eye-blink-bottom 0.62s cubic-bezier(0.4, 0, 0.2, 1) infinite !important;
+  animation: eye-blink-bottom 0.62s cubic-bezier(0.4, 0, 0.2, 1) -0.45s infinite !important;
 }
 .eye-loader .eye-svg.is-loading .eye-iris-group {
   animation: eye-bounce 0.55s ease-in-out infinite !important;

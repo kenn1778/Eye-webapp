@@ -47,17 +47,21 @@ export function PublicHeader({
       className={isShrunk ? "bf-header is-shrunk" : "bf-header"}
     >
       <div className="bf-header-inner">
-        <Link to="/" className="bf-brand" aria-label="Exploor home">
-          <img
-            className="bf-brand-logo"
-            src="/exploor-logo.gif"
-            alt=""
-            width={40}
-            height={40}
-            decoding="async"
-          />
+        <Link to="/" className="bf-brand" aria-label="Xplore home">
+          <picture>
+            <source srcSet="/exploor-logo.webp" type="image/webp" />
+            <img
+              className="bf-brand-logo"
+              src="/exploor-logo.gif"
+              alt=""
+              width={40}
+              height={40}
+              decoding="async"
+              fetchPriority="high"
+            />
+          </picture>
           <span className="bf-brand-text">
-            <span className="bf-brand-name">Expl00r</span>
+            <span className="bf-brand-name">Xplore</span>
             <span className="bf-brand-tagline">Share ideas, Inspire Minds</span>
           </span>
         </Link>
@@ -171,9 +175,12 @@ export function PublicHeader({
             aria-label={menuOpen ? "Close menu" : "Open menu"}
             onClick={() => setMenuOpen((open) => !open)}
           >
-            <span aria-hidden="true" />
-            <span aria-hidden="true" />
-            <span aria-hidden="true" />
+            <span className="bf-burger-icon" aria-hidden="true">
+              <span />
+              <span />
+              <span />
+            </span>
+            <span className="bf-burger-label" aria-hidden="true">Menu</span>
           </button>
         </div>
       </div>

@@ -12,7 +12,7 @@ type Props = {
 const MIN_REPLY_DELAY_MS = 1200;
 const MAX_REPLY_DELAY_MS = 2000;
 
-// Fallback replies used only when the Exploor Assistant is unreachable, so the demo
+// Fallback replies used only when the Xplore Assistant is unreachable, so the demo
 // chat still feels alive offline.
 const cannedReplies: Record<string, string[]> = {
   "Scholarship seekers": [
@@ -30,7 +30,7 @@ const cannedReplies: Record<string, string[]> = {
 };
 
 // The assistant speaks with a single consistent identity.
-const AGENT = { user: "Expl00r Assistant", avatar: "EA" };
+const AGENT = { user: "Xplore Assistant", avatar: "XA" };
 
 function formatClockTime(date: Date): string {
   const hours = String(date.getHours()).padStart(2, "0");
@@ -83,7 +83,7 @@ export function CommunityChat({ community, onClose, onLeave }: Props) {
       id: nextMessageId(),
       community: community.name,
       user: "You",
-      avatar: "YO",
+      avatar: "JK",
       text,
       time: formatClockTime(new Date()),
       isMe: true,
@@ -97,7 +97,7 @@ export function CommunityChat({ community, onClose, onLeave }: Props) {
     // The demo chat never waits on this.
     void postChatMessage(community.name, text);
 
-    // Ask the Exploor Assistant for a professional reply. If it is unavailable we
+    // Ask the Xplore Assistant for a professional reply. If it is unavailable we
     // fall back to a canned line so the room never goes silent.
     void (async () => {
       const startedAt = Date.now();
@@ -153,7 +153,7 @@ export function CommunityChat({ community, onClose, onLeave }: Props) {
         </header>
 
         <div className="chat-notice">
-          <span aria-hidden="true">&#128274;</span> Community chatroom. Be respectful, share sources, no spam. The Expl00r Assistant may reply to help.
+          <span aria-hidden="true">&#128274;</span> Community chatroom. Be respectful, share sources, no spam. The Xplore Assistant may reply to help.
         </div>
 
         <div ref={listRef} className="chat-list" role="log" aria-live="polite" aria-relevant="additions">

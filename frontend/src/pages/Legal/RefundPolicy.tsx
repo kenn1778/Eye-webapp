@@ -19,7 +19,7 @@ export function RefundPolicy() {
 
         <section>
           <h2>1. Free browsing</h2>
-          <p>Reading stories, browsing opportunities, and joining communities on Expl00r is free. No payment or refund is needed for free features.</p>
+          <p>Reading stories, browsing opportunities, and joining communities on Xplore is free. No payment or refund is needed for free features.</p>
         </section>
 
         <section>
@@ -53,11 +53,11 @@ export function RefundPolicy() {
         <section>
           <h2>5. Contact</h2>
           <div className="legal-contact-card">
-            <p>Expl00r Billing, No. 14 Lawal Street, Alimosho, Akowonjo, Lagos State, Nigeria<br/>Email: <a href="mailto:teckennedy177@gmail.com">teckennedy177@gmail.com</a></p>
+            <p>Xplore Billing, No. 14 Lawal Street, Alimosho, Akowonjo, Lagos State, Nigeria<br/>Email: <a href="mailto:teckennedy177@gmail.com">teckennedy177@gmail.com</a></p>
           </div>
         </section>
       </main>
-      <footer className="site-footer"><Brand /><p>© 2026 Expl00r</p><div className="footer-meta"><Link to="/privacy">Privacy</Link><Link to="/terms">Terms</Link></div></footer>
+      <footer className="site-footer"><Brand /><p>© 2026 Xplore</p><div className="footer-meta"><Link to="/privacy">Privacy</Link><Link to="/terms">Terms</Link></div></footer>
     </div>
   );
 }

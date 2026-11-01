@@ -114,11 +114,13 @@ export function SocialIcon({ kind }: { kind: keyof typeof socialIconPaths }) {
 }
 
 // "6 min read  /  12 Sep 2026" -> "12 Sep 2026"; "Published 10/27/2026" -> "10/27/2026".
+// Only a slash surrounded by spaces separates segments; dates like 10/27/2026 stay whole.
 export function storyDate(story: Story): string {
-  const meta = story.meta ?? "";
-  const parts = meta.split("/");
-  const tail = parts.length > 1 ? parts[parts.length - 1].trim() : meta.trim();
-  return tail.replace(/^Published\s+/i, "") || meta;
+  const meta = (story.meta ?? "").trim();
+  if (!meta) return "";
+  const separated = meta.split(/\s+\/\s+/);
+  if (separated.length > 1) return separated[separated.length - 1].trim();
+  return meta.replace(/^Published\s+/i, "") || meta;
 }
 
 export function storyViews(story: Story): number {

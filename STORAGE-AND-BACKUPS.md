@@ -21,21 +21,18 @@ asset is attached to a published post.
    media bucket to allow `PUT` from the admin frontend origin and expose the
    `ETag` response header. CORS is not an access-control mechanism; signed URLs
    and IAM authorize uploads.
-4. Deploy the backend. Migrations are a separate release step: the `migrate`
-   service (Docker Compose, `target: migrate` image) runs `prisma migrate
-   deploy` exactly once and the backend waits for it to finish, so replicas
-   never race. Non-Docker deployments must run `npx prisma migrate deploy`
-   from `backend/` before rolling out the new image.
-5. Install PostgreSQL client tools compatible with the server (`pg_dump`) on a
-   trusted backup runner and provide `DATABASE_URL` plus the backup bucket's
-   IAM role. Run `npm run backup:s3` from `backend/` to create a custom-format
-   logical dump and stream it to S3. Schedule this daily with a host timer or
-   managed scheduler and alert on non-zero exits. Example Linux crontab entry
-   for the Docker Compose deployment at 02:15 UTC daily: `15 2 * * * cd
-   /opt/eye && docker compose --profile backup run --rm backup >>
-   /var/log/eye-backup.log 2>&1`. For a host-runner deployment use
-   `cd /opt/eye/backend && npm run backup:s3` instead. The runner must have
-   `pg_dump`, network access to Postgres, and its AWS IAM role attached.
+4. Deploy the backend with `deploy/aws/deploy-backend.ps1`. Migrations are a
+   separate release step: the script runs `npx prisma migrate deploy` from
+   `backend/` on the Lightsail host before restarting `eye-api`. Run migrations
+   once per release; never run them from a second host at the same time.
+5. Install PostgreSQL client tools compatible with the server (`pg_dump`) on the
+   Lightsail host and provide `DATABASE_URL` plus the backup bucket's IAM role.
+   Run `npm run backup:s3` from `backend/` to create a custom-format logical dump
+   and stream it to S3. Schedule this daily with a host timer or managed
+   scheduler and alert on non-zero exits. Example Linux crontab entry at 02:15
+   UTC daily: `15 2 * * * cd /opt/eye/backend && npm run backup:s3 >>
+   /var/log/eye-backup.log 2>&1`. The runner must have `pg_dump`, network access
+   to Postgres, and its AWS IAM role attached.
 6. Apply an S3 lifecycle policy to the backup prefix (for example, transition
    older backups to archival storage and expire after the desired retention).
    Keep S3 versioning or Object Lock if required by the recovery policy. Test

@@ -17,21 +17,24 @@ export function PublicFooter({ authorEmail, featuredCategoryTiles, goToCategory,
     <footer className="bf-footer" id="about">
       <div className="bf-footer-grid">
         <div className="bf-footer-brand">
-          <Link to="/" className="bf-brand bf-brand-light" aria-label="Exploor home">
-            <img className="bf-brand-logo" src="/exploor-logo.gif" alt="" width={40} height={40} decoding="async" />
+          <Link to="/" className="bf-brand bf-brand-light" aria-label="Xplore home">
+            <picture>
+              <source srcSet="/exploor-logo.webp" type="image/webp" />
+              <img className="bf-brand-logo" src="/exploor-logo.webp" alt="" width={40} height={40} loading="lazy" decoding="async" />
+            </picture>
             <span className="bf-brand-text">
-              <span className="bf-brand-name">Expl00r</span>
+              <span className="bf-brand-name">Xplore</span>
             </span>
           </Link>
           <p className="bf-footer-copy">
             Scholarships, work, ideas, and culture &mdash; a useful publication for people building a future on their own terms.
           </p>
           <div className="bf-footer-social">
-            <a href="https://x.com" target="_blank" rel="noreferrer" aria-label="Exploor on X"><SocialIcon kind="x" /></a>
-            <a href="https://facebook.com" target="_blank" rel="noreferrer" aria-label="Exploor on Facebook"><SocialIcon kind="facebook" /></a>
-            <a href="https://instagram.com" target="_blank" rel="noreferrer" aria-label="Exploor on Instagram"><SocialIcon kind="instagram" /></a>
-            <a href="https://linkedin.com" target="_blank" rel="noreferrer" aria-label="Exploor on LinkedIn"><SocialIcon kind="linkedin" /></a>
-            <a href={`mailto:${authorEmail}`} aria-label="Email Exploor"><SocialIcon kind="mail" /></a>
+            <a href="https://x.com" target="_blank" rel="noreferrer" aria-label="Xplore on X"><SocialIcon kind="x" /></a>
+            <a href="https://facebook.com" target="_blank" rel="noreferrer" aria-label="Xplore on Facebook"><SocialIcon kind="facebook" /></a>
+            <a href="https://instagram.com" target="_blank" rel="noreferrer" aria-label="Xplore on Instagram"><SocialIcon kind="instagram" /></a>
+            <a href="https://linkedin.com" target="_blank" rel="noreferrer" aria-label="Xplore on LinkedIn"><SocialIcon kind="linkedin" /></a>
+            <a href={`mailto:${authorEmail}`} aria-label="Email Xplore"><SocialIcon kind="mail" /></a>
           </div>
         </div>
 
@@ -79,7 +82,7 @@ export function PublicFooter({ authorEmail, featuredCategoryTiles, goToCategory,
       </div>
 
       <div className="bf-footer-bar">
-        <span>&copy; 2026 Expl00r. All rights reserved.</span>
+        <span>&copy; 2026 Xplore. All rights reserved.</span>
         <nav aria-label="Legal">
           <button type="button" onClick={() => navigate("/privacy")}>Privacy Policy</button>
           <button type="button" onClick={() => navigate("/terms")}>Terms of Service</button>

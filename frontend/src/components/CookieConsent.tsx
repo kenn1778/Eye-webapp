@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { readString, writeString } from "../lib/storage";
 
@@ -51,10 +51,10 @@ export function CookieConsent() {
               <svg viewBox="0 0 32 32" fill="none"><path d="M26.7 16.3a10.8 10.8 0 1 1-11-11c-.3 3.7 2.8 6.8 6.5 6.5-.3 2.3 1.8 4.6 4.5 4.5Z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/><circle cx="11" cy="12" r="1.3" fill="currentColor"/><circle cx="17" cy="21" r="1.3" fill="currentColor"/><circle cx="10" cy="19" r="1.3" fill="currentColor"/></svg>
             </div>
             <div className="cookie-copy">
-              <span className="cookie-kicker">Your privacy</span>
+              <span className="cookie-kicker">Your Privacy</span>
               <h2 id="cookie-title">A little choice about cookies</h2>
               <p id="cookie-desc">
-                Necessary cookies keep Expl00r working. With your permission, analytics help us understand what readers find useful. No ads and no sale of your data. <Link to="/cookies">Cookie details</Link>
+                Necessary cookies keep Xplore working. With your permission, analytics help us understand what readers find useful. No ads and no sale of your data. <Link to="/cookies">Cookie Details</Link>
               </p>
             </div>
           </div>
@@ -98,10 +98,10 @@ export function CookieConsent() {
             </svg>
           </div>
           <div className="cookie-copy">
-            <span className="cookie-kicker">Your privacy</span>
+            <span className="cookie-kicker">Your Privacy</span>
             <h2 id="cookie-title">A little choice about cookies</h2>
             <p id="cookie-desc">
-              Necessary cookies keep Expl00r working. With your permission,
+              Necessary cookies keep Xplore working. With your permission,
               analytics help us understand what readers find useful. No ads and
               no sale of your data. <Link to="/cookies">Cookie details</Link>
             </p>
@@ -114,7 +114,7 @@ export function CookieConsent() {
             aria-expanded={showSettings}
             onClick={() => setShowSettings(!showSettings)}
           >
-            Close preferences
+            Close Preferences
           </button>
         </div>
         <div className="cookie-settings">
@@ -136,7 +136,7 @@ export function CookieConsent() {
               type="button"
               onClick={() => save("accepted")}
             >
-              Allow analytics
+              Allow Analytics
             </button>
           </div>
         </div>

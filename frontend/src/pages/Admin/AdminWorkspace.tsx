@@ -255,7 +255,7 @@ export function AdminWorkspace({ closeAdmin, onPublish }: AdminWorkspaceProps) {
             <div>
               <div className="eyebrow">Saturday, 12 September 2026</div>
               <h1>Good morning, {adminName}.</h1>
-              <p>Here&apos;s what&apos;s moving across Expl00r today.</p>
+              <p>Here&apos;s what&apos;s moving across Xplore today.</p>
             </div>
             <button
               className="admin-primary"
@@ -439,7 +439,7 @@ export function AdminWorkspace({ closeAdmin, onPublish }: AdminWorkspaceProps) {
           <section className="logout-dialog" role="dialog" aria-modal="true" aria-labelledby="logout-title" onClick={(event) => event.stopPropagation()}>
             <div className="logout-icon">â†—</div>
             <div className="eyebrow">Admin session</div>
-            <h2 id="logout-title">Log out of Expl00r?</h2>
+            <h2 id="logout-title">Log out of Xplore?</h2>
             <p>Your publishing workspace will close. You can sign in again when you are ready.</p>
             <div className="logout-actions"><button className="button-secondary" type="button" onClick={() => setShowLogoutDialog(false)}>Stay signed in</button><button className="admin-primary" type="button" onClick={closeAdmin}>Log out</button></div>
           </section>

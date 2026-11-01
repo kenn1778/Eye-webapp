@@ -91,7 +91,7 @@ function writeCachedStories(stories: Story[]) {
 // First-paint loader - the eye blink covers the gap before the app mounts.
 function EyeLoader({ leaving = false }: { leaving?: boolean }) {
   return (
-    <div className={`eye-loader ${leaving ? "is-leaving" : ""}`} role="status" aria-live="polite" aria-busy="true" aria-label="Loading Exploor">
+    <div className={`eye-loader ${leaving ? "is-leaving" : ""}`} role="status" aria-live="polite" aria-busy="true" aria-label="Loading Xplore">
       <div className="eye-loader-card">
         <span className="brand-icon is-loading" aria-hidden="true">
           <svg className="eye-svg is-loading" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 100" role="img" aria-hidden="true">
@@ -113,7 +113,7 @@ function EyeLoader({ leaving = false }: { leaving?: boolean }) {
           </svg>
         </span>
         <div className="eye-loader-text">
-          <span className="eyebrow">Expl00r</span>
+          <span className="eyebrow">Xplore</span>
           <span className="loader-dots" aria-hidden="true"><span></span><span></span><span></span></span>
         </div>
       </div>
@@ -158,7 +158,7 @@ function AppRoutes() {
   // Let the veil fade over the finished page instead of snapping away.
   useEffect(() => {
     if (!bootReady) return;
-    const timer = window.setTimeout(() => setBootVeil(false), 520);
+    const timer = window.setTimeout(() => setBootVeil(false), 200);
     return () => window.clearTimeout(timer);
   }, [bootReady]);
 
@@ -174,7 +174,7 @@ function AppRoutes() {
 
   useEffect(() => {
     if (initialDelayDone) return;
-    const timer = window.setTimeout(() => setInitialDelayDone(true), 450);
+    const timer = window.setTimeout(() => setInitialDelayDone(true), 150);
     return () => window.clearTimeout(timer);
   }, [initialDelayDone]);
 
@@ -188,7 +188,7 @@ function AppRoutes() {
     let cancelled = false;
     const failSafe = window.setTimeout(() => {
       if (!cancelled) setPostsReady(true);
-    }, 5000);
+    }, 2000);
     const finish = () => {
       if (cancelled) return;
       window.clearTimeout(failSafe);

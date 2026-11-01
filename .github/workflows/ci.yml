@@ -20,6 +20,7 @@ jobs:
           cache: 'npm'
           cache-dependency-path: backend/package-lock.json
       - run: npm ci
+      - run: npm run check:migrations
       - run: npx prisma generate
       - run: node --check src/server.js
       - run: node --check src/**/*.js 2>/dev/null || true

@@ -585,10 +585,15 @@ button:disabled { cursor: progress; }
  * Tokens carry most of the weight; these rules catch the colours
  * that were baked in upstream. */
 
+[data-theme="dark"] { background: #121816; }
 [data-theme="dark"] body { background: #121816; color: var(--bf-text); }
 [data-theme="dark"] h1,
 [data-theme="dark"] h2 { color: var(--bf-ink); }
 [data-theme="dark"] .site-shell { background: #121816; }
+/* 06-theme-refit paints the content column white; night needs it dark
+   or the mobile hero (transparent card) and desktop section gaps show
+   white behind light text. */
+[data-theme="dark"] .site-shell > main { background: #121816; }
 
 /* Chrome */
 [data-theme="dark"] .bf-header { background: rgba(18, 24, 22, .92); }
@@ -631,6 +636,11 @@ button:disabled { cursor: progress; }
 }
 [data-theme="dark"] .bf-dot { background: rgba(255, 255, 255, .28); }
 [data-theme="dark"] .bf-arrow { background: var(--bf-card); }
+/* Mobile feed overlay pill is baked #fff upstream with light ink text. */
+[data-theme="dark"] .bf-post-readmore {
+  background: rgba(22, 29, 27, .92);
+  color: var(--bf-ink);
+}
 
 /* Odds and ends baked white upstream. */
 [data-theme="dark"] .bf-searchbar input:focus,
@@ -914,4 +924,128 @@ button:disabled { cursor: progress; }
   .bf-popular-item:hover,
   .bf-theme-toggle:hover,
   .bf-back-top:hover { transform: none; }
+}
+
+/* ---------------------------------------------------------------- *
+ *  Mobile layout refit                                              *
+ * ---------------------------------------------------------------- *
+ *  Phone layout per the Blogify reference: breadcrumb band above a
+ *  stacked hero (text over a rounded image card), a "Menu" caption on
+ *  the hamburger, a flat single-column post feed ordered
+ *  date -> title -> excerpt -> image with a Read More pill, compact
+ *  circular pagination, and a two-column footer. Lives at the end of
+ *  the cascade so it wins over the small-screen rules above.        */
+
+/* 02-responsive.css inflates every button to a 44px tap target on
+   touch devices, which turns the 8px carousel dots into big circles. */
+.bf-dot { min-width: 0; min-height: 0; }
+
+@media (max-width: 960px) {
+  /* Header: hamburger gains its "Menu" caption. */
+  .bf-burger { width: auto; padding: 10px 8px 10px 12px; }
+  .bf-burger-label {
+    display: inline;
+    color: var(--bf-ink);
+    font: 600 14px/1 var(--bf-sans);
+    white-space: nowrap;
+  }
+
+  /* Hero: text block above a rounded image card, dots centered below. */
+  .bf-hero { margin-top: 14px; }
+  .bf-hero-card {
+    min-height: 0;
+    background: transparent;
+    border-radius: 0;
+    box-shadow: none;
+    overflow: visible;
+  }
+  .bf-hero-slide { position: relative; display: none; }
+  .bf-hero-slide.is-active { display: flex; flex-direction: column; }
+  .bf-hero-content { order: 1; padding: 18px 2px 22px; max-width: none; }
+  .bf-hero-media {
+    order: 2;
+    position: relative;
+    inset: auto;
+    z-index: 0;
+    width: 100%; /* slide is align-items:center — without this an empty/broken img collapses the box to 0 width */
+    padding-top: 62.5%; /* 16:10 — % padding tracks width, holds the box open even before the img loads */
+    border-radius: var(--bf-radius-lg);
+    overflow: hidden;
+    background: var(--bf-line-soft);
+    box-shadow: var(--bf-shadow-md);
+  }
+  .bf-hero-media::after { content: none; }
+  [data-theme="dark"] .bf-hero-media::after { content: none; }
+  .bf-hero-media img {
+    position: absolute;
+    inset: 0;
+    height: 100%;
+    object-position: center;
+    transform: none;
+  }
+  .bf-hero-title { font-size: clamp(24px, 6.6vw, 32px); margin: 10px 0; }
+  .bf-hero-copy { font-size: 14px; margin-bottom: 16px; }
+  .bf-hero-actions { gap: 12px 16px; }
+  .bf-hero-dots { position: static; justify-content: center; margin: 16px 0 0; }
+  .bf-hero-arrows { display: none; }
+}
+
+@media (max-width: 640px) {
+  /* Latest: flat single-column feed, date -> title -> excerpt -> image. */
+  .bf-latest { background: transparent; border-radius: 0; }
+  .bf-post-grid { grid-template-columns: 1fr; gap: 20px; }
+  .bf-post-card { background: transparent; border-radius: 0; box-shadow: none; }
+  .bf-post-card:hover { transform: none; box-shadow: none; }
+  .bf-post-card + .bf-post-card { border-top: 1px solid var(--bf-line-soft); padding-top: 20px; }
+  .bf-post-meta { order: 1; margin: 0 0 8px; flex-wrap: wrap; white-space: normal; }
+  .bf-post-title { order: 2; margin: 0 0 8px; font-size: 19px; -webkit-line-clamp: 3; }
+  .bf-post-excerpt {
+    order: 3;
+    display: -webkit-box;
+    margin: 0 0 14px;
+    color: var(--bf-text);
+    font: 400 14px/1.6 var(--bf-sans);
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .bf-post-media { order: 4; aspect-ratio: 16 / 10; border-radius: var(--bf-radius); }
+  .bf-post-readmore {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 2;
+    padding: 11px 22px;
+    border-radius: 999px;
+    background: #fff;
+    color: var(--bf-ink);
+    font: 600 13.5px/1 var(--bf-sans);
+    box-shadow: var(--bf-shadow-md);
+    pointer-events: none;
+    white-space: nowrap;
+  }
+
+  /* Pagination: compact circles like the reference. */
+  .pagination { gap: 8px; }
+  .pagination-step { width: 44px; height: 44px; padding: 0; font-size: 0; display: grid; place-items: center; }
+  .pagination-step span { font-size: 16px; }
+  .pagination-page { width: 42px; height: 42px; padding: 0; display: grid; place-items: center; }
+}
+
+@media (max-width: 760px) {
+  /* Story page reads left-aligned like the reference. */
+  .bf-story-page { padding-top: 14px; }
+  .bf-story-hero { text-align: left; }
+  .bf-story-meta { justify-content: flex-start; }
+  .bf-story-hero h1 { font-size: clamp(24px, 6.6vw, 32px); }
+  .bf-story-image { margin: 18px 0 20px; border-radius: var(--bf-radius); box-shadow: none; }
+}
+
+@media (max-width: 560px) {
+  /* Footer keeps two link columns side by side on phones. */
+  .bf-footer-grid { grid-template-columns: 1fr 1fr; }
 }

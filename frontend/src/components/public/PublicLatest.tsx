@@ -59,16 +59,21 @@ export function PublicLatest({
             {pageStories.map((story) => (
               <article className="bf-post-card" key={story.id ?? story.title}>
                 <button className="bf-post-media" type="button" onClick={() => openStory(story)} aria-label={`Open ${story.title}`}>
-                  {story.image && <img src={story.image} alt="" loading="lazy" decoding="async" />}
+                  {story.image && <img src={story.image} alt="" loading="lazy" decoding="async" onError={(event) => { event.currentTarget.style.display = "none"; }} />}
                   <span className="bf-chip">{story.category}</span>
+                  <span className="bf-post-readmore" aria-hidden="true">Read More</span>
                 </button>
                 <h3 className="bf-post-title">
                   <Link to={story.id ? `/story/${story.id}` : "#"} onClick={(event) => { if (!story.id) { event.preventDefault(); setSelectedStory(story); } }}>
                     {story.title}
                   </Link>
                 </h3>
+                {story.excerpt ? <p className="bf-post-excerpt">{story.excerpt}</p> : null}
                 <div className="bf-post-meta">
-                  <span>{storyDate(story)}</span>
+                  <span className="bf-post-date">
+                    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><rect x="3" y="4.5" width="14" height="12.5" rx="2" stroke="currentColor" strokeWidth="1.5" /><path d="M3 8.5h14M7 2.8v3.2M13 2.8v3.2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
+                    {storyDate(story)}
+                  </span>
                   <span className="bf-views">
                     <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M2.5 10S5.5 4.8 10 4.8 17.5 10 17.5 10 14.5 15.2 10 15.2 2.5 10 2.5 10Z" stroke="currentColor" strokeWidth="1.5" /><circle cx="10" cy="10" r="2.4" stroke="currentColor" strokeWidth="1.5" /></svg>
                     {storyViews(story)}
@@ -128,7 +133,7 @@ export function PublicLatest({
               {popularStories.map((story) => (
                 <button className="bf-popular-item" key={story.id ?? story.title} type="button" onClick={() => openStory(story)}>
                   <span className="bf-popular-thumb">
-                    {story.image && <img src={story.image} alt="" loading="lazy" decoding="async" />}
+                    {story.image && <img src={story.image} alt="" loading="lazy" decoding="async" onError={(event) => { event.currentTarget.style.display = "none"; }} />}
                   </span>
                   <span className="bf-popular-body">
                     <span className="bf-popular-title">{story.title}</span>

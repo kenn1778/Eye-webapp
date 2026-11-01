@@ -11,6 +11,7 @@
     "start": "node src/server.js",
     "backup:s3": "node scripts/backup-database-s3.js",
     "hash-password": "node scripts/hash-password.js",
+    "check:migrations": "node scripts/check-migration-encoding.mjs",
     "precommit": "echo 'precommit check'"
   },
   "dependencies": {

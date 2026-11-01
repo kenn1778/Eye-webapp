@@ -1,19 +1,19 @@
 // End-to-end check for the password-reset flow and the newsletter double
-// opt-in, executed INSIDE the backend container so it talks to the real
-// database and the real Redis rate limiters.
+// opt-in. It runs the backend from this checkout, so it talks to the real
+// database and the real Redis rate limiters configured in backend/.env.
 //
 // The mailer is patched at runtime to capture the message that would have been
 // sent, which is how the raw reset token becomes visible without a mail
-// provider. Run it with:
-//   docker compose exec -T -e PORT=4010 backend node /tmp/e2e-auth-flow.mjs
+// provider. Run it from the repo root with a spare port:
+//   $env:PORT=4010; node scripts/e2e-auth-flow.mjs
 
 import { createRequire } from "node:module";
 
-const require = createRequire("/app/package.json");
+const require = createRequire(new URL("../backend/package.json", import.meta.url));
 const bcrypt = require("bcryptjs");
-const { config } = await import("/app/src/config.js");
-const { prisma } = await import("/app/src/lib/prisma.js");
-const { emailService } = await import("/app/src/lib/email.js");
+const { config } = await import(new URL("../backend/src/config.js", import.meta.url));
+const { prisma } = await import(new URL("../backend/src/lib/prisma.js", import.meta.url));
+const { emailService } = await import(new URL("../backend/src/lib/email.js", import.meta.url));
 
 const captured = [];
 emailService.send = async (payload) => {
@@ -66,7 +66,7 @@ await prisma.user.create({
 });
 
 // Start the API on the port set for this run.
-await import("/app/src/server.js");
+await import(new URL("../backend/src/server.js", import.meta.url));
 for (let attempt = 0; attempt < 60; attempt += 1) {
   try {
     const probe = await fetch(`${BASE}/healthz`);

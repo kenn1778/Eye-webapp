@@ -2,17 +2,25 @@ import { writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 const API_BASE = process.env.VITE_API_BASE_URL || "";
-const SITE_URL = process.env.SITE_URL || "https://yourdomain.com";
+const SITE_URL = process.env.SITE_URL || "https://d3dbr7cazt88p7.cloudfront.net";
 
 async function fetchPosts() {
   if (!API_BASE) {
     console.warn("VITE_API_BASE_URL not set, using empty list");
     return [];
   }
-  const res = await fetch(`${API_BASE}/api/v1/posts?status=published&limit=1000`);
-  if (!res.ok) throw new Error(`Failed to fetch posts: ${res.status}`);
-  const data = await res.json();
-  return data.items || [];
+  try {
+    const res = await fetch(`${API_BASE}/api/v1/posts?status=published&limit=1000`);
+    if (!res.ok) {
+      console.warn(`Failed to fetch posts: ${res.status}, using empty list`);
+      return [];
+    }
+    const data = await res.json();
+    return data.items || [];
+  } catch (err) {
+    console.warn(`Sitemap fetch error: ${err.message}, using empty list`);
+    return [];
+  }
 }
 
 function escapeXml(str) {

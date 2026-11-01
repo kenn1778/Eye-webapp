@@ -16,6 +16,12 @@ const asyncHandler = (handler) => (req, res, next) =>
 
 export const publicRouter = Router();
 
+// Cookie-independent public reads are safe to cache briefly at the CDN edge.
+// The site proxies /api/* through CloudFront, so a 30s TTL turns repeat visits
+// from a ~500ms round trip to the origin into a near-instant edge hit. New and
+// edited posts become visible within 30 seconds.
+const PUBLIC_CACHE = "public, max-age=30, stale-while-revalidate=120";
+
 const reviewLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   limit: 10,
@@ -105,7 +111,7 @@ publicRouter.get("/posts", asyncHandler(async (req, res) => {
     orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }],
     select: publicPostSelect,
   });
-  res.set("Cache-Control", "no-store");
+  res.set("Cache-Control", PUBLIC_CACHE);
   res.json({ items: posts.map(shapePost) });
 }));
 
@@ -117,7 +123,7 @@ publicRouter.get("/posts/categories", asyncHandler(async (_req, res) => {
     _count: { category: true },
     orderBy: { _count: { category: "desc" } },
   });
-  res.set("Cache-Control", "no-store");
+  res.set("Cache-Control", PUBLIC_CACHE);
   res.json({ items: grouped.map((group) => ({ name: group.category, count: group._count.category })) });
 }));
 
@@ -131,7 +137,7 @@ publicRouter.get("/posts/popular", asyncHandler(async (req, res) => {
     take: limit,
     select: publicPostSelect,
   });
-  res.set("Cache-Control", "no-store");
+  res.set("Cache-Control", PUBLIC_CACHE);
   res.json({ items: posts.map(shapePost) });
 }));
 
@@ -154,7 +160,7 @@ publicRouter.get("/posts/trending", asyncHandler(async (req, res) => {
     select: publicPostSelect,
   });
   const byId = new Map(posts.map((post) => [post.id, post]));
-  res.set("Cache-Control", "no-store");
+  res.set("Cache-Control", PUBLIC_CACHE);
   res.json({ items: grouped.map((group) => byId.get(group.postId)).filter(Boolean).map(shapePost) });
 }));
 
@@ -214,7 +220,7 @@ publicRouter.get("/posts/:id", asyncHandler(async (req, res) => {
     },
   });
   if (!post) return res.status(404).json({ message: "Post not found" });
-  res.set("Cache-Control", "no-store");
+  res.set("Cache-Control", PUBLIC_CACHE);
   res.json({
     ...post,
     image: post.mediaAssetId ? publicMediaPath(post.mediaAssetId) : post.image,
@@ -231,7 +237,7 @@ publicRouter.get("/reviews", asyncHandler(async (_req, res) => {
     take: 100,
     select: { id: true, name: true, rating: true, comment: true, createdAt: true },
   });
-  res.set("Cache-Control", "no-store");
+  res.set("Cache-Control", PUBLIC_CACHE);
   res.json({ items: items.map((review) => ({ ...review, comment: review.comment ?? "" })) });
 }));
 
@@ -310,7 +316,7 @@ publicRouter.get("/author", asyncHandler(async (_req, res) => {
       },
     });
   }
-  res.set("Cache-Control", "no-store");
+  res.set("Cache-Control", PUBLIC_CACHE);
   res.json({
     name: profile.name,
     role: profile.role,

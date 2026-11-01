@@ -40,7 +40,7 @@ export function PublicHero({
             aria-hidden={index !== featuredIndex}
           >
             <div className="bf-hero-media">
-              {story.image && <img src={story.image} alt="" loading={index === 0 ? "eager" : "lazy"} decoding="async" />}
+              {story.image && <img src={story.image} alt="" loading={index === 0 ? "eager" : "lazy"} decoding="async" fetchPriority={index === 0 ? "high" : undefined} onError={(event) => { event.currentTarget.style.display = "none"; }} />}
             </div>
             <div className="bf-hero-content">
               <span className="bf-eyebrow">Featured Post</span>

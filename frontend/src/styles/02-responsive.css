@@ -423,7 +423,7 @@ img, video, audio, iframe, svg { max-width: 100%; height: auto; }
 /* Focus states for TV and keyboard navigation. */
 @media (min-width: 1920px) and (hover: none) {
   a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
-    outline: 3px solid #6c9a70;
+    outline: 3px solid #427246;
     outline-offset: 4px;
     box-shadow: 0 0 0 6px rgba(108,154,112,0.25);
   }
