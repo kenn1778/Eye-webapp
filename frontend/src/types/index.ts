@@ -52,6 +52,7 @@ export type AdminMetrics = {
   views: number;
   messages: number;
   unreadMessages: number;
+  users: number;
 };
 
 // A single row in the admin notification feed, as returned by the API.
@@ -73,6 +74,7 @@ export type AdminInsights = {
   views: { total: number };
   messages: { total: number; last7Days: number; last30Days: number };
   topCommunities: { name: string; messages: number }[];
+  users: { total: number };
 };
 
 // One day in the activity flow chart.

@@ -23,8 +23,8 @@ const adminLimiter = rateLimit({
 
 // Aggregates are cheap but not free; a short TTL keeps a polling dashboard from
 // re-running the same scans every few seconds.
-const INSIGHTS_TTL_SECONDS = 30;
-const ACTIVITY_TTL_SECONDS = 30;
+const INSIGHTS_TTL_SECONDS = 5;
+const ACTIVITY_TTL_SECONDS = 5;
 
 // Query strings arrive as strings, so "false" must not coerce to true.
 const boolFromQuery = z
@@ -139,7 +139,7 @@ adminRouter.get(
 adminRouter.get(
   "/metrics",
   asyncHandler(async (_req, res) => {
-    const [posts, stories, subscribers, chatMessages, reviews, unreadNotifications, viewAggregate, messages, unreadMessages] =
+    const [posts, stories, subscribers, chatMessages, reviews, unreadNotifications, viewAggregate, messages, unreadMessages, users] =
       await Promise.all([
         prisma.post.count({ where: { deletedAt: null } }),
         prisma.story.count(),
@@ -150,6 +150,7 @@ adminRouter.get(
         prisma.post.aggregate({ where: { deletedAt: null }, _sum: { viewCount: true } }),
         prisma.contactMessage.count(),
         prisma.contactMessage.count({ where: { handled: false } }),
+        prisma.user.count(),
       ]);
 
     res.json({
@@ -162,6 +163,7 @@ adminRouter.get(
       views: viewAggregate._sum.viewCount ?? 0,
       messages,
       unreadMessages,
+      users,
     });
   }),
 );
@@ -191,6 +193,7 @@ adminRouter.get(
       messagesTotal,
       messages7,
       messages30,
+      usersTotal,
     ] = await Promise.all([
       prisma.newsletterSubscriber.count(),
       prisma.newsletterSubscriber.count({ where: { subscribedAt: { gte: since7 } } }),
@@ -213,6 +216,7 @@ adminRouter.get(
       prisma.contactMessage.count(),
       prisma.contactMessage.count({ where: { createdAt: { gte: since7 } } }),
       prisma.contactMessage.count({ where: { createdAt: { gte: since30 } } }),
+      prisma.user.count(),
     ]);
 
     const payload = {
@@ -231,6 +235,7 @@ adminRouter.get(
         name: row.name,
         messages: Number(row.messages),
       })),
+      users: { total: usersTotal },
     };
 
     await cache.set("admin:insights", payload, INSIGHTS_TTL_SECONDS);

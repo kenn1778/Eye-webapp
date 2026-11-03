@@ -10,6 +10,7 @@ export const emptyMetrics: AdminMetrics = {
   views: 0,
   messages: 0,
   unreadMessages: 0,
+  users: 0,
 };
 
 // Starter content until the API is wired up.

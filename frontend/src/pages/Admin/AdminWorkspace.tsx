@@ -22,11 +22,12 @@ const MIN_SIDEBAR_WIDTH = 190;
 const MAX_SIDEBAR_WIDTH = 360;
 const DEFAULT_SIDEBAR_WIDTH = 240;
 
-const POLL_INTERVAL_MS = 30_000;
+const POLL_INTERVAL_MS = 5_000;
 const RECENT_POSTS_LIMIT = 5;
 const ACTIVITY_DAYS = 14;
 
 const METRIC_CARDS: ReadonlyArray<{ label: string; value: keyof AdminMetrics; accent?: boolean }> = [
+  { label: "Users", value: "users", accent: true },
   { label: "Subscribers", value: "subscribers", accent: true },
   { label: "Post views", value: "views" },
   { label: "Posts", value: "posts" },
@@ -283,6 +284,11 @@ export function AdminWorkspace({ closeAdmin, onPublish }: AdminWorkspaceProps) {
               <span className="live-indicator">Live</span>
             </div>
             <div className="insights-grid">
+              <div className="insight-tile">
+                <span className="insight-label">Users</span>
+                <strong>{insights?.users.total ?? metrics.users}</strong>
+                <span className="insight-delta">Total registered</span>
+              </div>
               <div className="insight-tile">
                 <span className="insight-label">Subscribers</span>
                 <strong>{insights?.subscribers.total ?? metrics.subscribers}</strong>

@@ -23,7 +23,8 @@ function isMetrics(value: unknown): value is AdminMetrics {
     isFiniteNumber(value.subscribers) &&
     isFiniteNumber(value.chatMessages) &&
     isFiniteNumber(value.reviews) &&
-    isFiniteNumber(value.unreadNotifications)
+    isFiniteNumber(value.unreadNotifications) &&
+    isFiniteNumber(value.users)
   );
 }
 
@@ -58,7 +59,9 @@ function isInsights(value: unknown): value is AdminInsights {
     Array.isArray(value.topCommunities) &&
     value.topCommunities.every(
       (entry) => isRecord(entry) && typeof entry.name === "string" && isFiniteNumber(entry.messages),
-    )
+    ) &&
+    isRecord(value.users) &&
+    isFiniteNumber(value.users.total)
   );
 }
 
@@ -80,6 +83,7 @@ function withMetricDefaults(value: AdminMetrics): AdminMetrics {
     views: typeof value.views === "number" ? value.views : 0,
     messages: typeof value.messages === "number" ? value.messages : 0,
     unreadMessages: typeof value.unreadMessages === "number" ? value.unreadMessages : 0,
+    users: typeof value.users === "number" ? value.users : 0,
   };
 }
 
@@ -91,6 +95,7 @@ function withInsightDefaults(value: AdminInsights): AdminInsights {
       isRecord(value.messages) && isFiniteNumber(value.messages.total)
         ? value.messages
         : { total: 0, last7Days: 0, last30Days: 0 },
+    users: isRecord(value.users) && isFiniteNumber(value.users.total) ? value.users : { total: 0 },
   };
 }
 
