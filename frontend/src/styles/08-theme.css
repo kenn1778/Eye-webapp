@@ -41,6 +41,16 @@
 
 .loader-dots span { background: var(--bf-accent); }
 
+/* The Xplore badge is a black cutout, so it flips to white wherever it sits
+   on a dark surface: the dark-mode header, the always-dark footers, and the
+   dark boot veil in night mode. */
+[data-theme="dark"] .bf-header .bf-brand-logo,
+[data-theme="dark"] .xplore-loader-badge,
+.bf-footer .bf-brand-logo,
+.site-footer .brand-gif {
+  filter: invert(1);
+}
+
 /* ---------------------------------------------------------------- *
  *  Dark palette                                                     *
  * ---------------------------------------------------------------- *
@@ -699,34 +709,39 @@ button:disabled { cursor: progress; }
 [data-theme="dark"] .chat-msg.is-me .chat-avatar { background: rgba(45, 212, 191, .15); color: #2dd4bf; border-color: rgba(45, 212, 191, .3); }
 
 /* Workspace at night */
-[data-theme="dark"] .admin-shell { background: #121816; color: var(--bf-text); }
-[data-theme="dark"] .admin-sidebar { background: linear-gradient(160deg, #0e1412 0%, #131b18 65%, #182220 100%); }
-[data-theme="dark"] .admin-topbar { background: #161d1b; border-bottom-color: #242e2b; box-shadow: none; }
+[data-theme="dark"] .admin-shell { background: #202124; color: #e8eaed; }
+[data-theme="dark"] .admin-sidebar { background: #202124; border-right-color: #3c4043; }
+[data-theme="dark"] .admin-topbar { background: #202124; border-bottom-color: #3c4043; box-shadow: none; }
+[data-theme="dark"] .sidebar-item { color: #9aa0a6; }
+[data-theme="dark"] .sidebar-item:hover, [data-theme="dark"] .sidebar-item.selected { color: #e8eaed; background: #303134; }
+[data-theme="dark"] .sidebar-item.selected::before { background: #8ab4f8; }
+[data-theme="dark"] .sidebar-icon { color: #9aa0a6; }
+[data-theme="dark"] .sidebar-item:hover .sidebar-icon, [data-theme="dark"] .sidebar-item.selected .sidebar-icon { color: #8ab4f8; }
 [data-theme="dark"] .notification-dot { border-color: #161d1b; }
 [data-theme="dark"] .back-public { color: var(--bf-muted); }
 [data-theme="dark"] .icon-button { color: var(--bf-text); }
 [data-theme="dark"] .admin-heading p,
 [data-theme="dark"] .workspace-heading p { color: var(--bf-muted); }
 
-[data-theme="dark"] .admin-primary { color: #fff; }
-[data-theme="dark"] .admin-primary:hover:not(:disabled) { background: #0d9488; }
+[data-theme="dark"] .admin-primary { background: #1a73e8; color: #fff; }
+[data-theme="dark"] .admin-primary:hover:not(:disabled) { background: #1557b0; }
 
-[data-theme="dark"] .metric-card { border-color: var(--bf-line); }
-[data-theme="dark"] .metric-card strong { color: var(--bf-ink); }
-[data-theme="dark"] .metric-label { color: var(--bf-muted); }
+[data-theme="dark"] .metric-card { border-color: #3c4043; background: #292a2d; }
+[data-theme="dark"] .metric-card strong { color: #e8eaed; }
+[data-theme="dark"] .metric-label { color: #9aa0a6; }
 [data-theme="dark"] .metric-trend,
-[data-theme="dark"] .metric-glyph { color: var(--bf-faint); }
+[data-theme="dark"] .metric-glyph { color: #9aa0a6; }
 [data-theme="dark"] .metric-card.accent {
-  border-color: rgba(45, 212, 191, .3);
-  background: linear-gradient(135deg, rgba(45, 212, 191, .1), rgba(45, 212, 191, .04));
+  border-color: #1a73e8;
+  background: #1a237e;
 }
 
-[data-theme="dark"] .admin-panel { border-color: var(--bf-line); }
+[data-theme="dark"] .admin-panel { border-color: #3c4043; background: #292a2d; }
 [data-theme="dark"] .panel-link { color: #2dd4bf; }
 [data-theme="dark"] .post-toolbar { border-bottom-color: var(--bf-line-soft); }
-[data-theme="dark"] .admin-tab { color: var(--bf-muted); }
-[data-theme="dark"] .admin-tab.active { color: var(--bf-ink); }
-[data-theme="dark"] .admin-tab.active::after { background: #2dd4bf; }
+[data-theme="dark"] .admin-tab { color: #9aa0a6; }
+[data-theme="dark"] .admin-tab.active { color: #8ab4f8; }
+[data-theme="dark"] .admin-tab.active::after { background: #8ab4f8; }
 [data-theme="dark"] .tab-count { color: #2dd4bf; background: rgba(45, 212, 191, .12); }
 [data-theme="dark"] .admin-search { color: var(--bf-muted); border-bottom-color: var(--bf-line); }
 [data-theme="dark"] .admin-search input { color: var(--bf-ink); }
