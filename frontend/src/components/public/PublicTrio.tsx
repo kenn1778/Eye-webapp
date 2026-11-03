@@ -130,10 +130,10 @@ export function PublicTrio({
         </div>
         <div className="bf-insta-grid">
           {[
-            "https://images.unsplash.com/photo-1512486130939-2c4f79935e4f?auto=format&fit=crop&w=400&q=70",
-            "https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&w=400&q=70",
-            "https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=400&q=70",
-            "https://images.unsplash.com/photo-1502680390469-be75c86b636f?auto=format&fit=crop&w=400&q=70",
+            "https://images.unsplash.com/photo-1512486130939-2c4f79935e4f?auto=format&fit=crop&w=600&q=70",
+            "https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&w=600&q=70",
+            "https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=600&q=70",
+            "https://images.unsplash.com/photo-1502680390469-be75c86b636f?auto=format&fit=crop&w=600&q=70",
           ].map((src) => (
             <a key={src} href="https://instagram.com" target="_blank" rel="noreferrer" aria-label="Open Instagram post">
               <img src={src} alt="" loading="lazy" decoding="async" />

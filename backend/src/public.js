@@ -24,7 +24,7 @@ const PUBLIC_CACHE = "public, max-age=30, stale-while-revalidate=120";
 
 const reviewLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
-  limit: 10,
+  limit: 30,
   standardHeaders: true,
   legacyHeaders: false,
   store: createRateLimitStore("rl:reviews:"),
@@ -46,6 +46,17 @@ const contactLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   store: createRateLimitStore("rl:contact:"),
+});
+
+// Join/leave are unauthenticated database writes; cap them so an abuser
+// cannot hammer the membership tables.
+const communityLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: "Too many membership changes. Please slow down." },
+  store: createRateLimitStore("rl:community:"),
 });
 
 const visitorIdSchema = z.string().uuid();
@@ -272,7 +283,7 @@ publicRouter.get("/communities/:name/membership", asyncHandler(async (req, res) 
   res.json({ joined: Boolean(membership), members });
 }));
 
-publicRouter.post("/communities/:name/join", asyncHandler(async (req, res) => {
+publicRouter.post("/communities/:name/join", communityLimiter, asyncHandler(async (req, res) => {
   const parsed = visitorIdSchema.safeParse(req.body?.visitorId);
   if (!parsed.success) return res.status(400).json({ message: "A valid visitor id is required." });
   const community = await prisma.community.upsert({
@@ -290,7 +301,7 @@ publicRouter.post("/communities/:name/join", asyncHandler(async (req, res) => {
   res.json({ joined: true, members });
 }));
 
-publicRouter.post("/communities/:name/leave", asyncHandler(async (req, res) => {
+publicRouter.post("/communities/:name/leave", communityLimiter, asyncHandler(async (req, res) => {
   const parsed = visitorIdSchema.safeParse(req.body?.visitorId);
   if (!parsed.success) return res.status(400).json({ message: "A valid visitor id is required." });
   const community = await prisma.community.findUnique({ where: { name: req.params.name }, select: { id: true } });
