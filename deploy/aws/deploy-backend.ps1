@@ -81,7 +81,6 @@ npm ci --no-audit --no-fund
 echo "  prisma generate"
 npx prisma generate
 echo "  prisma migrate deploy"
-set -a; . ./.env; set +a
 npx prisma migrate deploy
 echo "  starting eye-api"
 sudo systemctl start eye-api

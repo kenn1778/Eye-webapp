@@ -1,7 +1,7 @@
 import { prisma } from "./prisma.js";
 import { logger } from "./logger.js";
 import { emailService } from "./email.js";
-import { config } from "./config.js";
+import { config } from "../config.js";
 
 // Reduce an address to something safe to show in the admin feed, e.g.
 // "jane.doe@example.com" -> "j***e@example.com". The full address stays in the
