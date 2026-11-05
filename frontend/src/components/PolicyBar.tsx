@@ -11,7 +11,7 @@ export function PolicyBar() {
         <NavLink to="/terms" className={({ isActive }) => isActive ? "policy-link active" : "policy-link"}>Terms</NavLink>
         <NavLink to="/cookies" className={({ isActive }) => isActive ? "policy-link active" : "policy-link"}>Cookies</NavLink>
         <NavLink to="/refund" className={({ isActive }) => isActive ? "policy-link active" : "policy-link"}>Refund</NavLink>
-        <span className="policy-bar-hint" aria-hidden="true">— updated 12 Sep 2026</span>
+        <span className="policy-bar-hint" aria-hidden="true">— updated 5 Nov 2026</span>
       </div>
     </nav>
   );

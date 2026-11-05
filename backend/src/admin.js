@@ -1,4 +1,5 @@
 ﻿import { Router } from "express";
+import jwt from "jsonwebtoken";
 import rateLimit from "express-rate-limit";
 import { z } from "zod";
 import { prisma } from "./lib/prisma.js";
@@ -9,6 +10,7 @@ import { logger } from "./lib/logger.js";
 import { config } from "./config.js";
 import bcrypt from "bcryptjs";
 import { refreshSessionCookie } from "./auth.js";
+import { emailService } from "./lib/email.js";
 
 // Every route below is admin-only. requireAuth runs first, then a generous
 // per-minute cap so a runaway dashboard tab cannot hammer the database.
@@ -607,46 +609,67 @@ adminRouter.post(
     const parsed = z.object({ email: z.string().email().max(254) }).safeParse(req.body);
     if (!parsed.success) return res.status(400).json({ message: "Enter a valid email." });
     const email = parsed.data.email.trim().toLowerCase();
-    const token = require("jsonwebtoken").sign({ email, role: "moderator" }, config.jwtSecret, { expiresIn: "5m" });
-    const link = `${config.publicBaseUrl || ""}/admin/moderators/accept?token=${encodeURIComponent(token)}`;
+    const token = jwt.sign({ email, role: "moderator" }, config.jwtSecret, { expiresIn: "5m" });
+    // The link opens the web app, not this API: the SPA page /admin/moderators/accept
+    // exists to present the result and then calls the accept endpoint below.
+    const base = config.appBaseUrl || config.publicApiUrl || "";
+    const link = `${base}/admin/moderators/accept?token=${encodeURIComponent(token)}`;
     // Send email
     try {
-      const { emailService } = await import("./lib/email.js");
-      await emailService.send({
+      const { skipped } = await emailService.send({
         to: email,
         subject: "Moderator request approval",
         text: `Click to accept moderator request: ${link}\nThis link expires in 5 minutes.`,
         html: `<p>Click to accept moderator request: <a href="${link}">${link}</a></p><p>This link expires in 5 minutes.</p>`,
         tag: "moderator-request",
       });
-    } catch (e) {
-      // Log but continue
+      if (skipped) {
+        return res.json({ message: "Request created, but email delivery is not configured.", expiresIn: 300 });
+      }
+    } catch (error) {
+      logger.warn({ err: error.message, to: email }, "[eye:admin] moderator request email failed");
     }
     res.json({ message: "Request sent", expiresIn: 300 });
   }),
 );
 
 
-adminRouter.get(
-  "/moderators/accept",
+export const moderatorAcceptRouter = Router();
+
+// Verifying the emailed token is the only auth here. The router is mounted ahead
+// of the session guard in server.js so a moderator without an admin session can
+// still redeem it. The token is HMAC-signed with the app secret and lives 5
+// minutes, so it cannot be extended or replayed into anything beyond this call.
+const moderatorAcceptLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: "Too many attempts. Please try again later." },
+  store: createRateLimitStore("rl:moderator-accept:"),
+});
+
+moderatorAcceptRouter.get(
+  "/",
+  moderatorAcceptLimiter,
   asyncHandler(async (req, res) => {
     const token = req.query.token;
     if (!token || typeof token !== "string") return res.status(400).json({ message: "Missing token." });
+    let payload;
     try {
-      const jwt = require("jsonwebtoken");
-      const payload = jwt.verify(token, config.jwtSecret);
-      if (!payload.email || payload.role !== "moderator") return res.status(400).json({ message: "Invalid token." });
-      const email = String(payload.email).toLowerCase();
-      const existing = await prisma.moderator.findUnique({ where: { email } });
-      if (existing) {
-        await prisma.moderator.update({ where: { email }, data: { status: "Active" } });
-      } else {
-        await prisma.moderator.create({ data: { email, name: email.split("@")[0], role: "Moderator", status: "Active" } });
-      }
-      res.json({ message: "Moderator activated", email });
-    } catch (e) {
+      payload = jwt.verify(token, config.jwtSecret);
+    } catch {
       return res.status(400).json({ message: "Invalid or expired token." });
     }
+    if (!payload.email || payload.role !== "moderator") return res.status(400).json({ message: "Invalid token." });
+    const email = String(payload.email).toLowerCase();
+    const existing = await prisma.moderator.findUnique({ where: { email } });
+    if (existing) {
+      await prisma.moderator.update({ where: { email }, data: { status: "Active" } });
+    } else {
+      await prisma.moderator.create({ data: { email, name: email.split("@")[0], role: "Moderator", status: "Active" } });
+    }
+    res.json({ message: "Moderator activated", email });
   }),
 );
 
@@ -751,6 +774,45 @@ adminRouter.delete(
     if (!parsedId.success) return res.status(400).json({ message: "Invalid id." });
     const result = await prisma.contactMessage.deleteMany({ where: { id: parsedId.data } });
     if (!result.count) return res.status(404).json({ message: "Message not found." });
+    res.json({ ok: true });
+  }),
+);
+
+// REVIEWS - moderate the visitor submissions shown on the public carousel.
+// Reviews publish immediately today; this list exists so spam or a regrettable
+// quote can be removed without touching the database by hand.
+const reviewsQuerySchema = z.object({
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+  offset: z.coerce.number().int().min(0).default(0),
+});
+
+adminRouter.get(
+  "/reviews",
+  asyncHandler(async (req, res) => {
+    const parsed = reviewsQuerySchema.safeParse(req.query);
+    if (!parsed.success) return res.status(400).json({ message: "Invalid query." });
+    const { limit, offset } = parsed.data;
+
+    const [items, total] = await Promise.all([
+      prisma.review.findMany({
+        orderBy: { createdAt: "desc" },
+        take: limit,
+        skip: offset,
+        select: { id: true, name: true, rating: true, comment: true, published: true, createdAt: true },
+      }),
+      prisma.review.count(),
+    ]);
+    res.json({ items, total });
+  }),
+);
+
+adminRouter.delete(
+  "/reviews/:id",
+  asyncHandler(async (req, res) => {
+    const parsedId = idSchema.safeParse(req.params.id);
+    if (!parsedId.success) return res.status(400).json({ message: "Invalid id." });
+    const result = await prisma.review.deleteMany({ where: { id: parsedId.data } });
+    if (!result.count) return res.status(404).json({ message: "Review not found." });
     res.json({ ok: true });
   }),
 );

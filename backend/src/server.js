@@ -8,7 +8,7 @@ import { config, auditConfig } from "./config.js";
 import { authRouter } from "./auth.js";
 import { newsletterRouter } from "./newsletter.js";
 import { chatRouter } from "./chat.js";
-import { adminRouter } from "./admin.js";
+import { adminRouter, moderatorAcceptRouter } from "./admin.js";
 import { membershipRouter } from "./membership.js";
 import { publicRouter } from "./public.js";
 import { mediaAdminRouter, publicMediaRouter } from "./media.js";
@@ -146,6 +146,9 @@ app.use("/api", apiLimiter);
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/newsletter", newsletterRouter);
 app.use("/api/v1/chat", chatRouter);
+// Token-only moderator redemption. Registered before the admin router so it
+// bypasses the admin-session guard while still verifying the emailed JWT.
+app.use("/api/v1/admin/moderators/accept", moderatorAcceptRouter);
 app.use("/api/v1/admin", adminRouter);
 app.use("/api/v1/membership", membershipRouter);
 app.use("/api/v1/public", publicRouter);

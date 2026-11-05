@@ -14,7 +14,7 @@ export function PrivacyPolicy() {
       <PolicyBar />
       <main className="legal-page">
         <div className="legal-header">
-          <div className="eyebrow">Legal • Effective: 12 September 2026 • Version 2.0</div>
+          <div className="eyebrow">Legal • Effective: 5 November 2026 • Version 2.1</div>
           <h1>Privacy Policy</h1>
           <p>Xplore (“we”, “us”) respects your privacy. This policy explains what we collect, why, how long we keep it, and your rights under the Nigeria Data Protection Act 2023 (NDPA), EU GDPR, and California CCPA/CPRA. Read it with our <Link to="/terms">Terms</Link> and <Link to="/cookies">Cookies Policy</Link>.</p>
           <div className="legal-notice">
@@ -31,7 +31,7 @@ export function PrivacyPolicy() {
           <p>We collect only what is necessary for the feature you use:</p>
           <ul>
             <li><strong>Newsletter email + consent timestamp + IP (at signup)</strong> — only when you submit <a href="/#newsletter">the newsletter form</a> and tick “I agree”. Stored until you unsubscribe. No name, phone, or address required.</li>
-            <li><strong>Technical data</strong> — IP, browser, device, pages viewed, referrer, via strictly necessary cookies (<code>eye:consent</code>, <code>eye:subscribed</code>) or, if you accept, analytics cookies. See <Link to="/cookies">Cookies Policy</Link>.</li>
+            <li><strong>Technical data</strong> — IP, browser, device, pages viewed, referrer, via strictly necessary cookies/storage (<code>eye:consent</code>) or, if you accept, analytics cookies. See <Link to="/cookies">Cookies Policy</Link>.</li>
             <li><strong>Admin workspace</strong> — email, display name, and password hash for invited team members only. No public user accounts.</li>
             <li><strong>Support emails</strong> — content of messages you send to hello@ or privacy@.</li>
           </ul>
@@ -63,7 +63,7 @@ export function PrivacyPolicy() {
           <h2>4. Cookies & tracking</h2>
           <p>We use only:</p>
           <ul>
-            <li><strong>Strictly necessary:</strong> <code>eye:consent</code> (your cookie choice, 12 months), <code>eye:subscribed</code> (prevent duplicate submits, 12 months).</li>
+            <li><strong>Strictly necessary:</strong> <code>eye:consent</code> (your cookie choice, kept until you clear it), and the <code>__Host-session</code> admin cookie for team sign-in. Functional preferences <code>eye:theme</code> and <code>eye:subscribe-popup:dismissed</code> remember your display choices.</li>
             <li><strong>Analytics (opt-in only):</strong> _ga/_gid if you click “Accept” in the cookie banner. No advertising pixels without consent.</li>
           </ul>
           <p>Third-party embeds that may set cookies: <strong>Google Fonts</strong> (fonts.googleapis.com) and <strong>Unsplash</strong> (images.unsplash.com). See <Link to="/cookies">Cookies Policy</Link> for details and how to block.</p>

@@ -187,6 +187,10 @@ export function AdminWorkspace({ closeAdmin, onPublish }: AdminWorkspaceProps) {
             <span className="sidebar-icon icon-messages" aria-hidden="true" />Messages
             {metrics.unreadMessages > 0 && <span className="sidebar-count alert">{metrics.unreadMessages}</span>}
           </button>
+          <button className={`sidebar-item ${activeSection === "Reviews" ? "selected" : ""}`} type="button" onClick={() => selectSection("Reviews")}>
+            <span className="sidebar-icon icon-reviews" aria-hidden="true" />Reviews
+            {metrics.reviews > 0 && <span className="sidebar-count">{metrics.reviews}</span>}
+          </button>
           <button className={`sidebar-item ${activeSection === "Author profile" ? "selected" : ""}`} type="button" onClick={() => selectSection("Author profile")}>
             <span className="sidebar-icon icon-author" aria-hidden="true" />Author profile
           </button>

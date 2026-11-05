@@ -12,7 +12,7 @@ export function CookiesPolicy() {
       </header>
       <main className="legal-page">
         <div className="legal-header">
-          <div className="eyebrow">Legal • Last updated: 12 September 2026</div>
+          <div className="eyebrow">Legal • Last updated: 5 November 2026</div>
           <h1>Cookies Policy</h1>
           <p>How we use cookies and similar tech — and how you control them.</p>
         </div>
@@ -27,8 +27,8 @@ export function CookiesPolicy() {
           <table className="legal-table">
             <thead><tr><th>Type</th><th>Example</th><th>Purpose</th><th>Duration</th></tr></thead>
             <tbody>
-              <tr><td>Strictly necessary</td><td><code>eye:consent</code>, <code>eye:subscribed</code></td><td>Remember cookie choice, prevent duplicate newsletter submits, keep login secure</td><td>Session to 12 months</td></tr>
-              <tr><td>Functional</td><td><code>prefers-color</code> (if added)</td><td>Remember preferences</td><td>12 months</td></tr>
+              <tr><td>Strictly necessary</td><td><code>eye:consent</code> (browser storage); <code>__Host-session</code> (admin sign-in cookie)</td><td>Remember your cookie-banner choice; keep admin login secure</td><td>Until cleared / session</td></tr>
+              <tr><td>Functional</td><td><code>eye:theme</code>, <code>eye:subscribe-popup:dismissed</code></td><td>Remember your light/dark preference and whether you dismissed the subscribe pop-up</td><td>Until cleared</td></tr>
               <tr><td>Analytics (only with consent)</td><td>_ga, _gid (if you enable)</td><td>Count visits, see which stories are useful</td><td>Up to 24 months</td></tr>
             </tbody>
           </table>

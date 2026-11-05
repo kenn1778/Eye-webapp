@@ -20,7 +20,6 @@ import {
   CAROUSEL_SIZE,
   CAROUSEL_INTERVAL,
   TESTIMONIAL_INTERVAL,
-  fallbackTestimonials,
 } from "../components/public/publicShared";
 import {
   fetchCommunityMembership,
@@ -77,7 +76,7 @@ export function PublicSite({ stories, openAdmin, isAdmin, justPublished }: Publi
   const [author, setAuthor] = useState<AuthorProfile | null>(null);
 
   // ---------- reviews / testimonials ----------
-  const [reviews, setReviews] = useState<PublicReview[]>(fallbackTestimonials);
+  const [reviews, setReviews] = useState<PublicReview[]>([]);
   const [testimonialIndex, setTestimonialIndex] = useState(0);
   const testimonialsPausedRef = useRef(false);
   const [reviewFormOpen, setReviewFormOpen] = useState(false);

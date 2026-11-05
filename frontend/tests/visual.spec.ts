@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page, type Route } from "@playwright/test";
 import { ADMIN_EMAIL, ADMIN_PASSWORD } from "../playwright.config";
 
 /**
@@ -266,13 +266,19 @@ test.beforeEach(async ({ page }) => {
   });
 
   // Story page fetch. Same origin as the proxy, so stub it for the same reason.
-  await page.route("**/api/v1/posts/*", (route) => {
+  // The story page today calls the PUBLIC reader route (/api/v1/public/posts/:id),
+  // which the catch-all stub above would otherwise swallow and answer
+  // {ok:true} — leaving the page rendering with no story body. The bare
+  // /api/v1/posts/:id shape stays stubbed so older entry points keep working.
+  const serveStoryPost = (route: Route) => {
     const path = new URL(route.request().url()).pathname;
     const id = path.split("/").pop() ?? "";
     const post = stubPosts.find((item) => item.id === id);
     if (!post) return route.fulfill({ status: 404, contentType: "application/json", body: "{}" });
     return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(post) });
-  });
+  };
+  await page.route("**/api/v1/public/posts/*", serveStoryPost);
+  await page.route("**/api/v1/posts/*", serveStoryPost);
 });
 
 /**

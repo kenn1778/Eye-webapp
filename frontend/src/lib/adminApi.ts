@@ -512,6 +512,43 @@ export async function deleteModerator(id: string): Promise<boolean> {
   }
 }
 
+// Reviews moderation - the same visitor quotes the public carousel shows,
+// with a delete for anything spammy or regrettable.
+export type AdminReview = {
+  id: string;
+  name: string;
+  rating: number;
+  comment: string | null;
+  published: boolean;
+  createdAt: string;
+};
+
+function isAdminReview(value: unknown): value is AdminReview {
+  return isRecord(value) && typeof value.id === "string" && typeof value.name === "string" &&
+    isFiniteNumber(value.rating) && (value.comment === null || typeof value.comment === "string") &&
+    typeof value.published === "boolean" && typeof value.createdAt === "string";
+}
+
+export async function fetchAdminReviews(limit = 20, offset = 0): Promise<{ items: AdminReview[]; total: number } | null> {
+  const params = new URLSearchParams({ limit: String(limit), offset: String(offset) });
+  const payload = await getJson(`/api/v1/admin/reviews?${params}`);
+  if (!isRecord(payload) || !Array.isArray(payload.items)) return null;
+  return {
+    items: payload.items.filter(isAdminReview),
+    total: isFiniteNumber(payload.total) ? payload.total : 0,
+  };
+}
+
+export async function deleteAdminReview(id: string): Promise<boolean> {
+  try {
+    const response = await fetch(`${API_BASE}/api/v1/admin/reviews/${encodeURIComponent(id)}`, { method: "DELETE", credentials: "include" });
+    return response.ok;
+  } catch (error) {
+    logError("admin", "deleteAdminReview failed", error);
+    return false;
+  }
+}
+
 export type AuditLogEntry = {
   id: string;
   actorEmail: string;

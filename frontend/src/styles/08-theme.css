@@ -239,7 +239,7 @@
 .icon-communities::before { box-shadow: 7px 4px 0 -1px #141d19, 7px 4px 0 0 currentColor; }
 .icon-team::before { box-shadow: 7px 0 0 -1px #141d19, 7px 0 0 0 currentColor; }
 
-/* Two glyphs the old icon set never had: inbox + author bust. */
+/* Glyphs the old icon set never had: inbox + author bust + review star. */
 .icon-messages::before {
   content: '';
   position: absolute;
@@ -280,6 +280,17 @@
   border: 1px solid currentColor;
   border-bottom: 0;
   border-radius: 6px 6px 0 0;
+}
+/* Filled five-point star, sized to sit level with the two glyphs above. */
+.icon-reviews::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 13px;
+  background: currentColor;
+  clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
 }
 
 /* Notification tray */

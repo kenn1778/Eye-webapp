@@ -1,6 +1,5 @@
 import type { ReactElement } from "react";
 import type { Story } from "../../types";
-import type { PublicReview } from "../../lib/adminApi";
 import scholarshipCommunityArt from "../../../../pics-1/Scholarship seekers.jpg";
 import creativeCommunityArt from "../../../../pics-1/Creative careers.jpg";
 import firstJobCommunityArt from "../../../../pics-1/First job circle.jpg";
@@ -30,35 +29,6 @@ export const communityArt: Record<string, { src: string; alt: string; width: num
     height: 333,
   },
 };
-
-// Fallback testimonials so the "What Our Readers Say" carousel is never empty
-// while the reviews API is unreachable.
-export const fallbackTestimonials: PublicReview[] = [
-  {
-    id: "t1",
-    name: "Loven A",
-    rating: 5,
-    comment:
-      "This blog has become my daily source of inspiration. The content is always valuable and well-written!",
-    createdAt: "2026-09-02T09:00:00.000Z",
-  },
-  {
-    id: "t2",
-    name: "Tonia Prisca",
-    rating: 5,
-    comment:
-      "I found two fully funded programs through the weekly brief. The deadlines filter alone is worth it.",
-    createdAt: "2026-09-18T09:00:00.000Z",
-  },
-  {
-    id: "t3",
-    name: "Solomon Alozie",
-    rating: 4,
-    comment:
-      "Clear, honest guidance. The application checklists saved me hours of second-guessing.",
-    createdAt: "2026-10-04T09:00:00.000Z",
-  },
-];
 
 // Category tiles get a stable icon per known category name; unknown categories
 // fall back to the bookmark glyph so nothing renders blank.

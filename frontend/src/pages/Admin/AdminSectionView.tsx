@@ -5,6 +5,7 @@ import { AdminSettings } from "./AdminSettings";
 import { AdminPosts } from "./AdminPosts";
 import { AdminMedia } from "./AdminMedia";
 import { AdminMessages } from "./AdminMessages";
+import { AdminReviews } from "./AdminReviews";
 import { AdminAuthorProfileEditor } from "./AdminAuthorProfile";
 
 type AdminSectionViewProps = {
@@ -45,6 +46,10 @@ export function AdminSectionView({ section, onNewPost, onProfileSaved }: AdminSe
 
   if (section === "Messages") {
     return <AdminMessages />;
+  }
+
+  if (section === "Reviews") {
+    return <AdminReviews />;
   }
 
   if (section === "Author profile") {

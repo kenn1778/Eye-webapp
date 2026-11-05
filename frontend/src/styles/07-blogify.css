@@ -1225,6 +1225,13 @@ body.bf-menu-lock { overflow: hidden; }
 .bf-quote-dots .bf-dot { background: var(--bf-line); }
 .bf-quote-dots .bf-dot.is-active { background: var(--bf-accent); }
 
+.bf-quote-empty {
+  margin: 14px 0 4px;
+  color: var(--bf-muted);
+  font: 400 13.5px/1.6 var(--bf-sans);
+  font-style: italic;
+}
+
 .bf-review-toggle {
   align-self: flex-start;
   border: 0;

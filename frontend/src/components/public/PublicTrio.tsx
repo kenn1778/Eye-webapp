@@ -69,6 +69,9 @@ export function PublicTrio({
             </figcaption>
           </figure>
         )}
+        {reviews.length === 0 && (
+          <p className="bf-quote-empty">No reader reviews yet — be the first to leave one.</p>
+        )}
         <div className="bf-quote-dots" role="group" aria-label="Reader testimonial selector">
           {reviews.map((review, index) => (
             <button
