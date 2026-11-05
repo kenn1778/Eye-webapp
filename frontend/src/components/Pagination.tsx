@@ -4,9 +4,10 @@ type PaginationProps = {
   onPageChange: (page: number) => void;
   label?: string;
   className?: string;
+  showFirstLast?: boolean;
 };
 
-type PageItem = number | "ellipsis";
+type PageItem = number | "ellipsis-start" | "ellipsis-end";
 
 function pageItems(total: number, current: number): PageItem[] {
   if (total <= 7) {
@@ -15,18 +16,38 @@ function pageItems(total: number, current: number): PageItem[] {
   const items: PageItem[] = [1];
   const start = Math.max(2, current - 1);
   const end = Math.min(total - 1, current + 1);
-  if (start > 2) items.push("ellipsis");
+  if (start > 2) items.push("ellipsis-start");
   for (let value = start; value <= end; value += 1) items.push(value);
-  if (end < total - 1) items.push("ellipsis");
+  if (end < total - 1) items.push("ellipsis-end");
   items.push(total);
   return items;
 }
 
-export function Pagination({ page, totalPages, onPageChange, label = "Pagination", className }: PaginationProps) {
+export function Pagination({
+  page,
+  totalPages,
+  onPageChange,
+  label = "Pagination",
+  className,
+  showFirstLast = false,
+}: PaginationProps) {
   if (totalPages <= 1) return null;
   const items = pageItems(totalPages, page);
+  const baseClass = className ? `pagination ${className}` : "pagination";
   return (
-    <nav className={className ? "pagination " + className : "pagination"} aria-label={label}>
+    <nav className={baseClass} aria-label={label} role="navigation">
+      {showFirstLast && (
+        <button
+          className="pagination-step pagination-first"
+          type="button"
+          onClick={() => onPageChange(1)}
+          disabled={page <= 1}
+          aria-label="First page"
+          title="First page"
+        >
+          <span aria-hidden="true">«</span>
+        </button>
+      )}
       <button
         className="pagination-step"
         type="button"
@@ -34,12 +55,17 @@ export function Pagination({ page, totalPages, onPageChange, label = "Pagination
         disabled={page <= 1}
         aria-label="Previous page"
       >
-        <span aria-hidden="true">&larr;</span> Previous
+        <span aria-hidden="true">←</span>
+        <span className="pagination-step-label">Prev</span>
       </button>
-      <div className="pagination-pages">
+      <div className="pagination-pages" role="list">
         {items.map((item, index) =>
-          item === "ellipsis" ? (
-            <span className="pagination-ellipsis" key={"ellipsis-" + index} aria-hidden="true">
+          typeof item === "string" ? (
+            <span
+              className="pagination-ellipsis"
+              key={item + index}
+              aria-hidden="true"
+            >
               &hellip;
             </span>
           ) : (
@@ -47,8 +73,9 @@ export function Pagination({ page, totalPages, onPageChange, label = "Pagination
               key={item}
               className={item === page ? "pagination-page is-current" : "pagination-page"}
               type="button"
+              role="listitem"
               onClick={() => onPageChange(item)}
-              aria-label={"Page " + item}
+              aria-label={`Page ${item}`}
               aria-current={item === page ? "page" : undefined}
             >
               {item}
@@ -63,8 +90,21 @@ export function Pagination({ page, totalPages, onPageChange, label = "Pagination
         disabled={page >= totalPages}
         aria-label="Next page"
       >
-        Next <span aria-hidden="true">&rarr;</span>
+        <span className="pagination-step-label">Next</span>
+        <span aria-hidden="true">→</span>
       </button>
+      {showFirstLast && (
+        <button
+          className="pagination-step pagination-last"
+          type="button"
+          onClick={() => onPageChange(totalPages)}
+          disabled={page >= totalPages}
+          aria-label="Last page"
+          title="Last page"
+        >
+          <span aria-hidden="true">»</span>
+        </button>
+      )}
     </nav>
   );
 }

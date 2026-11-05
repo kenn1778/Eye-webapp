@@ -174,7 +174,7 @@ h2 { margin-top: 8px; color: #1d2925; font-size: clamp(30px, 4vw, 50px); line-he
 
 .card-read:hover { text-decoration: underline; }
 
-.client-modal-backdrop { position: fixed; inset: 0; z-index: 15; display: grid; place-items: center; padding: 20px; background: rgba(22, 34, 29, .48); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); animation: rise-in .2s ease both; }
+.client-modal-backdrop { position: fixed; inset: 0; z-index: 200; display: grid; place-items: center; padding: 20px; background: rgba(22, 34, 29, .48); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); animation: rise-in .2s ease both; }
 
 /* The -webkit- prefix repeats each backdrop-filter for older Safari. */
 .story-reader { position: relative; width: min(760px, 100%); max-height: calc(100vh - 40px); overflow-y: auto; border: 1px solid rgba(255, 255, 255, .55); background: var(--glass-light); box-shadow: 0 25px 70px rgba(21, 31, 26, .27); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); animation: rise-in .3s ease both; }

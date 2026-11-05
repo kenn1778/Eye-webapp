@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { fetchAuditLog, type AuditLogEntry } from "../../lib/adminApi";
 import { communities } from "../../data/seedData";
 import { AdminSettings } from "./AdminSettings";
@@ -8,6 +8,7 @@ import { AdminMessages } from "./AdminMessages";
 import { AdminReviews } from "./AdminReviews";
 import { AdminAuthorProfileEditor } from "./AdminAuthorProfile";
 import { AdminSubscribers } from "./AdminSubscribers";
+import { Pagination } from "../../components/Pagination";
 
 type AdminSectionViewProps = {
   section: string;
@@ -183,14 +184,19 @@ function AuditLogView() {
         )}
         <div className="audit-pagination">
           <span>{total === 0 ? "0 records" : `${offset + 1}–${Math.min(offset + entries.length, total)} of ${total}`}</span>
-          <div>
-            <button className="button-secondary" type="button" onClick={() => { setLoading(true); setOffset(Math.max(0, offset - pageSize)); }} disabled={loading || offset === 0}>
-              Previous
-            </button>
-            <button className="button-secondary" type="button" onClick={() => { setLoading(true); setOffset(offset + pageSize); }} disabled={loading || offset + pageSize >= total}>
-              Next
-            </button>
-          </div>
+          {Math.ceil(total / pageSize) > 1 && (
+            <Pagination
+              page={Math.floor(offset / pageSize) + 1}
+              totalPages={Math.ceil(total / pageSize)}
+              onPageChange={(nextPage) => {
+                setLoading(true);
+                setOffset((nextPage - 1) * pageSize);
+              }}
+              label="Audit logs pagination"
+              className="pagination-admin"
+              showFirstLast
+            />
+          )}
         </div>
       </div>
     </section>

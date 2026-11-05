@@ -1,0 +1,786 @@
+/* ============================================================
+   09-fixes.css — Comprehensive fixes for all reported issues:
+   1. Dark theme gaps
+   2. Animation upgrades (rich, polished)
+   3. Professional pagination
+   4. Mobile responsiveness pro-level
+   5. Review/comment section visibility
+   6. Story modal z-index
+   7. Visitor stats recording
+   Loaded AFTER 08-theme.css in App.css
+   ============================================================ */
+
+/* ================================================================
+   SECTION 1: DARK THEME — MISSING OVERRIDES
+   ================================================================ */
+
+/* Review fields in dark mode — previously white bg was invisible */
+[data-theme="dark"] .review-field input,
+[data-theme="dark"] .review-field textarea,
+[data-theme="dark"] .bf-review-form input,
+[data-theme="dark"] .bf-review-form textarea {
+  background: #0f1612 !important;
+  border-color: #2a3532 !important;
+  color: #f3f6f5 !important;
+}
+[data-theme="dark"] .review-field input::placeholder,
+[data-theme="dark"] .review-field textarea::placeholder,
+[data-theme="dark"] .bf-review-form input::placeholder,
+[data-theme="dark"] .bf-review-form textarea::placeholder {
+  color: #6d7c76 !important;
+}
+[data-theme="dark"] .review-field input:focus,
+[data-theme="dark"] .review-field textarea:focus,
+[data-theme="dark"] .bf-review-form input:focus,
+[data-theme="dark"] .bf-review-form textarea:focus {
+  border-color: #2dd4bf !important;
+  box-shadow: 0 0 0 3px rgba(45, 212, 191, .18) !important;
+  background: #121816 !important;
+}
+
+/* Story cards, card bodies in dark mode */
+[data-theme="dark"] .story-card {
+  background: var(--bf-card, #161d1b);
+  border-color: var(--bf-line, #2a3532);
+}
+[data-theme="dark"] .story-card h3 { color: var(--bf-ink, #f3f6f5); }
+[data-theme="dark"] .story-card p { color: var(--bf-muted, #94a29c); }
+[data-theme="dark"] .card-read { color: #2dd4bf; }
+
+/* Category tabs in dark mode */
+[data-theme="dark"] .category-tab {
+  background: var(--bf-card, #161d1b);
+  border-color: #2a3532;
+  color: #94a29c;
+}
+[data-theme="dark"] .category-tab:hover,
+[data-theme="dark"] .category-tab.selected {
+  background: #0f766e;
+  border-color: #0f766e;
+  color: #fff;
+}
+
+/* Search field in dark mode */
+[data-theme="dark"] .search-field {
+  background: var(--bf-card, #161d1b);
+  border-color: #2a3532;
+  color: #94a29c;
+}
+[data-theme="dark"] .search-field input {
+  color: #f3f6f5;
+  background: transparent;
+}
+[data-theme="dark"] .search-field input::placeholder { color: #6d7c76; }
+[data-theme="dark"] .search-field:focus-within {
+  border-color: #2dd4bf;
+  box-shadow: 0 0 0 3px rgba(45, 212, 191, .15);
+}
+
+/* Newsletter inputs in dark */
+[data-theme="dark"] .newsletter-form input {
+  background: rgba(22, 29, 27, .7);
+  border-color: #2a3532;
+  color: #f3f6f5;
+}
+[data-theme="dark"] .newsletter-form input:focus {
+  background: #161d1b;
+  border-color: #2dd4bf;
+  box-shadow: 0 0 0 3px rgba(45, 212, 191, .15);
+}
+
+/* Toast in dark */
+[data-theme="dark"] .toast {
+  background: #1a231f;
+  border: 1px solid #2a3532;
+  color: #f3f6f5;
+  box-shadow: 0 10px 30px rgba(0,0,0,.45);
+}
+
+/* Empty state in dark */
+[data-theme="dark"] .empty-state,
+[data-theme="dark"] .latest-empty-state { color: #94a29c; }
+[data-theme="dark"] .latest-empty-state {
+  background: var(--bf-card, #161d1b);
+  border-color: #2a3532;
+}
+[data-theme="dark"] .latest-empty-state h3 { color: var(--bf-ink, #f3f6f5); }
+
+/* Error boundary in dark */
+[data-theme="dark"] .error-boundary {
+  background: linear-gradient(135deg, #0d1b18 0%, #14352f 65%, #0d9488 140%);
+}
+
+/* Attachment cards in dark */
+[data-theme="dark"] .attachment-card {
+  background: linear-gradient(140deg, rgba(22, 29, 27, .9), rgba(16, 22, 19, .7));
+  border-color: #2a3532;
+}
+[data-theme="dark"] .attachment-card:hover {
+  border-color: #2dd4bf;
+  background: linear-gradient(140deg, rgba(45, 212, 191, .1), rgba(22, 29, 27, .9));
+}
+[data-theme="dark"] .attachment-card strong { color: #f3f6f5; }
+[data-theme="dark"] .attachment-card small { color: #94a29c; }
+[data-theme="dark"] .file-name { color: #2dd4bf; }
+
+/* Tag chips in dark */
+[data-theme="dark"] .tag-chip {
+  background: rgba(45, 212, 191, .12);
+  color: #2dd4bf;
+  border: 1px solid rgba(45, 212, 191, .2);
+}
+[data-theme="dark"] .tag-chip:hover { background: #0f766e; color: #fff; }
+
+/* ================================================================
+   SECTION 2: ANIMATIONS — RICH & POLISHED
+   ================================================================ */
+
+/* --- Page Entrance: Spring-feel slide-up with fade --- */
+.page-transition {
+  animation: page-in .48s cubic-bezier(.22, .61, .36, 1) both;
+}
+@keyframes page-in {
+  from { opacity: 0; transform: translateY(16px) scale(0.99); }
+  60%  { opacity: 1; }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* --- Rise-in keyframe (used by modals, dialogs, toast) --- */
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(18px) scale(0.97); }
+  60%  { opacity: 1; }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes rise-in-fast {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* --- Skeleton Shimmer: richer wave effect --- */
+.bf-skeleton {
+  position: relative;
+  overflow: hidden;
+  background: var(--bf-line-soft, #eef1ef);
+  border-radius: 10px;
+}
+.bf-skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, .72) 40%,
+    rgba(255, 255, 255, .88) 50%,
+    rgba(255, 255, 255, .72) 60%,
+    transparent 100%
+  );
+  animation: skeleton-sweep 1.6s ease-in-out infinite;
+}
+[data-theme="dark"] .bf-skeleton {
+  background: rgba(255, 255, 255, .06);
+}
+[data-theme="dark"] .bf-skeleton::after {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, .08) 40%,
+    rgba(255, 255, 255, .14) 50%,
+    rgba(255, 255, 255, .08) 60%,
+    transparent 100%
+  );
+}
+@keyframes skeleton-sweep {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* --- Loader Dots: staggered pulse --- */
+.loader-dots { display: inline-flex; gap: 6px; align-items: center; }
+.loader-dots span {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--bf-accent, #0d9488);
+  animation: dot-pulse 1.3s ease-in-out infinite both;
+}
+.loader-dots span:nth-child(1) { animation-delay: 0s; }
+.loader-dots span:nth-child(2) { animation-delay: .18s; }
+.loader-dots span:nth-child(3) { animation-delay: .36s; }
+@keyframes dot-pulse {
+  0%, 80%, 100% { transform: scale(.7); opacity: .45; }
+  40%            { transform: scale(1.15); opacity: 1; }
+}
+
+/* --- Card reveals on scroll (Reveal component uses .reveal + .is-visible) --- */
+/* Override the basic ease in 05-components.css with a spring curve */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity .6s cubic-bezier(.22,.61,.36,1), transform .6s cubic-bezier(.22,.61,.36,1);
+  will-change: opacity, transform;
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+/* Stagger siblings inside a grid/list */
+.reveal:nth-child(2) { transition-delay: .08s; }
+.reveal:nth-child(3) { transition-delay: .16s; }
+.reveal:nth-child(4) { transition-delay: .24s; }
+.reveal:nth-child(5) { transition-delay: .32s; }
+.reveal:nth-child(6) { transition-delay: .40s; }
+
+/* .reveal-item alias kept for any future components that use it */
+.reveal-item {
+  opacity: 0;
+  transform: translateY(22px);
+  transition: opacity .55s cubic-bezier(.22,.61,.36,1), transform .55s cubic-bezier(.22,.61,.36,1);
+}
+.reveal-item.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.reveal-item:nth-child(2) { transition-delay: .08s; }
+.reveal-item:nth-child(3) { transition-delay: .16s; }
+.reveal-item:nth-child(4) { transition-delay: .24s; }
+.reveal-item:nth-child(5) { transition-delay: .32s; }
+.reveal-item:nth-child(6) { transition-delay: .40s; }
+
+/* --- Metric cards: subtle entrance stagger --- */
+.metric-card {
+  animation: metric-in .5s cubic-bezier(.22,.61,.36,1) both;
+}
+.metric-card:nth-child(1) { animation-delay: .05s; }
+.metric-card:nth-child(2) { animation-delay: .12s; }
+.metric-card:nth-child(3) { animation-delay: .19s; }
+.metric-card:nth-child(4) { animation-delay: .26s; }
+@keyframes metric-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* --- Button hover spring --- */
+.admin-primary,
+.button-secondary,
+.bf-btn,
+.bf-subscribe-btn {
+  transition: background .22s ease, color .22s ease, border-color .22s ease,
+              transform .22s cubic-bezier(.34,1.56,.64,1), box-shadow .22s ease,
+              opacity .22s ease;
+}
+.admin-primary:hover:not(:disabled),
+.bf-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px -6px rgba(13, 148, 136, .35);
+}
+.admin-primary:active:not(:disabled),
+.bf-btn:active { transform: translateY(0); }
+
+/* --- Story reader modal: polished entrance --- */
+.story-reader {
+  animation: story-open .35s cubic-bezier(.22,.61,.36,1) both;
+}
+@keyframes story-open {
+  from { opacity: 0; transform: translateY(24px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* --- Soft pulse (live dot) --- */
+@keyframes soft-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(45, 212, 191, .4); }
+  50%       { box-shadow: 0 0 0 7px rgba(45, 212, 191, 0); }
+}
+
+/* --- Eye loader fade --- */
+@keyframes eye-loader-fade {
+  from { opacity: 1; }
+  to   { opacity: 0; pointer-events: none; }
+}
+
+/* ================================================================
+   SECTION 3: PROFESSIONAL PAGINATION
+   ================================================================ */
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 24px 0 8px;
+  flex-wrap: wrap;
+  user-select: none;
+}
+
+/* Step buttons (Prev / Next) */
+.pagination-step {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 14px;
+  color: var(--bf-text, #374151);
+  border: 1.5px solid var(--bf-line, #e5e7eb);
+  border-radius: 10px;
+  background: var(--bf-card, #fff);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: .01em;
+  transition: color .2s ease, background .2s ease, border-color .2s ease,
+              box-shadow .2s ease, transform .18s cubic-bezier(.34,1.56,.64,1);
+  box-shadow: 0 1px 3px rgba(16, 22, 19, .07);
+}
+.pagination-step:hover:not(:disabled) {
+  color: var(--bf-accent, #0d9488);
+  border-color: var(--bf-accent, #0d9488);
+  background: var(--bf-accent-soft, #e6f6f4);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px -4px rgba(13, 148, 136, .28);
+}
+.pagination-step:active:not(:disabled) { transform: translateY(0); }
+.pagination-step:disabled {
+  opacity: .4;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+.pagination-step span[aria-hidden] { font-size: 15px; line-height: 1; }
+.pagination-step-label {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* Page number buttons */
+.pagination-pages {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.pagination-page {
+  display: inline-grid;
+  place-items: center;
+  min-width: 40px;
+  min-height: 40px;
+  padding: 0 6px;
+  color: var(--bf-text, #374151);
+  border: 1.5px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: color .18s ease, background .18s ease, border-color .18s ease,
+              box-shadow .18s ease, transform .18s cubic-bezier(.34,1.56,.64,1);
+}
+.pagination-page:hover:not(.is-current) {
+  color: var(--bf-accent, #0d9488);
+  background: var(--bf-accent-soft, #e6f6f4);
+  border-color: rgba(13, 148, 136, .22);
+  transform: translateY(-1px);
+}
+.pagination-page:active:not(.is-current) { transform: translateY(0); }
+.pagination-page.is-current {
+  color: #fff;
+  background: var(--bf-accent, #0d9488);
+  border-color: var(--bf-accent, #0d9488);
+  box-shadow: 0 4px 14px -4px rgba(13, 148, 136, .45);
+  cursor: default;
+  transform: scale(1.05);
+}
+.pagination-ellipsis {
+  display: inline-grid;
+  place-items: center;
+  min-width: 32px;
+  min-height: 40px;
+  color: var(--bf-faint, #9ca3af);
+  font-size: 14px;
+  letter-spacing: .06em;
+  user-select: none;
+}
+
+/* Dark mode pagination */
+[data-theme="dark"] .pagination-step {
+  background: var(--bf-card, #161d1b);
+  border-color: #2a3532;
+  color: #c3cdc9;
+  box-shadow: 0 1px 3px rgba(0,0,0,.2);
+}
+[data-theme="dark"] .pagination-step:hover:not(:disabled) {
+  color: #2dd4bf;
+  border-color: #2dd4bf;
+  background: rgba(45, 212, 191, .1);
+}
+[data-theme="dark"] .pagination-page {
+  color: #c3cdc9;
+}
+[data-theme="dark"] .pagination-page:hover:not(.is-current) {
+  color: #2dd4bf;
+  background: rgba(45, 212, 191, .1);
+  border-color: rgba(45, 212, 191, .25);
+}
+[data-theme="dark"] .pagination-page.is-current {
+  background: #0f766e;
+  border-color: #0f766e;
+  color: #fff;
+  box-shadow: 0 4px 14px -4px rgba(15, 118, 110, .5);
+}
+[data-theme="dark"] .pagination-ellipsis { color: #6d7c76; }
+
+/* Admin area pagination override — compact */
+.pagination-admin {
+  padding: 16px 0 4px;
+}
+.pagination-admin .pagination-step { min-height: 36px; padding: 0 12px; font-size: 12px; }
+.pagination-admin .pagination-page { min-width: 36px; min-height: 36px; font-size: 12px; }
+
+/* Mobile: compact icon-only Prev/Next */
+@media (max-width: 480px) {
+  .pagination-step-label { display: none; }
+  .pagination-step { padding: 0 12px; min-width: 44px; }
+  .pagination-page { min-width: 44px; min-height: 44px; border-radius: 50%; }
+  .pagination-ellipsis { min-width: 24px; }
+}
+
+/* ================================================================
+   SECTION 4: MOBILE RESPONSIVENESS — PRO LEVEL
+   ================================================================ */
+
+/* Ensure story modal is always above everything on mobile */
+.client-modal-backdrop {
+  z-index: 200 !important;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* Story reader: proper sizing on small screens */
+@media (max-width: 600px) {
+  .story-reader {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: 95dvh !important;
+    border-radius: 20px 20px 0 0 !important;
+  }
+  .client-modal-backdrop {
+    align-items: flex-end !important;
+    padding: 0 !important;
+  }
+  .reader-content {
+    padding: 20px 18px 28px !important;
+  }
+  .reader-close {
+    top: 12px;
+    right: 12px;
+  }
+}
+
+/* Login card — extra small screens */
+@media (max-width: 374px) {
+  .login-card {
+    width: calc(100% - 16px) !important;
+    padding: 20px 16px 22px !important;
+    border-radius: 16px !important;
+  }
+  .login-brand { margin: 28px 0 24px !important; }
+}
+
+/* Admin sidebar: smooth mobile slide */
+@media (max-width: 760px) {
+  .admin-sidebar {
+    transition: transform .28s cubic-bezier(.22,.61,.36,1), width .28s ease !important;
+  }
+  .admin-shell.sidebar-closed .admin-sidebar {
+    transform: translateX(-105%) !important;
+  }
+  .admin-shell.sidebar-open .admin-sidebar {
+    transform: translateX(0) !important;
+  }
+}
+
+/* Touch: larger tap targets on the story cards */
+@media (pointer: coarse) {
+  .story-card, .story-button, .bf-post-card button {
+    min-height: 44px;
+  }
+  .bf-post-media { min-height: 44px; }
+  .bf-popular-item { min-height: 52px; }
+  .card-read, .card-action { min-height: 44px; display: inline-flex; align-items: center; }
+}
+
+/* Category tabs: smooth scroll with snap on touch */
+@media (pointer: coarse) {
+  .category-tabs {
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 8px;
+  }
+  .category-tab {
+    scroll-snap-align: start;
+    flex-shrink: 0;
+  }
+}
+
+/* Footer newsletter: stack cleanly on small phones */
+@media (max-width: 479px) {
+  .newsletter-form > div {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .newsletter-form .button {
+    width: 100%;
+    justify-content: center;
+  }
+  .newsletter-form {
+    min-width: 0;
+    width: 100%;
+  }
+}
+
+/* Admin heading action buttons: stack on mobile */
+@media (max-width: 600px) {
+  .admin-heading {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+  .admin-heading .admin-primary { width: 100%; justify-content: center; }
+}
+
+/* Table overflow: show scrollbar hint on touch */
+@media (pointer: coarse) {
+  .posts-table::after {
+    content: '';
+    position: absolute;
+    top: 0; right: 0; bottom: 0;
+    width: 28px;
+    background: linear-gradient(to right, transparent, rgba(248, 250, 252, .85));
+    pointer-events: none;
+  }
+  [data-theme="dark"] .posts-table::after {
+    background: linear-gradient(to right, transparent, rgba(32, 33, 36, .85));
+  }
+}
+
+/* Metric grid: 2-col is tighter on small screens */
+@media (max-width: 480px) {
+  .metrics-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .metric-card {
+    min-height: 108px;
+    padding: 14px 12px;
+  }
+  .metric-card strong { font-size: 24px; }
+}
+
+/* Admin tabs: horizontal scroll without scrollbar on touch */
+@media (max-width: 600px) {
+  .admin-tabs {
+    gap: 0;
+    border-bottom: 1px solid var(--bf-line, #e5e7eb);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .admin-tabs::-webkit-scrollbar { display: none; }
+  .admin-tab {
+    flex-shrink: 0;
+    padding: 10px 14px;
+    font-size: 13px;
+  }
+}
+
+/* ================================================================
+   SECTION 5: REVIEW SECTION — FULL OVERHAUL
+   ================================================================ */
+
+/* Make the review form visible and attractive in both themes */
+.review-field {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+.review-field label {
+  color: var(--bf-text, #374151);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+.review-field input,
+.review-field textarea {
+  width: 100%;
+  padding: 11px 14px;
+  color: var(--bf-ink, #101613);
+  border: 1.5px solid var(--bf-line, #e5e7eb);
+  border-radius: 10px;
+  background: #fff;
+  font-family: inherit;
+  font-size: 13px;
+  transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
+  outline: none;
+}
+.review-field input:focus,
+.review-field textarea:focus {
+  border-color: var(--bf-accent, #0d9488);
+  box-shadow: 0 0 0 3px rgba(13, 148, 136, .16);
+  background: #fafffe;
+}
+.review-field textarea {
+  min-height: 90px;
+  resize: vertical;
+}
+.review-success {
+  color: var(--bf-accent-dark, #0f766e);
+  font-size: 12px;
+  font-weight: 600;
+  animation: rise-in-fast .3s ease both;
+}
+.review-error {
+  color: #dc2626;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Star picker: bigger, more tappable */
+.bf-star-picker {
+  display: flex;
+  gap: 4px;
+  margin: 4px 0;
+}
+.bf-star-picker button {
+  min-width: 36px;
+  min-height: 36px;
+  font-size: 22px;
+  line-height: 1;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--bf-line, #e5e7eb);
+  transition: color .15s ease, transform .15s cubic-bezier(.34,1.56,.64,1);
+  padding: 2px;
+}
+.bf-star-picker button:hover,
+.bf-star-picker button.is-on { color: #f59e0b; transform: scale(1.18); }
+
+/* Review edit form in admin */
+.review-edit-form {
+  display: grid;
+  gap: 12px;
+}
+.review-edit-form label {
+  display: grid;
+  gap: 5px;
+  color: var(--bf-text);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+.review-edit-form input,
+.review-edit-form select,
+.review-edit-form textarea {
+  padding: 9px 12px;
+  border: 1.5px solid var(--bf-line);
+  border-radius: 8px;
+  background: var(--bf-card);
+  color: var(--bf-ink);
+  font-family: inherit;
+  font-size: 13px;
+  transition: border-color .2s ease, box-shadow .2s ease;
+  outline: none;
+}
+.review-edit-form input:focus,
+.review-edit-form select:focus,
+.review-edit-form textarea:focus {
+  border-color: var(--bf-accent);
+  box-shadow: 0 0 0 3px var(--bf-accent-ring);
+}
+[data-theme="dark"] .review-edit-form input,
+[data-theme="dark"] .review-edit-form select,
+[data-theme="dark"] .review-edit-form textarea {
+  background: #121816;
+  border-color: #2a3532;
+  color: #f3f6f5;
+}
+
+/* ================================================================
+   SECTION 6: MISCELLANEOUS POLISH
+   ================================================================ */
+
+/* Smooth scroll */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Better focus rings globally */
+:focus-visible {
+  outline: 2px solid var(--bf-accent, #0d9488);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Button disabled: better visual */
+button:disabled {
+  cursor: not-allowed;
+  opacity: .45;
+  filter: grayscale(.3);
+}
+
+/* Soft-pulse for chat live dot */
+.chat-live-dot { animation: soft-pulse 2s ease-in-out infinite; }
+
+/* Back-to-top button spring */
+.bf-back-top {
+  transition: background .22s ease, transform .22s cubic-bezier(.34,1.56,.64,1), box-shadow .22s ease !important;
+}
+.bf-back-top:hover { transform: translateY(-4px) !important; }
+
+/* Smoother image loading */
+img {
+  transition: opacity .3s ease;
+}
+img[loading="lazy"] {
+  opacity: 0;
+}
+img[loading="lazy"].loaded,
+img:not([loading]) {
+  opacity: 1;
+}
+
+/* Reading progress indicator */
+.reading-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--bf-accent), #2dd4bf);
+  z-index: 9999;
+  transform-origin: left center;
+  transition: transform .1s linear;
+}
+
+/* Admin content max-width refinement */
+@media (min-width: 1600px) {
+  .admin-content { max-width: 1400px; }
+}
+
+/* ================================================================
+   SECTION 7: REDUCED MOTION OVERRIDES
+   ================================================================ */
+@media (prefers-reduced-motion: reduce) {
+  .page-transition,
+  .story-reader,
+  .metric-card,
+  .reveal-item,
+  .loader-dots span,
+  .bf-skeleton::after,
+  .chat-live-dot {
+    animation: none !important;
+    transition: none !important;
+  }
+  .reveal-item { opacity: 1 !important; transform: none !important; }
+  .metric-card { animation: none !important; }
+}

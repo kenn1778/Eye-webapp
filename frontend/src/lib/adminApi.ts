@@ -429,13 +429,23 @@ export async function submitPublicReview(review: { name: string; rating: number;
 }
 
 const VISITOR_ID_KEY = "eye:visitor-id";
+// SESSION_KEY gives each browser tab its own ephemeral ID so multiple tabs
+// on the same post each count as a separate view. localStorage still
+// deduplicates returning visitors across sessions.
+const SESSION_KEY = "eye:visitor-id-session";
 
 export function getVisitorId(): string {
   try {
-    const existing = window.localStorage.getItem(VISITOR_ID_KEY);
-    if (existing && /^[0-9a-f-]{36}$/i.test(existing)) return existing;
+    // Reuse existing per-tab ID if already set for this tab
+    const session = window.sessionStorage.getItem(SESSION_KEY);
+    if (session && /^[0-9a-f-]{36}$/i.test(session)) return session;
+    // Generate a fresh UUID unique to this tab
     const id = crypto.randomUUID();
-    window.localStorage.setItem(VISITOR_ID_KEY, id);
+    window.sessionStorage.setItem(SESSION_KEY, id);
+    // Persist base visitor ID for first-ever visit continuity
+    if (!window.localStorage.getItem(VISITOR_ID_KEY)) {
+      window.localStorage.setItem(VISITOR_ID_KEY, id);
+    }
     return id;
   } catch {
     return crypto.randomUUID();
@@ -580,6 +590,50 @@ export async function updateAdminReview(id: string, data: Partial<{ name: string
   } catch (error) {
     logError("admin", "updateAdminReview failed", error);
     return { ok: false };
+  }
+}
+
+// Subscribers management
+export type AdminSubscriber = {
+  id: string;
+  email: string;
+  confirmed: boolean;
+  subscribedAt: string;
+};
+
+function isAdminSubscriber(value: unknown): value is AdminSubscriber {
+  return (
+    isRecord(value) &&
+    typeof value.id === "string" &&
+    typeof value.email === "string" &&
+    typeof value.confirmed === "boolean" &&
+    typeof value.subscribedAt === "string"
+  );
+}
+
+export async function fetchAdminSubscribers(
+  limit = 20,
+  offset = 0,
+): Promise<{ items: AdminSubscriber[]; total: number } | null> {
+  const params = new URLSearchParams({ limit: String(limit), offset: String(offset) });
+  const payload = await getJson(`/api/v1/admin/subscribers?${params}`);
+  if (!isRecord(payload) || !Array.isArray(payload.items) || !isFiniteNumber(payload.total)) return null;
+  return {
+    items: payload.items.filter(isAdminSubscriber),
+    total: payload.total,
+  };
+}
+
+export async function deleteAdminSubscriber(id: string): Promise<boolean> {
+  try {
+    const response = await fetch(`${API_BASE}/api/v1/admin/subscribers/${encodeURIComponent(id)}`, {
+      method: "DELETE",
+      credentials: "include",
+    });
+    return response.ok;
+  } catch (error) {
+    logError("admin", "deleteAdminSubscriber failed", error);
+    return false;
   }
 }
 

@@ -4,7 +4,12 @@ import { config } from "../config.js";
 
 // Prisma 7 requires a driver adapter for every database. The generated client
 // is CommonJS, but this module is ESM to match the rest of the backend.
-const adapter = new PrismaPg({ connectionString: config.databaseUrl });
+const adapter = new PrismaPg({
+  connectionString: config.databaseUrl,
+  max: 10,
+  idleTimeoutMillis: 10000,
+  connectionTimeoutMillis: 10000,
+});
 
 // Single shared client - Prisma manages its own connection pool, so creating
 // more than one instance per process just wastes connections.

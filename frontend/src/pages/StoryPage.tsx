@@ -34,10 +34,27 @@ export default function StoryPage() {
   const [story, setStory] = useState<Story | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [readingProgress, setReadingProgress] = useState(0);
   // One ping per page visit; the backend also dedupes per visitor id.
   const pingedRef = useRef(false);
   // Lets the ping response be ignored if the page has navigated away already.
   const cancelledRef = useRef(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const totalHeight = document.documentElement.scrollHeight - window.innerHeight;
+      if (totalHeight <= 0) {
+        setReadingProgress(0);
+        return;
+      }
+      const progress = Math.min(1, Math.max(0, window.scrollY / totalHeight));
+      setReadingProgress(progress);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [story]);
 
   useEffect(() => {
     let cancelled = false;
@@ -156,6 +173,11 @@ export default function StoryPage() {
 
   return (
     <main className="bf-story-page page-fade">
+      <div
+        className="reading-progress"
+        style={{ transform: `scaleX(${readingProgress})` }}
+        aria-hidden="true"
+      />
       <header className="bf-story-hero">
         <div className="bf-story-hero-inner">
           <Link to="/" className="bf-story-back">&larr; Back to stories</Link>

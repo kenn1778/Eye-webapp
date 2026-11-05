@@ -1,32 +1,23 @@
 import { useCallback, useEffect, useState } from "react";
 import { Pagination } from "../../components/Pagination";
+import {
+  fetchAdminSubscribers,
+  deleteAdminSubscriber,
+  type AdminSubscriber,
+} from "../../lib/adminApi";
 
 const PAGE_SIZE = 20;
 
-type Subscriber = {
-  id: string;
-  email: string;
-  confirmed: boolean;
-  subscribedAt: string;
-};
-
-async function fetchSubscribers(limit: number, offset: number): Promise<{ items: Subscriber[]; total: number } | null> {
-  const API_BASE = import.meta.env.VITE_PUBLIC_API_URL ?? "";
-  const params = new URLSearchParams({ limit: String(limit), offset: String(offset) });
-  const res = await fetch(`${API_BASE}/api/v1/admin/subscribers?${params}`, { credentials: "include" });
-  if (!res.ok) return null;
-  return res.json();
-}
-
 export function AdminSubscribers() {
-  const [items, setItems] = useState<{ items: Subscriber[]; total: number } | null>(null);
+  const [items, setItems] = useState<{ items: AdminSubscriber[]; total: number } | null>(null);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
-    const result = await fetchSubscribers(PAGE_SIZE, (page - 1) * PAGE_SIZE);
+    const result = await fetchAdminSubscribers(PAGE_SIZE, (page - 1) * PAGE_SIZE);
     if (result) {
       setItems(result);
       setError("");
@@ -37,6 +28,18 @@ export function AdminSubscribers() {
   }, [page]);
 
   useEffect(() => { void load(); }, [load]);
+
+  const handleDelete = async (subscriber: AdminSubscriber) => {
+    if (!window.confirm(`Are you sure you want to remove ${subscriber.email} from subscribers?`)) return;
+    setDeletingId(subscriber.id);
+    const success = await deleteAdminSubscriber(subscriber.id);
+    if (success) {
+      await load();
+    } else {
+      setError("Failed to delete subscriber. Please try again.");
+    }
+    setDeletingId(null);
+  };
 
   const total = items?.total ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
@@ -68,14 +71,29 @@ export function AdminSubscribers() {
                     <th>Email</th>
                     <th>Confirmed</th>
                     <th>Subscribed</th>
+                    <th style={{ width: 100, textAlign: "right" }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {items!.items.map(s => (
                     <tr key={s.id}>
-                      <td>{s.email}</td>
-                      <td>{s.confirmed ? "Yes" : "Pending"}</td>
-                      <td>{new Date(s.subscribedAt).toLocaleString()}</td>
+                      <td><strong>{s.email}</strong></td>
+                      <td>
+                        <span className={s.confirmed ? "audit-result success" : "audit-result failure"}>
+                          {s.confirmed ? "Confirmed" : "Pending"}
+                        </span>
+                      </td>
+                      <td className="muted-cell">{new Date(s.subscribedAt).toLocaleString()}</td>
+                      <td style={{ textAlign: "right" }}>
+                        <button
+                          className="button-danger"
+                          type="button"
+                          onClick={() => void handleDelete(s)}
+                          disabled={deletingId === s.id}
+                        >
+                          {deletingId === s.id ? "Removing..." : "Remove"}
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -87,6 +105,7 @@ export function AdminSubscribers() {
               onPageChange={(next) => { setPage(next); document.querySelector(".admin-content")?.scrollTo({ top: 0, behavior: "smooth" }); }}
               label="Subscribers pagination"
               className="pagination-admin"
+              showFirstLast
             />
           </>
         )}

@@ -33,8 +33,8 @@ export function AdminLogin({ onLogin, onBack }: AdminLoginProps) {
       setError("Too many attempts. Try again in a minute.");
       return;
     }
-    if (!email.trim() || password.length < 4) {
-      setError("Enter a valid email and a password with at least 4 characters.");
+    if (!email.trim() || password.length < 8) {
+      setError("Enter a valid email and a password of at least 8 characters.");
       return;
     }
     setPending(true);

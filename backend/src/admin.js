@@ -1,4 +1,4 @@
-﻿import { Router } from "express";
+import { Router } from "express";
 import jwt from "jsonwebtoken";
 import rateLimit from "express-rate-limit";
 import { z } from "zod";
@@ -869,6 +869,17 @@ adminRouter.get(
       prisma.newsletterSubscriber.count(),
     ]);
     res.json({ items, total });
+  }),
+);
+
+adminRouter.delete(
+  "/subscribers/:id",
+  asyncHandler(async (req, res) => {
+    const parsedId = idSchema.safeParse(req.params.id);
+    if (!parsedId.success) return res.status(400).json({ message: "Invalid id." });
+    const result = await prisma.newsletterSubscriber.deleteMany({ where: { id: parsedId.data } });
+    if (!result.count) return res.status(404).json({ message: "Subscriber not found." });
+    res.json({ ok: true });
   }),
 );
 

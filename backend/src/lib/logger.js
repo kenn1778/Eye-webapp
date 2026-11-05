@@ -29,3 +29,7 @@ export const logger = pino({
   base: { service: "eye-api" },
   transport: buildTransport(),
 });
+
+export function createRequestLogger(requestId) {
+  return logger.child({ requestId });
+}
