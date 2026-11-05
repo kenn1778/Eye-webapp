@@ -681,6 +681,8 @@ button:disabled { cursor: progress; }
 [data-theme="dark"] .bf-published-notice .status-live { background: var(--bf-card); }
 [data-theme="dark"] .bf-form-error { background: rgba(239, 68, 68, .12); color: #fca5a5; }
 [data-theme="dark"] .bf-star-picker button { color: var(--bf-line); }
+[data-theme="dark"] .bf-star-picker button.is-on { color: #fbbf24; }
+[data-theme="dark"] .bf-quote-stars { color: #fbbf24; }
 [data-theme="dark"] .bf-insta-grid img,
 [data-theme="dark"] .bf-post-media img,
 [data-theme="dark"] .bf-hero-media img,

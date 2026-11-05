@@ -11,6 +11,7 @@ import { config } from "./config.js";
 import bcrypt from "bcryptjs";
 import { refreshSessionCookie } from "./auth.js";
 import { emailService } from "./lib/email.js";
+import { notifySubscribersAboutPost } from "./lib/notifications.js";
 
 // Every route below is admin-only. requireAuth runs first, then a generous
 // per-minute cap so a runaway dashboard tab cannot hammer the database.
@@ -442,6 +443,9 @@ adminRouter.post(
     const post = await prisma.post.create({
       data: { ...fields, status, publishedAt: status === "published" ? new Date() : null },
     });
+    if (post.status === "published") {
+      void notifySubscribersAboutPost(post).catch(() => {});
+    }
     res.status(201).json(post);
   }),
 );
@@ -457,6 +461,7 @@ adminRouter.patch(
     const existing = await prisma.post.findFirst({ where: { id: parsedId.data, deletedAt: null } });
     if (!existing) return res.status(404).json({ message: "Post not found." });
     const data = { ...parsedBody.data };
+    const wasPublished = existing.status === "published";
     if (data.status === "published" && !existing.publishedAt) data.publishedAt = new Date();
     const assetIds = [data.mediaAssetId, data.linkHeaderAssetId, data.audioAssetId, data.videoAssetId].filter(Boolean);
     if (assetIds.length) {
@@ -464,6 +469,9 @@ adminRouter.patch(
       if (readyAssets !== new Set(assetIds).size) return res.status(400).json({ message: "One or more selected media assets are not available." });
     }
     const post = await prisma.post.update({ where: { id: parsedId.data }, data });
+    if (post.status === "published" && !wasPublished) {
+      void notifySubscribersAboutPost(post).catch(() => {});
+    }
     res.json(post);
   }),
 );
@@ -814,6 +822,53 @@ adminRouter.delete(
     const result = await prisma.review.deleteMany({ where: { id: parsedId.data } });
     if (!result.count) return res.status(404).json({ message: "Review not found." });
     res.json({ ok: true });
+  }),
+);
+
+const reviewUpdateSchema = z.object({
+  name: z.string().trim().min(1).max(100).optional(),
+  rating: z.number().int().min(1).max(5).optional(),
+  comment: z.string().trim().min(0).max(2000).optional().nullable(),
+  published: z.boolean().optional(),
+});
+
+adminRouter.patch(
+  "/reviews/:id",
+  asyncHandler(async (req, res) => {
+    const parsedId = idSchema.safeParse(req.params.id);
+    if (!parsedId.success) return res.status(400).json({ message: "Invalid id." });
+    const parsedBody = reviewUpdateSchema.safeParse(req.body);
+    if (!parsedBody.success) return res.status(400).json({ message: "Invalid payload." });
+    const updated = await prisma.review.update({
+      where: { id: parsedId.data },
+      data: parsedBody.data,
+      select: { id: true, name: true, rating: true, comment: true, published: true, createdAt: true },
+    });
+    res.json({ ok: true, review: updated });
+  }),
+);
+
+const subscriberQuerySchema = z.object({
+  limit: z.coerce.number().int().min(1).max(200).default(50),
+  offset: z.coerce.number().int().min(0).default(0),
+});
+
+adminRouter.get(
+  "/subscribers",
+  asyncHandler(async (req, res) => {
+    const parsed = subscriberQuerySchema.safeParse(req.query);
+    if (!parsed.success) return res.status(400).json({ message: "Invalid query." });
+    const { limit, offset } = parsed.data;
+    const [items, total] = await Promise.all([
+      prisma.newsletterSubscriber.findMany({
+        orderBy: { subscribedAt: "desc" },
+        take: limit,
+        skip: offset,
+        select: { id: true, email: true, confirmed: true, subscribedAt: true },
+      }),
+      prisma.newsletterSubscriber.count(),
+    ]);
+    res.json({ items, total });
   }),
 );
 

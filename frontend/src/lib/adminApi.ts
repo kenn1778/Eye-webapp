@@ -549,6 +549,23 @@ export async function deleteAdminReview(id: string): Promise<boolean> {
   }
 }
 
+export async function updateAdminReview(id: string, data: Partial<{ name: string; rating: number; comment: string | null; published: boolean }>): Promise<{ ok: boolean; review?: AdminReview }> {
+  try {
+    const response = await fetch(`${API_BASE}/api/v1/admin/reviews/${encodeURIComponent(id)}`, {
+      method: "PATCH",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) return { ok: false };
+    const payload = await response.json() as { review?: AdminReview };
+    return { ok: true, review: payload.review };
+  } catch (error) {
+    logError("admin", "updateAdminReview failed", error);
+    return { ok: false };
+  }
+}
+
 export type AuditLogEntry = {
   id: string;
   actorEmail: string;

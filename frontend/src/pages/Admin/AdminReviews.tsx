@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { deleteAdminReview, fetchAdminReviews } from "../../lib/adminApi";
+import { deleteAdminReview, fetchAdminReviews, updateAdminReview, type AdminReview } from "../../lib/adminApi";
 import { Pagination } from "../../components/Pagination";
 
 const PAGE_SIZE = 10;
@@ -15,6 +15,8 @@ export function AdminReviews() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [openId, setOpenId] = useState<string | null>(null);
+  const [editing, setEditing] = useState<Partial<AdminReview> & { id: string } | null>(null);
+  const [saving, setSaving] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -45,6 +47,28 @@ export function AdminReviews() {
       setError("Could not delete this review. Try again.");
       return;
     }
+    await load();
+  };
+
+  const startEdit = (review: AdminReview) => {
+    setEditing({ id: review.id, name: review.name, rating: review.rating, comment: review.comment, published: review.published });
+  };
+
+  const saveEdit = async () => {
+    if (!editing) return;
+    setSaving(true);
+    const res = await updateAdminReview(editing.id, {
+      name: editing.name,
+      rating: editing.rating,
+      comment: editing.comment,
+      published: editing.published,
+    });
+    setSaving(false);
+    if (!res.ok) {
+      setError("Could not save changes. Try again.");
+      return;
+    }
+    setEditing(null);
     await load();
   };
 
@@ -96,16 +120,49 @@ export function AdminReviews() {
                 </button>
                 {openId === review.id && (
                   <div className="message-body">
-                    <p>{review.comment || "(no comment)"}</p>
-                    <div className="message-actions">
-                      <button
-                        className="button-secondary danger"
-                        type="button"
-                        onClick={() => void remove(review)}
+                    {editing && editing.id === review.id ? (
+                      <form
+                        className="review-edit-form"
+                        onSubmit={(e) => { e.preventDefault(); void saveEdit(); }}
                       >
-                        Delete review
-                      </button>
-                    </div>
+                        <label>
+                          Name
+                          <input value={editing.name ?? ""} onChange={(e) => setEditing({...editing, name: e.target.value})} />
+                        </label>
+                        <label>
+                          Rating
+                          <select value={editing.rating ?? 5} onChange={(e) => setEditing({...editing, rating: Number(e.target.value)})}>
+                            {[1,2,3,4,5].map(n => <option key={n} value={n}>{n} ★</option>)}
+                          </select>
+                        </label>
+                        <label>
+                          Comment
+                          <textarea value={editing.comment ?? ""} onChange={(e) => setEditing({...editing, comment: e.target.value})} />
+                        </label>
+                        <label>
+                          Published
+                          <input type="checkbox" checked={editing.published ?? true} onChange={(e) => setEditing({...editing, published: e.target.checked})} />
+                        </label>
+                        <div className="message-actions">
+                          <button className="button-secondary" type="submit" disabled={saving}>{saving ? "Saving..." : "Save"}</button>
+                          <button className="button-secondary" type="button" onClick={() => setEditing(null)}>Cancel</button>
+                        </div>
+                      </form>
+                    ) : (
+                      <>
+                        <p>{review.comment || "(no comment)"}</p>
+                        <div className="message-actions">
+                          <button className="button-secondary" type="button" onClick={() => startEdit(review)}>Edit review</button>
+                          <button
+                            className="button-secondary danger"
+                            type="button"
+                            onClick={() => void remove(review)}
+                          >
+                            Delete review
+                          </button>
+                        </div>
+                      </>
+                    )}
                   </div>
                 )}
               </article>

@@ -66,6 +66,10 @@ export function PublicTrio({
             <figcaption>
               <span className="bf-quote-avatar" aria-hidden="true">{initials(activeTestimonial.name)}</span>
               <span>&mdash; {activeTestimonial.name}</span>
+              <span className="bf-quote-stars" aria-label={`${activeTestimonial.rating} out of 5 stars`}>
+                {"★".repeat(Math.min(5, Math.max(1, activeTestimonial.rating)))}
+                {"☆".repeat(5 - Math.min(5, Math.max(1, activeTestimonial.rating)))}
+              </span>
             </figcaption>
           </figure>
         )}
