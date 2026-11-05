@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams, Link, Navigate } from "react-router-dom";
 import type { Story } from "../types";
-import { pingPostView } from "../lib/adminApi";
+import { pingPostView, fetchPostViewCount } from "../lib/adminApi";
 
 const API_BASE = (import.meta.env.VITE_API_BASE_URL ?? "").replace(/\/$/, "");
 
@@ -67,6 +67,7 @@ export default function StoryPage() {
     return () => { cancelledRef.current = true; };
   }, [id]);
 
+  // Ping once on load to count this visitor's read and show the fresh total.
   useEffect(() => {
     if (!story || !story.id || pingedRef.current) return;
     pingedRef.current = true;
@@ -77,6 +78,34 @@ export default function StoryPage() {
         setStory((current) => (current && current.id === story.id ? { ...current, views: result.views } : current));
       }
     });
+  }, [story]);
+
+  // Poll the live view count so the number stays current while a reader is on
+  // the page (other readers' views are reflected without incrementing ours).
+  const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  useEffect(() => {
+    if (!story || !story.id) return;
+    const postId = story.id;
+    let cancelled = false;
+    let tick = 0;
+    const poll = async () => {
+      if (cancelled) return;
+      const views = await fetchPostViewCount(postId);
+      if (!cancelled && typeof views === "number") {
+        setStory((current) => (current && current.id === postId ? { ...current, views } : current));
+      }
+    };
+    poll(); // immediate first read
+    pollIntervalRef.current = setInterval(() => {
+      tick += 1;
+      // Refresh every 15 seconds (skip the immediate tick on mount).
+      if (tick % 15 === 0) poll();
+    }, 1000);
+    return () => {
+      cancelled = true;
+      if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+      pollIntervalRef.current = null;
+    };
   }, [story]);
 
   useEffect(() => {

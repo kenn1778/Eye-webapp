@@ -242,6 +242,18 @@ publicRouter.get("/posts/:id", asyncHandler(async (req, res) => {
   });
 }));
 
+// Lightweight read-only view count so the frontend can poll for live updates
+// without incrementing the counter on every refresh.
+publicRouter.get("/posts/:id/view-count", asyncHandler(async (req, res) => {
+  const post = await prisma.post.findUnique({
+    where: { id: req.params.id, status: "published", deletedAt: null },
+    select: { id: true, viewCount: true },
+  });
+  if (!post) return res.status(404).json({ message: "Post not found" });
+  res.set("Cache-Control", "public, max-age=5, stale-while-revalidate=30");
+  res.json({ views: post.viewCount });
+}));
+
 publicRouter.get("/reviews", asyncHandler(async (_req, res) => {
   const items = await prisma.review.findMany({
     where: { published: true },

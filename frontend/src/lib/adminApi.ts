@@ -407,8 +407,25 @@ export async function fetchPublicReviews(): Promise<PublicReview[] | null> {
 }
 
 export async function submitPublicReview(review: { name: string; rating: number; comment: string }): Promise<PublicReview | null> {
-  const payload = await sendJson("/api/v1/public/reviews", "POST", review);
-  return isRecord(payload) && isPublicReview(payload.review) ? payload.review : null;
+  // Retry once on transient network failures so a momentary blip doesn't lose
+  // the reader's review. Hard validation errors (4xx) are not retried.
+  let lastError: unknown = null;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const payload = await sendJson("/api/v1/public/reviews", "POST", review);
+      if (isRecord(payload) && isPublicReview(payload.review)) return payload.review;
+      // Non-2xx or malformed success: don't retry, surface the failure below.
+      return null;
+    } catch (error) {
+      lastError = error;
+      if (attempt === 0) {
+        await new Promise((resolve) => setTimeout(resolve, 800));
+        continue;
+      }
+    }
+  }
+  logError("network", "submitPublicReview failed after retries", lastError);
+  return null;
 }
 
 const VISITOR_ID_KEY = "eye:visitor-id";
@@ -676,6 +693,21 @@ export async function pingPostView(id: string): Promise<{ counted: boolean; view
       : null;
   } catch (error) {
     logError("network", "Could not ping post view", error);
+    return null;
+  }
+}
+
+// Read-only poll for the live view count (does not increment the counter).
+export async function fetchPostViewCount(id: string): Promise<number | null> {
+  try {
+    const response = await fetch(`${API_BASE}/api/v1/public/posts/${encodeURIComponent(id)}/view-count`, {
+      credentials: "include",
+    });
+    if (!response.ok) return null;
+    const payload: unknown = await response.json();
+    return isRecord(payload) && isFiniteNumber(payload.views) ? payload.views : null;
+  } catch (error) {
+    logError("network", "Could not fetch post view count", error);
     return null;
   }
 }
