@@ -605,17 +605,24 @@ export async function fetchTrendingPosts(limit = 5): Promise<PostRecord[] | null
 }
 
 // Fire-and-forget read ping. The backend dedupes per visitor, so this can be
-// called on every story page load without inflating the counters.
-export async function pingPostView(id: string): Promise<void> {
+// called on every story page load without inflating the counters. The
+// response carries the fresh total so callers can update the UI immediately.
+export async function pingPostView(id: string): Promise<{ counted: boolean; views: number } | null> {
   try {
-    await fetch(`${API_BASE}/api/v1/public/posts/${encodeURIComponent(id)}/view`, {
+    const response = await fetch(`${API_BASE}/api/v1/public/posts/${encodeURIComponent(id)}/view`, {
       method: "POST",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ visitorId: getVisitorId() }),
     });
+    if (!response.ok) return null;
+    const payload: unknown = await response.json();
+    return isRecord(payload) && typeof payload.counted === "boolean" && isFiniteNumber(payload.views)
+      ? { counted: payload.counted, views: payload.views }
+      : null;
   } catch (error) {
     logError("network", "Could not ping post view", error);
+    return null;
   }
 }
 

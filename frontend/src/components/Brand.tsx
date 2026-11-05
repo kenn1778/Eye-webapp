@@ -1,20 +1,17 @@
 /**
- * The app logo. The animated mark is shared by the admin workspace, the legal
- * pages, and pricing; CSS keeps it round in every context (.brand-gif).
+ * The app logo: the Xplore badge (X-and-arrow mark in a ring). CSS flips it
+ * to white on dark surfaces (.brand-gif contexts keep it round everywhere).
  */
 export function Brand() {
   return (
-    <picture>
-      <source srcSet="/exploor-logo.webp" type="image/webp" />
-      <img
-        className="brand brand-gif"
-        src="/exploor-logo.gif"
-        alt="Xplore"
-        width={40}
-        height={40}
-        decoding="async"
-        fetchPriority="high"
-      />
-    </picture>
+    <img
+      className="brand brand-gif"
+      src="/xplore-badge.png"
+      alt="Xplore"
+      width={40}
+      height={40}
+      decoding="async"
+      fetchPriority="high"
+    />
   );
 }

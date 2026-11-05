@@ -36,6 +36,8 @@ export default function StoryPage() {
   const [notFound, setNotFound] = useState(false);
   // One ping per page visit; the backend also dedupes per visitor id.
   const pingedRef = useRef(false);
+  // Lets the ping response be ignored if the page has navigated away already.
+  const cancelledRef = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -61,9 +63,20 @@ export default function StoryPage() {
   }, [id]);
 
   useEffect(() => {
+    cancelledRef.current = false;
+    return () => { cancelledRef.current = true; };
+  }, [id]);
+
+  useEffect(() => {
     if (!story || !story.id || pingedRef.current) return;
     pingedRef.current = true;
-    void pingPostView(story.id);
+    void pingPostView(story.id).then((result) => {
+      // Show the visitor's own read in the counter right away instead of
+      // waiting for the next page load to pick it up.
+      if (!cancelledRef.current && result) {
+        setStory((current) => (current && current.id === story.id ? { ...current, views: result.views } : current));
+      }
+    });
   }, [story]);
 
   useEffect(() => {

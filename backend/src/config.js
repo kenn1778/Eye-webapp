@@ -40,7 +40,15 @@ export const config = {
     return origins.length > 0 ? origins : ["http://localhost:5173", "http://127.0.0.1:5173"];
   })(),
   sessionTtlHours: toInt(process.env.SESSION_TTL_HOURS, 8),
-  trustProxy: toBool(process.env.TRUST_PROXY, false),
+  // Number of trusted proxy hops in front of the API. A numeric value is used
+  // as-is; "true" maps to 2 (CloudFront edge -> nginx -> node on Lightsail),
+  // which is what makes req.ip the real visitor IP for rate limiting.
+  trustProxyHops: (() => {
+    const raw = process.env.TRUST_PROXY ?? "";
+    const parsed = Number.parseInt(raw, 10);
+    if (Number.isFinite(parsed) && parsed >= 0) return parsed;
+    return toBool(raw, false) ? 2 : 0;
+  })(),
   cookieSecure: toBool(process.env.COOKIE_SECURE, isProduction),
   // Postgres connection string used by Prisma (see prisma.config.ts).
   databaseUrl: process.env.DATABASE_URL ?? "",

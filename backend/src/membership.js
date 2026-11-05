@@ -22,6 +22,17 @@ const checkoutLimiter = rateLimit({
   store: createRateLimitStore("rl:membership:"),
 });
 
+// Verify calls Paystack per request, so it gets its own cap instead of
+// sharing the checkout bucket.
+const verifyLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: "Too many verification attempts. Please try again later." },
+  store: createRateLimitStore("rl:verify:"),
+});
+
 const checkoutSchema = z.object({
   email: z.string().email().max(254),
   plan: z.string().max(60).optional(),
@@ -82,7 +93,7 @@ membershipRouter.post("/checkout", checkoutLimiter, async (req, res) => {
 });
 
 // GET /api/v1/membership/verify?reference=... - confirm a payment after redirect.
-membershipRouter.get("/verify", async (req, res) => {
+membershipRouter.get("/verify", verifyLimiter, async (req, res) => {
   if (!paymentsEnabled) {
     return res.status(503).json({ message: "Membership is not available yet." });
   }

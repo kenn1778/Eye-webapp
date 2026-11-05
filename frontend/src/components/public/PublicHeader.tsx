@@ -2,7 +2,10 @@ import type { Dispatch, RefObject, SetStateAction } from "react";
 import { Link } from "react-router-dom";
 import { ThemeToggle } from "../ThemeToggle";
 
-export type NavDropdownItems = Record<string, { label: string; action: () => void }[]>;
+export type NavDropdownItems = Record<
+  string,
+  { label: string; action: () => void }[]
+>;
 
 type PublicHeaderProps = {
   headerRef: RefObject<HTMLElement | null>;
@@ -22,7 +25,7 @@ type PublicHeaderProps = {
   scrollToContact: () => void;
   submitSearch: (value: string) => void;
 };
-
+//menu
 export function PublicHeader({
   headerRef,
   isShrunk,
@@ -48,21 +51,18 @@ export function PublicHeader({
     >
       <div className="bf-header-inner">
         <Link to="/" className="bf-brand" aria-label="Xplore home">
-          <picture>
-            <source srcSet="/exploor-logo.webp" type="image/webp" />
-            <img
-              className="bf-brand-logo"
-              src="/exploor-logo.gif"
-              alt=""
-              width={40}
-              height={40}
-              decoding="async"
-              fetchPriority="high"
-            />
-          </picture>
+          <img
+            className="bf-brand-logo"
+            src="/xplore-badge.png"
+            alt=""
+            width={40}
+            height={40}
+            decoding="async"
+            fetchPriority="high"
+          />
           <span className="bf-brand-text">
             <span className="bf-brand-name">Xplore</span>
-            <span className="bf-brand-tagline">Share ideas, Inspire Minds</span>
+            <span className="bf-brand-tagline">Home for opportunities</span>
           </span>
         </Link>
 
@@ -180,7 +180,7 @@ export function PublicHeader({
               <span />
               <span />
             </span>
-            <span className="bf-burger-label" aria-hidden="true">Menu</span>
+            <span className="bf-burger-label" aria-hidden="true"></span>
           </button>
         </div>
       </div>

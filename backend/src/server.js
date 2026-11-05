@@ -22,7 +22,7 @@ import { createRateLimitStore } from "./lib/rate-limit.js";
 const app = express();
 
 app.disable("x-powered-by");
-if (config.trustProxy) app.set("trust proxy", 1);
+if (config.trustProxyHops > 0) app.set("trust proxy", config.trustProxyHops);
 
 // Attach a request id to every response and log one line per request when it
 // finishes. Placed first so it also covers 404s and error responses.
@@ -128,6 +128,20 @@ app.get("/healthz", healthLimiter, async (_req, res) => {
     s3: s3Health,
   });
 });
+
+// Global backstop for every /api route - mounted before the routers so it
+// always runs. Each endpoint also has its own tighter limiter; this caps
+// abuse of anything unlisted or cache-busting query floods that would
+// otherwise reach the database on a cache miss.
+const apiLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 240,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: "Too many requests. Please slow down." },
+  store: createRateLimitStore("rl:api:"),
+});
+app.use("/api", apiLimiter);
 
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/newsletter", newsletterRouter);

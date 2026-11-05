@@ -18,10 +18,7 @@ export function PublicFooter({ authorEmail, featuredCategoryTiles, goToCategory,
       <div className="bf-footer-grid">
         <div className="bf-footer-brand">
           <Link to="/" className="bf-brand bf-brand-light" aria-label="Xplore home">
-            <picture>
-              <source srcSet="/exploor-logo.webp" type="image/webp" />
-              <img className="bf-brand-logo" src="/exploor-logo.webp" alt="" width={40} height={40} loading="lazy" decoding="async" />
-            </picture>
+            <img className="bf-brand-logo" src="/xplore-badge.png" alt="" width={40} height={40} loading="lazy" decoding="async" />
             <span className="bf-brand-text">
               <span className="bf-brand-name">Xplore</span>
             </span>

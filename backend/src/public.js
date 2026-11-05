@@ -228,6 +228,7 @@ publicRouter.get("/posts/:id", asyncHandler(async (req, res) => {
       videoUrl: true,
       publishedAt: true,
       createdAt: true,
+      viewCount: true,
     },
   });
   if (!post) return res.status(404).json({ message: "Post not found" });

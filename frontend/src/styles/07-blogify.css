@@ -1751,7 +1751,8 @@ body.cookie-gate-lock { overflow: hidden; }
 
 /* ---------- animated logo ---------- */
 
-/* The animated app logo is always rendered round, wherever it appears. */
+/* The Xplore badge is a round cutout with transparency, so it sits directly
+   on the surface - no tile background, no extra ring. */
 .bf-brand-logo,
 .brand-gif {
   display: block;
@@ -1759,11 +1760,8 @@ body.cookie-gate-lock { overflow: hidden; }
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  object-fit: cover;
-  background: var(--bf-card, #fff);
+  object-fit: contain;
 }
-
-.bf-footer .bf-brand-logo { box-shadow: 0 0 0 2px rgba(255, 255, 255, .14); }
 
 .login-brand .brand-gif { width: 56px; height: 56px; }
 .admin-brand .brand-gif { width: 34px; height: 34px; }
