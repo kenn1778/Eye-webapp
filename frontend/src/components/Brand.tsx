@@ -1,17 +1,9 @@
+import { XploreBadge } from "./XploreBadge";
+
 /**
- * The app logo: the Xplore badge (X-and-arrow mark in a ring). CSS flips it
- * to white on dark surfaces (.brand-gif contexts keep it round everywhere).
+ * The app logo: the Xplore badge (ring + X + gold arrow), drawn inline so its
+ * ink follows the surface colour automatically in light and dark mode.
  */
 export function Brand() {
-  return (
-    <img
-      className="brand brand-gif"
-      src="/xplore-badge.png"
-      alt="Xplore"
-      width={40}
-      height={40}
-      decoding="async"
-      fetchPriority="high"
-    />
-  );
+  return <XploreBadge className="brand brand-gif" size={40} label="Xplore" />;
 }

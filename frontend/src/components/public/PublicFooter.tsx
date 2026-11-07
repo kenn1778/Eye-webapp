@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { MEMBERSHIP_ENABLED } from "../../config";
 import { SocialIcon } from "./publicShared";
+import { XploreBadge } from "../XploreBadge";
 
 type PublicFooterProps = {
   authorEmail: string;
@@ -18,7 +19,7 @@ export function PublicFooter({ authorEmail, featuredCategoryTiles, goToCategory,
       <div className="bf-footer-grid">
         <div className="bf-footer-brand">
           <Link to="/" className="bf-brand bf-brand-light" aria-label="Xplore home">
-            <img className="bf-brand-logo" src="/xplore-badge.png" alt="" width={40} height={40} loading="lazy" decoding="async" />
+            <XploreBadge className="bf-brand-logo" />
             <span className="bf-brand-text">
               <span className="bf-brand-name">Xplore</span>
             </span>

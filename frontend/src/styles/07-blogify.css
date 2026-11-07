@@ -1766,6 +1766,15 @@ body.cookie-gate-lock { overflow: hidden; }
 
 /* ---------- animated logo ---------- */
 
+/* The badge is an inline SVG that strokes its ring and X with currentColor,
+   so pin the ink for the surfaces a badge can sit on: Blogify surfaces take
+   the theme ink, footers are always dark, and brand placements (login,
+   admin sidebar) sit on light surfaces. */
+.bf-brand-logo { color: var(--bf-ink, #16181d); }
+.bf-footer .bf-brand-logo { color: #f3f5ed; }
+.site-footer .brand-gif { color: #f3f5ed; }
+.admin-brand .brand-gif { color: #17181c; }
+
 /* The Xplore badge is a round cutout with transparency, so it sits directly
    on the surface - no tile background, no extra ring. */
 .bf-brand-logo,

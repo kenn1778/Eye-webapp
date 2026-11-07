@@ -1,6 +1,7 @@
 import type { Dispatch, RefObject, SetStateAction } from "react";
 import { Link } from "react-router-dom";
 import { ThemeToggle } from "../ThemeToggle";
+import { XploreBadge } from "../XploreBadge";
 
 export type NavDropdownItems = Record<
   string,
@@ -51,15 +52,7 @@ export function PublicHeader({
     >
       <div className="bf-header-inner">
         <Link to="/" className="bf-brand" aria-label="Xplore home">
-          <img
-            className="bf-brand-logo"
-            src="/xplore-badge.png"
-            alt=""
-            width={40}
-            height={40}
-            decoding="async"
-            fetchPriority="high"
-          />
+          <XploreBadge className="bf-brand-logo" />
           <span className="bf-brand-text">
             <span className="bf-brand-name">Xplore</span>
             <span className="bf-brand-tagline">Home for opportunities</span>

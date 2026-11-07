@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { XploreBadge } from "./XploreBadge";
 
 // Global transition overlay: the pulsing Xplore badge covers async moments such
 // as a fresh load, a newsletter signup, joining a community, or posting a
@@ -59,15 +60,7 @@ export function EyeTransition() {
     >
       <div className="eye-loader-card">
         <span className="brand-icon" aria-hidden="true">
-          <img
-            className="xplore-loader-badge"
-            src="/xplore-badge.png"
-            alt=""
-            width={84}
-            height={84}
-            decoding="async"
-            fetchPriority="high"
-          />
+          <XploreBadge className="xplore-loader-badge" size={84} />
         </span>
         <div className="eye-loader-text">
           <span className="eyebrow">Xplore</span>

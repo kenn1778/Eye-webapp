@@ -41,15 +41,10 @@
 
 .loader-dots span { background: var(--bf-accent); }
 
-/* The Xplore badge is a black cutout, so it flips to white wherever it sits
-   on a dark surface: the dark-mode header, the always-dark footers, and the
-   dark boot veil in night mode. */
-[data-theme="dark"] .bf-header .bf-brand-logo,
-[data-theme="dark"] .xplore-loader-badge,
-.bf-footer .bf-brand-logo,
-.site-footer .brand-gif {
-  filter: invert(1);
-}
+/* The Xplore badge is an inline SVG whose ring and X stroke use currentColor,
+   so it follows each surface's text ink on its own — light header, dark
+   header, always-dark footers, admin sidebar, loader. The gold arrow keeps
+   its metallic gradient in every theme, so no invert() trick is needed. */
 
 /* ---------------------------------------------------------------- *
  *  Dark palette                                                     *
