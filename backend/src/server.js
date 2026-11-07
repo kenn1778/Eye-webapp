@@ -11,6 +11,7 @@ import { chatRouter } from "./chat.js";
 import { adminRouter, moderatorAcceptRouter } from "./admin.js";
 import { membershipRouter } from "./membership.js";
 import { publicRouter } from "./public.js";
+import { storyMetaRouter } from "./story-meta.js";
 import { mediaAdminRouter, publicMediaRouter } from "./media.js";
 import { prisma, disconnectPrisma } from "./lib/prisma.js";
 import { logger } from "./lib/logger.js";
@@ -154,6 +155,9 @@ app.use("/api/v1/membership", membershipRouter);
 app.use("/api/v1/public", publicRouter);
 app.use("/api/v1/admin/media", mediaAdminRouter);
 app.use("/api/v1/public/media", publicMediaRouter);
+// Story preview pages: GET /story/:id serves the SPA shell with per-story
+// Open Graph tags so pasted links unfurl with title, image and site name.
+app.use(storyMetaRouter);
 
 app.use((_req, res) => res.status(404).json({ message: "Not found." }));
 
