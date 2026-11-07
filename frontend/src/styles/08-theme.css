@@ -612,7 +612,7 @@ button:disabled { cursor: progress; }
 [data-theme="dark"] .site-shell > main { background: #121816; }
 
 /* Chrome */
-[data-theme="dark"] .bf-header { background: rgba(18, 24, 22, .92); }
+[data-theme="dark"] .bf-header { background: rgba(18, 24, 22, .62); border-bottom-color: rgba(214, 223, 212, .14); }
 [data-theme="dark"] .site-header { background: rgba(18, 24, 22, .92); }
 [data-theme="dark"] .site-header.is-shrunk { background: rgba(18, 24, 22, .96); }
 [data-theme="dark"] .bf-dropdown,

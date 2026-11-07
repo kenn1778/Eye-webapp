@@ -158,11 +158,12 @@
   z-index: 90;
   max-width: none;
   padding-inline: 0;
-  background: rgba(255, 255, 255, .96);
+  /* Frosted glass: translucent so the page is visibly blurred beneath it. */
+  background: rgba(255, 255, 255, .62);
   -webkit-backdrop-filter: blur(14px) saturate(130%);
   backdrop-filter: blur(14px) saturate(130%);
-  border-bottom: 1px solid var(--bf-line-soft);
-  transition: box-shadow .25s var(--bf-ease);
+  border-bottom: 1px solid rgba(214, 223, 212, .55);
+  transition: box-shadow .25s var(--bf-ease), background-color .25s var(--bf-ease);
   padding-top: env(safe-area-inset-top, 0px);
 }
 
