@@ -71,6 +71,16 @@ app.use(
       maxAge: 31536000,
       includeSubDomains: true,
     },
+    // Defence-in-depth: each API response opt-ins out of browser features the
+    // app never uses, so a successful content injection cannot leverage them.
+    permissionsPolicy: {
+      camera: [],
+      geolocation: [],
+      microphone: [],
+      payment: [],
+      usb: [],
+      displayCapture: [],
+    },
   }),
 );
 // Only small JSON payloads hit these routes - keep the cap tight. The raw body
@@ -173,13 +183,18 @@ app.use((error, req, res, _next) => {
     ? "Something went wrong." 
     : error.message;
   
-  // Include error code for client handling
-  const errorCode = error.code || error.status || "INTERNAL_ERROR";
-  
+  // Include error code for client handling - but never expose an internal
+  // vendor code (DB error codes, SDK codes) that isn't already an HTTP-level
+  // status the client sent through. Internal codes say "something about the
+  // database" to an attacker; a 400-499 code the handler chose is safe.
+  const safeCode =
+    typeof error.status === "number" && error.status >= 400 && error.status < 500
+      ? error.code || "VALIDATION_ERROR"
+      : "INTERNAL_ERROR";
   res.status(error.status ?? 500).json({
     error: {
       message,
-      code: errorCode,
+      code: safeCode,
       requestId: req.id, // For support correlation
     },
   });

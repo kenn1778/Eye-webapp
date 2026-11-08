@@ -10,7 +10,7 @@ import {
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { prisma } from "./lib/prisma.js";
-import { requireAuth } from "./auth.js";
+import { requireAuth, requireAdmin } from "./auth.js";
 import { createRateLimitStore } from "./lib/rate-limit.js";
 import { config } from "./config.js";
 import { mediaStorageEnabled, publicMediaPath, s3 } from "./lib/s3.js";
@@ -64,7 +64,7 @@ async function signedAssetUrl(objectKey, mimeType) {
 }
 
 export const mediaAdminRouter = Router();
-mediaAdminRouter.use(requireAuth, mediaLimiter, requireMediaStorage);
+mediaAdminRouter.use(requireAuth, requireAdmin, mediaLimiter, requireMediaStorage);
 
 // Reserve a database record and return a short-lived presigned PUT URL. The
 // browser uploads bytes directly to S3; the bucket remains private.

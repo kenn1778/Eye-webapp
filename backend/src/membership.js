@@ -132,12 +132,32 @@ membershipRouter.post("/webhook", async (req, res) => {
 });
 
 // Flip a subscription to active and alert the admin feed. Idempotent: Paystack
-// may deliver the same event more than once.
+// may deliver the same event more than once. The paid amount must match the
+// configured plan price, so a reference from some other (possibly cheaper or
+// currency-mismatched) transaction can never surface as a plan upgrade.
 async function activateSubscription(transaction) {
   const email = (transaction?.customer?.email ?? "").trim().toLowerCase();
   if (!email) return;
 
-  const plan = transaction?.metadata?.plan ?? "premium";
+  const planId = transaction?.metadata?.plan ?? "premium";
+  const plan = config.membershipPlans.find((item) => item.id === planId);
+  const paidAmount = Number(transaction?.amount);
+  const planAmount = plan?.amountKobo ?? null;
+  if (planAmount !== null && Number.isFinite(paidAmount) && paidAmount !== planAmount) {
+    logger.warn(
+      { email, reference: transaction.reference, paidAmount, planAmount },
+      "[eye:membership] activation blocked - paid amount does not match the plan price",
+    );
+    await createNotification({
+      type: "system",
+      title: "Subscription activation blocked",
+      body: "Amount paid differed from the plan price.",
+      actor: maskEmail(email),
+    });
+    return;
+  }
+
+  // Monthly plan only for now; PERIOD_MS is its 30-day term.
   const currentPeriodEnd = new Date(Date.now() + PERIOD_MS);
 
   try {
@@ -145,13 +165,13 @@ async function activateSubscription(transaction) {
       where: { email },
       create: {
         email,
-        plan,
+        plan: planId,
         status: "active",
         providerRef: transaction.reference,
         currentPeriodEnd,
       },
       update: {
-        plan,
+        plan: planId,
         status: "active",
         providerRef: transaction.reference,
         currentPeriodEnd,
@@ -161,7 +181,7 @@ async function activateSubscription(transaction) {
     await createNotification({
       type: "system",
       title: "New premium member",
-      body: `Plan: ${plan}`,
+      body: `Plan: ${planId}`,
       actor: maskEmail(email),
     });
   } catch (error) {

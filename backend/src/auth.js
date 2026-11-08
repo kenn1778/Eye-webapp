@@ -101,9 +101,13 @@ function cookieOptions() {
   };
 }
 
-// Single-admin deployment, so every verified sign-in carries the admin role.
-function issueToken(email, id = null) {
-  return jwt.sign({ sub: email, uid: id, role: "admin" }, config.jwtSecret, {
+// Single-admin deployment: the session role reflects WHICH password matched,
+// not just "any password anywhere". A database User row with a password (e.g.
+// a future member account) must never mint an admin session - that is exactly
+// what role-based gating below enforces. Today only AdminProfile rows and the
+// environment admin can sign in.
+function issueToken(email, id = null, role = "admin") {
+  return jwt.sign({ sub: email, uid: id, role }, config.jwtSecret, {
     expiresIn: `${config.sessionTtlHours}h`,
     issuer: "eye-api",
   });
@@ -131,6 +135,16 @@ export function requireAuth(req, res, next) {
     res.clearCookie(SESSION_COOKIE, baseCookieOptions());
     return res.status(401).json({ message: "Session expired. Please sign in again." });
   }
+}
+
+// Admin surfaces must check the ROLE, not just authentication. requireAuth
+// proves the token is valid; this proves it belongs to an administrator, so a
+// future member sign-in can never browse workspace data even with a session.
+export function requireAdmin(req, res, next) {
+  if (req.user?.role !== "admin") {
+    return res.status(403).json({ message: "Administrator access required." });
+  }
+  return next();
 }
 
 export function refreshSessionCookie(res, user) {
@@ -170,9 +184,15 @@ authRouter.post("/login", loginLimiter, async (req, res) => {
     return res.status(401).json({ message: "Invalid email or password." });
   }
 
+  // Role follows the record that matched: AdminProfile rows and the
+  // environment admin are administrators; a bare database User row (future
+  // member accounts) is not, whatever its password.
+  const role = profile || (normalizedEmail === config.adminEmail && config.adminPasswordHash)
+    ? "admin"
+    : "member";
   const profileId = profile?.id ?? user?.id ?? null;
-  res.cookie(SESSION_COOKIE, issueToken(normalizedEmail, profileId), cookieOptions());
-  return res.json({ user: { email: normalizedEmail, name: profile?.name ?? user?.name ?? null } });
+  res.cookie(SESSION_COOKIE, issueToken(normalizedEmail, profileId, role), cookieOptions());
+  return res.json({ user: { email: normalizedEmail, name: profile?.name ?? user?.name ?? null, role } });
 });
 
 // GET /api/v1/auth/me

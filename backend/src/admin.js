@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 import rateLimit from "express-rate-limit";
 import { z } from "zod";
 import { prisma } from "./lib/prisma.js";
-import { requireAuth } from "./auth.js";
+import { requireAuth, requireAdmin } from "./auth.js";
 import { createRateLimitStore } from "./lib/rate-limit.js";
 import { cache } from "./lib/cache.js";
 import { logger } from "./lib/logger.js";
@@ -73,7 +73,7 @@ function isSensitiveField(fieldName) {
 
 export const adminRouter = Router();
 
-adminRouter.use(requireAuth, adminLimiter);
+adminRouter.use(requireAuth, requireAdmin, adminLimiter);
 
 // Record authenticated admin mutations after the response completes. Only
 // field names are stored from request bodies; credentials and user content
