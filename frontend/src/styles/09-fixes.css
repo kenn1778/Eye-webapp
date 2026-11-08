@@ -791,6 +791,9 @@ textarea,
   .admin-video-grid { grid-template-columns: 1fr; }
 }
 
+/* Subscribers: Approve sits beside Remove in the actions cell */
+.subscriber-approve { margin-right: 8px; }
+
 /* Soft-pulse for chat live dot */
 .chat-live-dot { animation: soft-pulse 2s ease-in-out infinite; }
 

@@ -3,6 +3,8 @@ import { Pagination } from "../../components/Pagination";
 import {
   fetchAdminSubscribers,
   deleteAdminSubscriber,
+  setAdminSubscriberConfirmed,
+  confirmAllPendingSubscribers,
   type AdminSubscriber,
 } from "../../lib/adminApi";
 
@@ -13,7 +15,10 @@ export function AdminSubscribers() {
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [savingId, setSavingId] = useState<string | null>(null);
+  const [bulkSaving, setBulkSaving] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -34,6 +39,7 @@ export function AdminSubscribers() {
     setDeletingId(subscriber.id);
     const success = await deleteAdminSubscriber(subscriber.id);
     if (success) {
+      setMessage("");
       await load();
     } else {
       setError("Failed to delete subscriber. Please try again.");
@@ -41,6 +47,41 @@ export function AdminSubscribers() {
     setDeletingId(null);
   };
 
+  const handleConfirm = async (subscriber: AdminSubscriber) => {
+    setSavingId(subscriber.id);
+    setError("");
+    setMessage("");
+    const success = await setAdminSubscriberConfirmed(subscriber.id, true);
+    if (success) {
+      setMessage(`${subscriber.email} approved - they now receive newsletter emails.`);
+      await load();
+    } else {
+      setError("Failed to approve this subscriber. Please try again.");
+    }
+    setSavingId(null);
+  };
+
+  const handleConfirmAll = async () => {
+    const pending = items?.items.filter((s) => !s.confirmed).length ?? 0;
+    if (!window.confirm(
+      pending === 1
+        ? "Approve the pending subscriber? This page covers the first 20 rows; older pending rows are approved too."
+        : `Approve all ${pending} pending subscribers? This page covers the first 20 rows; older pending rows are approved too.`,
+    )) return;
+    setBulkSaving(true);
+    setError("");
+    setMessage("");
+    const count = await confirmAllPendingSubscribers();
+    if (count !== null) {
+      setMessage(count === 0 ? "No pending subscribers - everyone is already approved." : `Approved ${count} subscriber${count === 1 ? "" : "s"}. They now receive newsletter emails.`);
+      await load();
+    } else {
+      setError("Failed to approve all pending subscribers. Please try again.");
+    }
+    setBulkSaving(false);
+  };
+
+  const pendingOnPage = items?.items.filter((s) => !s.confirmed).length ?? 0;
   const total = items?.total ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
@@ -53,10 +94,16 @@ export function AdminSubscribers() {
           <p>{total === 0 ? "No subscribers yet." : `${total} email subscriber${total === 1 ? "" : "s"} on record.`}</p>
         </div>
         <div className="audit-pagination">
+          {pendingOnPage > 0 && (
+            <button className="admin-primary" type="button" onClick={() => void handleConfirmAll()} disabled={bulkSaving}>
+              {bulkSaving ? "Approving..." : `Approve all pending (${pendingOnPage})`}
+            </button>
+          )}
           <button className="button-secondary" type="button" onClick={() => void load()} disabled={loading}>Refresh</button>
         </div>
       </div>
       {error && <p className="field-help invalid" role="alert">{error}</p>}
+      {message && <p className="review-success" role="status">{message}</p>}
       <div className="admin-panel section-panel">
         {loading ? (
           <p className="audit-message" role="status">Loading subscribers...</p>
@@ -71,7 +118,7 @@ export function AdminSubscribers() {
                     <th>Email</th>
                     <th>Confirmed</th>
                     <th>Subscribed</th>
-                    <th style={{ width: 100, textAlign: "right" }}>Actions</th>
+                    <th style={{ width: 170, textAlign: "right" }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -84,12 +131,22 @@ export function AdminSubscribers() {
                         </span>
                       </td>
                       <td className="muted-cell">{new Date(s.subscribedAt).toLocaleString()}</td>
-                      <td style={{ textAlign: "right" }}>
+                      <td style={{ textAlign: "right", whiteSpace: "nowrap" }}>
+                        {!s.confirmed && (
+                          <button
+                            className="button-secondary subscriber-approve"
+                            type="button"
+                            onClick={() => void handleConfirm(s)}
+                            disabled={savingId === s.id || deletingId === s.id}
+                          >
+                            {savingId === s.id ? "Approving..." : "Approve"}
+                          </button>
+                        )}
                         <button
                           className="button-danger"
                           type="button"
                           onClick={() => void handleDelete(s)}
-                          disabled={deletingId === s.id}
+                          disabled={deletingId === s.id || savingId === s.id}
                         >
                           {deletingId === s.id ? "Removing..." : "Remove"}
                         </button>

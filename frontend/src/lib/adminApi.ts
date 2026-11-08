@@ -637,6 +637,39 @@ export async function deleteAdminSubscriber(id: string): Promise<boolean> {
   }
 }
 
+export async function setAdminSubscriberConfirmed(
+  id: string,
+  confirmed: boolean,
+): Promise<boolean> {
+  try {
+    const response = await fetch(`${API_BASE}/api/v1/admin/subscribers/${encodeURIComponent(id)}`, {
+      method: "PATCH",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ confirmed }),
+    });
+    return response.ok;
+  } catch (error) {
+    logError("admin", "setAdminSubscriberConfirmed failed", error);
+    return false;
+  }
+}
+
+export async function confirmAllPendingSubscribers(): Promise<number | null> {
+  try {
+    const response = await fetch(`${API_BASE}/api/v1/admin/subscribers/confirm-all`, {
+      method: "POST",
+      credentials: "include",
+    });
+    if (!response.ok) return null;
+    const payload = (await response.json().catch(() => null)) as Record<string, unknown> | null;
+    return payload && typeof payload.confirmed === "number" ? payload.confirmed : null;
+  } catch (error) {
+    logError("admin", "confirmAllPendingSubscribers failed", error);
+    return null;
+  }
+}
+
 export type AuditLogEntry = {
   id: string;
   actorEmail: string;

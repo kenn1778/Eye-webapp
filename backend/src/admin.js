@@ -884,6 +884,46 @@ adminRouter.delete(
   }),
 );
 
+// PATCH /subscribers/:id - approve (confirmed: true) or revoke (false) a
+// subscriber manually. Unconfirmed rows were "Pending" on the sign-up list
+// until either the email link or the admin moved them over.
+const subscriberUpdateSchema = z.object({
+  confirmed: z.boolean(),
+});
+
+adminRouter.patch(
+  "/subscribers/:id",
+  asyncHandler(async (req, res) => {
+    const parsedId = idSchema.safeParse(req.params.id);
+    if (!parsedId.success) return res.status(400).json({ message: "Invalid id." });
+    const parsed = subscriberUpdateSchema.safeParse(req.body);
+    if (!parsed.success) return res.status(400).json({ message: "Provide confirmed: true or false." });
+    try {
+      const item = await prisma.newsletterSubscriber.update({
+        where: { id: parsedId.data },
+        data: { confirmed: parsed.data.confirmed },
+        select: { id: true, email: true, confirmed: true, subscribedAt: true },
+      });
+      res.json({ ok: true, item });
+    } catch {
+      // update throws on a stale id; surface that as a 404, not a 500.
+      return res.status(404).json({ message: "Subscriber not found." });
+    }
+  }),
+);
+
+// POST /subscribers/confirm-all - one click approves every pending row.
+adminRouter.post(
+  "/subscribers/confirm-all",
+  asyncHandler(async (_req, res) => {
+    const result = await prisma.newsletterSubscriber.updateMany({
+      where: { confirmed: false },
+      data: { confirmed: true },
+    });
+    res.json({ ok: true, confirmed: result.count });
+  }),
+);
+
 // AUTHOR PROFILE - the public author card the landing page renders. A single
 // row is created on first read (same defaults as the public endpoint) so the
 // editor always has something to work with.
