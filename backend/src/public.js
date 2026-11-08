@@ -4,6 +4,7 @@ import { z } from "zod";
 import { prisma } from "./lib/prisma.js";
 import { createRateLimitStore } from "./lib/rate-limit.js";
 import { publicMediaPath } from "./lib/s3.js";
+import { parseVideoUrl, embedUrl } from "./lib/video.js";
 import { config } from "./config.js";
 import { enqueue } from "./lib/queue.js";
 import { createNotification, maskEmail } from "./lib/notifications.js";
@@ -274,6 +275,35 @@ publicRouter.post("/reviews", reviewLimiter, asyncHandler(async (req, res) => {
     select: { id: true, name: true, rating: true, comment: true, createdAt: true },
   });
   res.status(201).json({ review });
+}));
+
+// Homepage video spotlight. The admin upserts a single row (typically a fresh
+// YouTube link or a direct video file); readers get a parse-safe, cacheable
+// shape instead of the raw admin input. 404 keeps the section hidden when no
+// video is set.
+publicRouter.get("/site-video", asyncHandler(async (_req, res) => {
+  const single = await prisma.siteVideo.findFirst({ orderBy: { updatedAt: "desc" } });
+  if (!single) return res.status(404).json({ message: "No video is set." });
+
+  const parsed = parseVideoUrl(single.url);
+  if (!parsed) {
+    // A stored link the parser no longer understands must never surface raw
+    // to visitors; the admin sees the same state in the workspace and fixes it.
+    res.set("Cache-Control", PUBLIC_CACHE);
+    return res.json({ enabled: false, reason: "unparseable", updatedAt: single.updatedAt });
+  }
+
+  res.set("Cache-Control", PUBLIC_CACHE);
+  res.json({
+    enabled: true,
+    kind: parsed.kind,
+    youtubeId: parsed.kind === "youtube" ? parsed.id : null,
+    fileUrl: parsed.kind === "file" ? parsed.url : null,
+    embedUrl: parsed.kind === "youtube" ? embedUrl(parsed.id) : null,
+    title: single.title || null,
+    note: single.note || null,
+    updatedAt: single.updatedAt,
+  });
 }));
 
 // Visitor ids are random UUIDs stored in localStorage. They identify the

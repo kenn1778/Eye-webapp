@@ -8,6 +8,7 @@ import { AdminMessages } from "./AdminMessages";
 import { AdminReviews } from "./AdminReviews";
 import { AdminAuthorProfileEditor } from "./AdminAuthorProfile";
 import { AdminSubscribers } from "./AdminSubscribers";
+import { AdminVideo } from "./AdminVideo";
 import { Pagination } from "../../components/Pagination";
 
 type AdminSectionViewProps = {
@@ -70,6 +71,10 @@ export function AdminSectionView({ section, onNewPost, onProfileSaved }: AdminSe
 
   if (section === "Media") {
     return <AdminMedia />;
+  }
+
+  if (section === "Video") {
+    return <AdminVideo />;
   }
 
   if (section === "Categories") {

@@ -12,6 +12,7 @@ import bcrypt from "bcryptjs";
 import { refreshSessionCookie } from "./auth.js";
 import { emailService } from "./lib/email.js";
 import { notifySubscribersAboutPost } from "./lib/notifications.js";
+import { parseVideoUrl, embedUrl } from "./lib/video.js";
 
 // Every route below is admin-only. requireAuth runs first, then a generous
 // per-minute cap so a runaway dashboard tab cannot hammer the database.
@@ -939,6 +940,72 @@ adminRouter.patch(
       select: authorProfileSelect,
     });
     res.json(profile);
+  }),
+);
+
+// DAILY VIDEO SPOTLIGHT - the YouTube link (or direct video file) shown above
+// the public footer. One row only: PUT upserts it, DELETE removes it, which
+// hides the section on the public site until the next link goes live.
+const siteVideoSchema = z.object({
+  // The parser decides YouTube vs direct file; anything else is rejected here
+  // so malformed links can never reach the public page.
+  url: z.string().trim().min(12).max(2048),
+  title: z.string().trim().max(140).optional().nullable(),
+  note: z.string().trim().max(240).optional().nullable(),
+});
+
+function siteVideoShape(single) {
+  const parsed = single ? parseVideoUrl(single.url) : null;
+  return {
+    url: single?.url ?? null,
+    title: single?.title ?? null,
+    note: single?.note ?? null,
+    kind: parsed?.kind ?? null,
+    youtubeId: parsed?.kind === "youtube" ? parsed.id : null,
+    embedUrl: parsed?.kind === "youtube" ? embedUrl(parsed.id) : null,
+    updatedAt: single?.updatedAt ?? null,
+    parseError: Boolean(single) && !parsed,
+  };
+}
+
+adminRouter.get(
+  "/site-video",
+  asyncHandler(async (_req, res) => {
+    const single = await prisma.siteVideo.findFirst({ orderBy: { updatedAt: "desc" } });
+    res.json(siteVideoShape(single));
+  }),
+);
+
+adminRouter.put(
+  "/site-video",
+  asyncHandler(async (req, res) => {
+    const parsed = siteVideoSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ message: "Paste a valid YouTube link or direct video file URL." });
+    }
+    if (!parseVideoUrl(parsed.data.url)) {
+      return res.status(400).json({
+        message: "That link is not a YouTube video or direct video file. Try a standard YouTube URL (watch, share, shorts or embed).",
+      });
+    }
+    const current = await prisma.siteVideo.findFirst({ orderBy: { updatedAt: "asc" } });
+    const data = {
+      url: parsed.data.url,
+      title: parsed.data.title || null,
+      note: parsed.data.note || null,
+    };
+    const video = current
+      ? await prisma.siteVideo.update({ where: { id: current.id }, data })
+      : await prisma.siteVideo.create({ data });
+    res.json({ ok: true, video: siteVideoShape(video) });
+  }),
+);
+
+adminRouter.delete(
+  "/site-video",
+  asyncHandler(async (_req, res) => {
+    const result = await prisma.siteVideo.deleteMany({});
+    res.json({ ok: true, removed: result.count });
   }),
 );
 

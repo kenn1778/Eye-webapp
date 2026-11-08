@@ -14,6 +14,7 @@ import { PublicDiscover } from "../components/public/PublicDiscover";
 import { PublicCommunities } from "../components/public/PublicCommunities";
 import { PublicTrio } from "../components/public/PublicTrio";
 import { PublicFooter } from "../components/public/PublicFooter";
+import { VideoSpotlight } from "../components/public/VideoSpotlight";
 import { StoryReaderModal } from "../components/public/StoryReaderModal";
 import {
   PAGE_SIZE,
@@ -520,6 +521,8 @@ export function PublicSite({ stories, openAdmin, isAdmin, justPublished }: Publi
             />
           </Reveal>
         </main>
+
+        <VideoSpotlight />
 
         <PublicFooter
           authorEmail={authorEmail}

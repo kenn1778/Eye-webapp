@@ -40,7 +40,21 @@ export function PublicHero({
             aria-hidden={index !== featuredIndex}
           >
             <div className="bf-hero-media">
-              {story.image && <img src={story.image} alt="" loading={index === 0 ? "eager" : "lazy"} decoding="async" fetchPriority={index === 0 ? "high" : undefined} onError={(event) => { event.currentTarget.style.display = "none"; }} />}
+              {/* Every slide image is fetched eagerly: at small widths inactive
+                  slides are display:none and a lazy image would only START
+                  loading when its slide becomes active - a blank white flash
+                  mid-carousel. A shimmer shows until the pixels arrive. */}
+              {story.image && (
+                <img
+                  src={story.image}
+                  alt=""
+                  loading="eager"
+                  decoding={index === 0 ? "sync" : "async"}
+                  fetchPriority={index === 0 ? "high" : "auto"}
+                  onLoad={(event) => event.currentTarget.classList.add("is-loaded")}
+                  onError={(event) => event.currentTarget.classList.add("is-failed")}
+                />
+              )}
             </div>
             <div className="bf-hero-content">
               <span className="bf-eyebrow">Featured Post</span>

@@ -613,6 +613,14 @@ button:disabled { cursor: progress; }
 
 /* Chrome */
 [data-theme="dark"] .bf-header { background: rgba(18, 24, 22, .62); border-bottom-color: rgba(214, 223, 212, .14); }
+
+/* Featured video spotlight: the player letterbox stays near-black in dark
+   mode and shadows deepen instead of carrying the light-theme tint. */
+[data-theme="dark"] .bf-watch-frame {
+  background: #0d120f;
+  border-color: var(--bf-line-soft);
+  box-shadow: 0 24px 48px rgba(0, 0, 0, .45);
+}
 [data-theme="dark"] .site-header { background: rgba(18, 24, 22, .92); }
 [data-theme="dark"] .site-header.is-shrunk { background: rgba(18, 24, 22, .96); }
 [data-theme="dark"] .bf-dropdown,

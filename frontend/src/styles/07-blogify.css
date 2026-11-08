@@ -274,6 +274,14 @@
   to { opacity: 1; transform: translate(-50%, 0); }
 }
 
+/* Simple vertical drop for full-width rows (no X translation - the -50% X in
+   bf-drop-in exists for the centered dropdown and would shift a full-width
+   bar half its own width off the screen on small viewports). */
+@keyframes bf-drop-run {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .bf-dropdown button {
   display: block;
   width: 100%;
@@ -366,7 +374,7 @@
   padding: 0 var(--bf-gutter) 14px;
   display: flex;
   gap: 10px;
-  animation: bf-drop-in .2s var(--bf-ease) both;
+  animation: bf-drop-run .2s var(--bf-ease) both;
 }
 
 .bf-searchbar input {
@@ -522,19 +530,47 @@ body.bf-menu-lock { overflow: hidden; }
 .bf-hero-slide.is-active { opacity: 1; visibility: visible; z-index: 2; }
 
 .bf-hero-media { position: absolute; inset: 0; z-index: -1; }
+
+/* Shimmer placeholder: visible until the slide image has actually decoded, so
+   a slow remote image shows a moving sheen instead of a blank white card. */
+.bf-hero-media::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, var(--bf-band) 30%, var(--bf-card) 45%, var(--bf-band) 60%);
+  background-size: 220% 100%;
+  animation: bf-shimmer 1.5s linear infinite;
+}
+
+@keyframes bf-shimmer {
+  from { background-position: 120% 0; }
+  to { background-position: -120% 0; }
+}
+
 .bf-hero-media img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   object-position: 72% center;
   transform: scale(1.04);
+  /* Fade in once loaded so the swap is animated, not a paint pop. */
+  opacity: 0;
+  transition: opacity .5s var(--bf-ease);
 }
 
-.bf-hero-slide.is-active .bf-hero-media img { animation: bf-hero-zoom 7s var(--bf-ease) both; }
+.bf-hero-media img.is-loaded { opacity: 1; }
+.bf-hero-media img.is-failed { display: none; }
+
+.bf-hero-slide.is-active .bf-hero-media img.is-loaded { animation: bf-hero-zoom 7s var(--bf-ease) both; }
 
 @keyframes bf-hero-zoom {
   from { transform: scale(1.08); }
   to { transform: scale(1); }
+}
+
+@keyframes bf-slide-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* Legibility scrim: strong on the text side, clear over the photo. */
@@ -1566,7 +1602,9 @@ body.eye-transition-lock { overflow: hidden; }
 
   .bf-hero-card { min-height: 0; }
   .bf-hero-slide { position: relative; grid-template-columns: 1fr; display: none; }
-  .bf-hero-slide.is-active { display: grid; }
+  /* display:none→grid skips the desktop opacity transition, so activated
+     slides fade+rise in explicitly instead of popping. */
+  .bf-hero-slide.is-active { display: grid; animation: bf-slide-in .45s var(--bf-ease) both; }
   .bf-hero-media { position: absolute; }
   .bf-hero-media::after {
     background: linear-gradient(180deg, rgba(255, 255, 255, .92) 0%, rgba(255, 255, 255, .78) 55%, rgba(255, 255, 255, .55) 100%);
@@ -1724,6 +1762,7 @@ body.eye-transition-lock { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) {
   .bf-hero-slide,
   .bf-hero-media img,
+  .bf-watch-frame,
   .bf-post-card,
   .bf-community-card,
   .bf-cat-tile,
@@ -1794,4 +1833,58 @@ body.cookie-gate-lock { overflow: hidden; }
 
 @media (max-width: 560px) {
   .bf-brand-logo { width: 34px; height: 34px; }
+}
+
+/* ---------- featured video spotlight ---------- */
+
+/* Sits between the content feed and the footer; the admin swaps the link any
+   time, so the chrome must look right for YouTube embeds and native files. */
+.bf-watch {
+  width: 100%;
+  max-width: var(--bf-container);
+  margin-inline: auto;
+  padding: clamp(18px, 4vw, 42px) var(--bf-gutter) clamp(36px, 6vw, 68px);
+}
+
+.bf-watch-frame {
+  position: relative;
+  width: 100%;
+  max-width: min(920px, 100%);
+  margin-inline: auto;
+  aspect-ratio: 16 / 9;
+  border-radius: 20px;
+  overflow: hidden;
+  background: var(--bf-ink);
+  border: 1px solid var(--bf-line-soft);
+  box-shadow: 0 24px 48px rgba(16, 22, 19, .12);
+}
+
+.bf-watch-frame iframe,
+.bf-watch-frame video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+  background: transparent;
+}
+
+.bf-watch-meta {
+  font: 500 12px/1.4 var(--bf-sans);
+  color: var(--bf-muted);
+  white-space: nowrap;
+}
+
+.bf-watch-note {
+  max-width: min(920px, 100%);
+  margin: 14px auto 0;
+  color: var(--bf-muted);
+  font: 400 14.5px/1.6 var(--bf-sans);
+}
+
+@media (max-width: 560px) {
+  .bf-watch { padding-bottom: 34px; }
+  .bf-watch-frame { border-radius: 14px; box-shadow: 0 16px 32px rgba(16, 22, 19, .10); }
+  .bf-section-head h2 { font-size: clamp(18px, 5vw, 22px); }
 }

@@ -728,6 +728,69 @@ button:disabled {
   filter: grayscale(.3);
 }
 
+/* ================================================================
+   SECTION 8: CONTENT PROTECTION + DAILY VIDEO PANEL
+   ================================================================ */
+
+/* Copy protection: text is not selectable anywhere in the app. Form fields,
+   textareas and anything explicitly marked .copyable stay editable/selectable
+   so the app (sign-in, editor, review forms) keeps working normally. */
+body {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+input,
+textarea,
+[contenteditable="true"],
+.copyable,
+.copyable * {
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-touch-callout: default;
+}
+
+/* Allow drag-free selection inside the admin editor inputs and search bars */
+.admin-content input,
+.admin-content textarea,
+.bf-searchbar input,
+.bf-sidebar-search input {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* Admin: daily video panel */
+.admin-video-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+  align-items: start;
+}
+
+.admin-video-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.admin-video-preview iframe,
+.admin-video-preview video {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: 0;
+  border-radius: 14px;
+  background: #0d120f;
+  display: block;
+}
+
+.admin-video-preview strong { color: var(--bf-ink, #16181d); }
+.admin-video-preview p { color: var(--bf-muted, #94a29c); margin: 0; }
+
+@media (max-width: 900px) {
+  .admin-video-grid { grid-template-columns: 1fr; }
+}
+
 /* Soft-pulse for chat live dot */
 .chat-live-dot { animation: soft-pulse 2s ease-in-out infinite; }
 

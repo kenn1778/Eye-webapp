@@ -203,6 +203,9 @@ export function AdminWorkspace({ closeAdmin, onPublish }: AdminWorkspaceProps) {
           <button className={`sidebar-item ${activeSection === "Media" ? "selected" : ""}`} type="button" onClick={() => selectSection("Media")}>
             <span className="sidebar-icon icon-media" aria-hidden="true" />Media
           </button>
+          <button className={`sidebar-item ${activeSection === "Video" ? "selected" : ""}`} type="button" onClick={() => selectSection("Video")}>
+            <span className="sidebar-icon icon-media" aria-hidden="true" />Daily video
+          </button>
           <button className={`sidebar-item ${activeSection === "Categories" ? "selected" : ""}`} type="button" onClick={() => selectSection("Categories")}>
             <span className="sidebar-icon icon-categories" aria-hidden="true" />Categories
           </button>

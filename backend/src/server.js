@@ -60,6 +60,9 @@ app.use(
         "style-src": ["'self'", "'unsafe-inline'"],
         "img-src": ["'self'", "data:", "https:"],
         "connect-src": ["'self'"],
+        // The homepage video spotlight embeds the privacy-enhanced YouTube
+        // player; without this directive default-src 'self' would block it.
+        "frame-src": ["https://www.youtube-nocookie.com", "https://www.youtube.com"],
         "frame-ancestors": ["'none'"],
         "base-uri": ["'self'"],
       },

@@ -310,3 +310,15 @@ model AuthorProfile {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+// Homepage video spotlight. A single row (upserted by the admin) names the
+// video shown above the footer; the URL accepts YouTube links or a direct
+// video file. Empty table = the section is hidden on the public site.
+model SiteVideo {
+  id        String   @id @default(cuid())
+  url       String   @db.VarChar(2048)
+  title     String?  @db.VarChar(140)
+  note      String?  @db.VarChar(240)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

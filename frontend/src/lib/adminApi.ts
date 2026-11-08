@@ -902,3 +902,75 @@ export async function updateAdminAuthorProfile(
     return null;
   }
 }
+
+// ---------- Admin: daily video spotlight ----------
+
+export type SiteVideoState = {
+  url: string | null;
+  title: string | null;
+  note: string | null;
+  kind: "youtube" | "file" | null;
+  youtubeId: string | null;
+  embedUrl: string | null;
+  updatedAt: string | null;
+  parseError: boolean;
+};
+
+function isSiteVideoState(value: unknown): value is SiteVideoState {
+  return (
+    isRecord(value) &&
+    (value.url === null || typeof value.url === "string") &&
+    (value.title === null || typeof value.title === "string") &&
+    (value.note === null || typeof value.note === "string") &&
+    (value.kind === null || value.kind === "youtube" || value.kind === "file") &&
+    (value.youtubeId === null || typeof value.youtubeId === "string") &&
+    (value.embedUrl === null || typeof value.embedUrl === "string") &&
+    (value.updatedAt === null || typeof value.updatedAt === "string") &&
+    typeof value.parseError === "boolean"
+  );
+}
+
+export async function fetchAdminSiteVideo(): Promise<SiteVideoState | null> {
+  const payload = await getJson("/api/v1/admin/site-video");
+  return isSiteVideoState(payload) ? payload : null;
+}
+
+export async function saveAdminSiteVideo(
+  data: { url: string; title?: string | null; note?: string | null },
+): Promise<{ ok: boolean; message?: string; video?: SiteVideoState }> {
+  try {
+    const response = await fetch(`${API_BASE}/api/v1/admin/site-video`, {
+      method: "PUT",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    const payload = (await response.json().catch(() => ({}))) as unknown;
+    if (!response.ok) {
+      const message = isRecord(payload) && typeof payload.message === "string"
+        ? payload.message
+        : "Could not save the video. Try again.";
+      return { ok: false, message };
+    }
+    const video = isRecord(payload) ? payload.video : undefined;
+    return isSiteVideoState(video)
+      ? { ok: true, video }
+      : { ok: false, message: "Unexpected server response." };
+  } catch (error) {
+    logError("network", "saveAdminSiteVideo failed", error);
+    return { ok: false, message: "Could not save the video. Try again." };
+  }
+}
+
+export async function clearAdminSiteVideo(): Promise<boolean> {
+  try {
+    const response = await fetch(`${API_BASE}/api/v1/admin/site-video`, {
+      method: "DELETE",
+      credentials: "include",
+    });
+    return response.ok;
+  } catch (error) {
+    logError("admin", "clearAdminSiteVideo failed", error);
+    return false;
+  }
+}
