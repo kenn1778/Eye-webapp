@@ -21,13 +21,14 @@ function dataClient() {
   if (!keyFile || !existsSync(keyFile)) {
     throw new Error("GA4_KEY_FILE_MISSING");
   }
-  const keyJson = readFileSync(keyFile, "utf8");
-  const creds = JSON.parse(keyJson);
-  client = new BetaAnalyticsDataClient({
-    // Prefer explicit credentials so the key path never has to match the
-    // GOOGLE_APPLICATION_CREDENTIALS convention.
-    credentials: { client_email: creds.client_email, private_key: creds.private_key },
-  });
+  // Validate up front so an invalid key file fails in one clear place instead
+  // of surfacing as a gRPC auth error. keyFilename is the supported,
+  // deprecation-free way to hand the JSON straight to the client.
+  const creds = JSON.parse(readFileSync(keyFile, "utf8"));
+  if (!creds.client_email || !creds.private_key) {
+    throw new Error("GA4_KEY_FILE_INVALID");
+  }
+  client = new BetaAnalyticsDataClient({ keyFilename: keyFile });
   return client;
 }
 
