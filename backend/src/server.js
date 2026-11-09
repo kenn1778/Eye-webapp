@@ -71,17 +71,18 @@ app.use(
       maxAge: 31536000,
       includeSubDomains: true,
     },
-    // Defence-in-depth: each API response opt-ins out of browser features the
-    // app never uses, so a successful content injection cannot leverage them.
-    permissionsPolicy: {
-      camera: [],
-      geolocation: [],
-      microphone: [],
-      payment: [],
-      usb: [],
-      displayCapture: [],
-    },
   }),
+);
+// Note: helmet 8 dropped its Permissions-Policy middleware, so it is set here.
+// Opt out of the browser features the app never uses; a successful content
+// injection then cannot leverage them.
+app.use((_req, res, next) => {
+  res.setHeader(
+    "Permissions-Policy",
+    "camera=(), geolocation=(), microphone=(), payment=(), usb=(), display-capture=()",
+  );
+  next();
+});
 );
 // Only small JSON payloads hit these routes - keep the cap tight. The raw body
 // is retained so the Paystack webhook signature can be verified.
