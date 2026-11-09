@@ -80,6 +80,11 @@ export const config = {
   // assistant keeps working when Google retires a dated model.
   geminiModel: process.env.GEMINI_MODEL ?? "gemini-flash-latest",
   geminiTimeoutMs: toInt(process.env.GEMINI_TIMEOUT_MS, 12000),
+  // GA4 dashboard readback. Empty values disable /api/v1/admin/analytics
+  // (it answers { enabled: false }). The service-account key file must live
+  // on the server only - never commit it, never fetch it over HTTP.
+  ga4PropertyId: toInt(process.env.GA4_PROPERTY_ID, 0),
+  ga4KeyFile: process.env.GA4_KEY_FILE ?? "",
   // Paystack powers premium membership. An empty secret key disables checkout
   // (the plans endpoint still responds, with enabled: false).
   paystackSecretKey: process.env.PAYSTACK_SECRET_KEY ?? "",

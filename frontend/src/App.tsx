@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useState, type ReactNode } from "react";
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import "./App.css";
+import { initGA4, trackPageView } from "./lib/ga4";
 import type { Story } from "./types";
 import { seedStories } from "./data/seedData";
 import { CookieConsent } from "./components/CookieConsent";
@@ -139,6 +140,19 @@ function PageTransition({ children }: { children: ReactNode }) {
       {children}
     </div>
   );
+}
+
+// GA4 route tracker: fires init once, then a page_view on every real path
+// change (replace-navigations included). Inert unless built with VITE_GA4_ID.
+function RouteTracker() {
+  const location = useLocation();
+  useEffect(() => {
+    initGA4();
+  }, []);
+  useEffect(() => {
+    trackPageView(location.pathname + location.search);
+  }, [location.pathname, location.search]);
+  return null;
 }
 
 function AppRoutes() {
@@ -328,6 +342,7 @@ function AppRoutes() {
 export default function App() {
   return (
     <BrowserRouter>
+      <RouteTracker />
       <AppRoutes />
     </BrowserRouter>
   );

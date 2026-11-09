@@ -17,3 +17,9 @@
 keys.env
 keys*.env
 *.keys.env
+
+# Google service-account keys (never commit)
+ga4-key.json
+*.ga4.json
+GA4_*.json
+service-account*.json

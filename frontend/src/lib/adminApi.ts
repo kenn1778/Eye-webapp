@@ -133,6 +133,44 @@ export async function fetchInsights(): Promise<AdminInsights | null> {
   return isInsights(payload) ? withInsightDefaults(payload) : null;
 }
 
+// Site traffic readback from Google Analytics 4. NULL when GA4 is disabled on
+// the backend (or a report failed) - the dashboard hides the card instead.
+export type AdminTraffic = {
+  enabled: true;
+  windowDays: number;
+  totals: { visitors: number; pageViews: number; sessions: number; newVisitors: number };
+  series: { date: string; users: number; views: number }[];
+  topPages: { path: string; views: number }[];
+  sources: { source: string; users: number }[];
+};
+
+function isTraffic(value: unknown): value is AdminTraffic {
+  if (!isRecord(value) || value.enabled !== true) return false;
+  const totals = value.totals;
+  const series = value.series;
+  return (
+    isRecord(totals) &&
+    isFiniteNumber(totals.visitors) &&
+    isFiniteNumber(totals.pageViews) &&
+    isFiniteNumber(totals.sessions) &&
+    isFiniteNumber(totals.newVisitors) &&
+    Array.isArray(series) &&
+    Array.isArray(value.topPages) &&
+    Array.isArray(value.sources)
+  );
+}
+
+export async function fetchTraffic(days = 28): Promise<AdminTraffic | null> {
+  try {
+    const payload = await getJson(`/api/v1/admin/analytics?days=${days}`);
+    if (!isTraffic(payload)) return null;
+    const series = payload.series.filter((point) => isRecord(point) && typeof point.date === "string");
+    return { ...payload, series, windowDays: days };
+  } catch {
+    return null; // disabled/erroring GA must never block the workspace refresh
+  }
+}
+
 export async function fetchActivity(days = 14): Promise<ActivityPoint[] | null> {
   const payload = await getJson(`/api/v1/admin/activity?days=${days}`);
   if (!isRecord(payload) || !Array.isArray(payload.series)) return null;

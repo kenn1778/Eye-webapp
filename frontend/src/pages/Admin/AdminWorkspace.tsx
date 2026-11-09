@@ -1,5 +1,6 @@
 import { startTransition, useCallback, useEffect, useMemo, useState, type CSSProperties } from "react";
 import type { AdminInsights, AdminMetrics, AdminNotification, ActivityPoint, Story } from "../../types";
+import type { AdminTraffic } from "../../lib/adminApi";
 import { emptyMetrics, adminTabs } from "../../data/seedData";
 import { Brand } from "../../components/Brand";
 import { ThemeToggle } from "../../components/ThemeToggle";
@@ -7,9 +8,11 @@ import { AdminEditor } from "../../components/AdminEditor";
 import { AdminSectionView } from "./AdminSectionView";
 import { AdminNotifications } from "./AdminNotifications";
 import { AdminActivityChart } from "./AdminActivityChart";
+import { AdminTrafficCard } from "./AdminTrafficCard";
 import {
   fetchActivity,
   fetchInsights,
+  fetchTraffic,
   fetchMetrics,
   fetchNotifications,
   fetchPosts,
@@ -70,19 +73,21 @@ export function AdminWorkspace({ closeAdmin, onPublish }: AdminWorkspaceProps) {
   const [metrics, setMetrics] = useState<AdminMetrics>(emptyMetrics);
   const [insights, setInsights] = useState<AdminInsights | null>(null);
   const [activity, setActivity] = useState<ActivityPoint[]>([]);
+  const [traffic, setTraffic] = useState<AdminTraffic | null>(null);
   const [notifications, setNotifications] = useState<AdminNotification[]>([]);
   const [unread, setUnread] = useState(0);
   const [savedPosts, setSavedPosts] = useState<Awaited<ReturnType<typeof fetchPosts>>>(null);
   const [adminName, setAdminName] = useState("Administrator");
 
   const refresh = useCallback(async () => {
-    const [nextMetrics, nextInsights, nextActivity, nextNotifications, nextPosts, profile] = await Promise.all([
+    const [nextMetrics, nextInsights, nextActivity, nextNotifications, nextPosts, profile, nextTraffic] = await Promise.all([
       fetchMetrics(),
       fetchInsights(),
       fetchActivity(ACTIVITY_DAYS),
       fetchNotifications(20),
       fetchPosts("", 20, 0),
       fetchAdminProfile(),
+      fetchTraffic(ACTIVITY_DAYS),
     ]);
 
     // Low priority so a background refresh never blocks typing or clicks.
@@ -90,6 +95,7 @@ export function AdminWorkspace({ closeAdmin, onPublish }: AdminWorkspaceProps) {
       if (nextMetrics) setMetrics(nextMetrics);
       if (nextInsights) setInsights(nextInsights);
       if (nextActivity) setActivity(nextActivity);
+      if (nextTraffic?.enabled) setTraffic(nextTraffic);
       if (nextPosts) setSavedPosts(nextPosts);
       if (profile) setAdminName(profile.name);
       if (nextNotifications) {
@@ -345,6 +351,13 @@ export function AdminWorkspace({ closeAdmin, onPublish }: AdminWorkspaceProps) {
                     : "No messages yet"}
                 </span>
               </div>
+            </div>
+            <div className="activity-block">
+              <div className="activity-block-head">
+                <div className="eyebrow">Site traffic (Google Analytics)</div>
+                <span className="activity-range">Last {ACTIVITY_DAYS} days</span>
+              </div>
+              <AdminTrafficCard traffic={traffic} />
             </div>
             <div className="activity-block">
               <div className="activity-block-head">

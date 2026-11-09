@@ -1476,3 +1476,11 @@ h1, h2, h3, p, label, strong, small, button, a { max-width: 100%; overflow-wrap:
   .insight-tile strong { font-size: 23px; }
 
 }
+
+/* GA4 site-traffic card top-pages list. */
+.ga-list { margin: 8px 0 2px; padding: 0; list-style: none; }
+.ga-list li { display: flex; justify-content: space-between; gap: 10px; padding: 5px 0; border-bottom: 1px dashed #e0e4d8; font-size: 11px; color: #4b5a50; }
+.ga-list li:last-child { border-bottom: 0; }
+.ga-list li strong { font-family: 'DM Mono', monospace; font-weight: 500; color: #35433b; }
+[data-theme='dark'] .ga-list li { border-bottom-color: #242e2b; color: #9aa7a0; }
+[data-theme='dark'] .ga-list li strong { color: #d5ded9; }
