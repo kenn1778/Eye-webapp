@@ -128,19 +128,27 @@ async function probeDatabase() {
   }
 }
 
-app.get("/healthz", healthLimiter, async (_req, res) => {
+app.get("/healthz", healthLimiter, async (req, res) => {
   const [db, cacheHealth, s3Health] = await Promise.all([
     probeDatabase(),
     cache.health(),
     checkS3Health(),
   ]);
-  res.json({ 
-    status: "ok", 
-    uptime: process.uptime(), 
-    db, 
-    cache: cacheHealth,
-    s3: s3Health,
-  });
+  const dbUp = db === "up";
+  // Public body discloses only the aggregate status - component-level detail
+  // tells an attacker which subsystem to attack (which limiter to drain, which
+  // dependency to break). nginx tags every request it proxies, so only
+  // loopback callers (deploy scripts, runbooks, ssh) get the full payload;
+  // viewer-supplied headers cannot forge the tag because proxy_set_header
+  // overrides them server-side.
+  const detail = { status: "ok", uptime: process.uptime(), db, cache: cacheHealth, s3: s3Health };
+  if (req.headers["x-internal-request"]) {
+    return res.status(200).json({
+      status: "ok",
+      ...(dbUp ? {} : { degraded: "database health check failed" }),
+    });
+  }
+  return res.status(dbUp ? 200 : 503).json(detail);
 });
 
 // Global backstop for every /api route - mounted before the routers so it
