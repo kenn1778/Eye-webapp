@@ -83,7 +83,6 @@ app.use((_req, res, next) => {
   );
   next();
 });
-);
 // Only small JSON payloads hit these routes - keep the cap tight. The raw body
 // is retained so the Paystack webhook signature can be verified.
 app.use(
