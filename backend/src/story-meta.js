@@ -107,7 +107,7 @@ const publishedPostSelect = {
 // Helmet's CSP (set for JSON APIs) is stricter than the SPA's inline-script
 // policy; the shell's own meta CSP is what the app expects, so override it.
 const SHELL_CSP =
-  "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'";
+  "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'";
 
 function metaTags({ title, description, image, url, type, jsonLd }) {
   return [
