@@ -57,10 +57,19 @@ app.use(
       useDefaults: false,
       directives: {
         "default-src": ["'self'"],
-        "script-src": ["'self'"],
+        // GA4 collection: analytics.google.com only serves first-party-labelled
+        // cookies; story-preview pages app-serve the SPA here (story-meta), so
+        // the tag must be loadable from the API origin as well.
+        "script-src": ["'self'", "https://www.googletagmanager.com"],
         "style-src": ["'self'", "'unsafe-inline'"],
         "img-src": ["'self'", "data:", "https:"],
-        "connect-src": ["'self'"],
+        // GA4 measurement transport (fetch beacons).
+        "connect-src": [
+          "'self'",
+          "https://*.google-analytics.com",
+          "https://*.googletagmanager.com",
+          "https://www.google-analytics.com",
+        ],
         // The homepage video spotlight embeds the privacy-enhanced YouTube
         // player; without this directive default-src 'self' would block it.
         "frame-src": ["https://www.youtube-nocookie.com", "https://www.youtube.com"],
