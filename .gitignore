@@ -12,3 +12,8 @@
 .env
 .env.*
 !.env.example
+
+# Access-key transfer files (never commit)
+keys.env
+keys*.env
+*.keys.env

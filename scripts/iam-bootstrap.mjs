@@ -30,18 +30,19 @@
 // The Node SDK resolves AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY from the
 // environment first, so the app picks these up with zero code changes.
 import { spawnSync } from "node:child_process";
-import { writeFileSync, readFileSync, rmSync } from "node:fs";
+import { writeFileSync, readFileSync, rmSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import * as path from "node:path";
 
 const USER = "eye-api-lightsail";
 const POLICY_NAME = "eye-lightsail-s3";
-const BUCKETS = ["eye-scholarship-media", "eye-scholarship-backup"];
+const BUCKETS = ["eye-media-771675725169", "eye-db-backups-771675725169"];
 
 const argv = process.argv.slice(2);
 const profile = argv.includes("--profile") ? argv[argv.indexOf("--profile") + 1] : null;
 const baseArgs = profile ? ["--profile", profile] : [];
-const fromFile = argv.includes("--from-file") ? argv[argv.indexOf("--from-file") + 1] : null;
+const fromFileArg = argv.includes("--from-file") ? argv[argv.indexOf("--from-file") + 1] : null;
 
 // Returns { ok, data, errorName } - NEVER masks a failure as success.
 function aws(args) {
@@ -58,14 +59,46 @@ function aws(args) {
 const fail = (msg, code = 1) => { console.error("ERROR: " + msg); process.exit(code); };
 
 let creds = null;
+let fromFile = fromFileArg;
 
 if (fromFile) {
   // Path B - credentials already exist; validate + carry them silently.
+  // An unexpanded %TEMP% (cmd syntax typed on the PowerShell prompt) resolves
+  // to the real temp dir here, so that misstep still works.
+  if (!existsSync(fromFile)) {
+    if (/%TEMP%|\$env:TEMP/i.test(fromFile)) {
+      fromFile = fromFile.replace(/%TEMP%|\$env:TEMP/i, tmpdir());
+    } else if (!path.isAbsolute(fromFile)) {
+      // Relative path typed without a drive: try the temp dir too.
+      const candidate = join(tmpdir(), fromFile);
+      if (existsSync(candidate)) fromFile = candidate;
+    }
+  }
+  if (!existsSync(fromFile)) {
+    fail(
+      `keys file not found: ${fromFile}\n` +
+      "Tip: the AWS console usually saves the key export as\n" +
+      "    %USERPROFILE%\\Downloads\\<user>_accessKeys.csv\n" +
+      "and this script reads that CSV directly, e.g.:\n" +
+      `    node scripts\\iam-bootstrap.mjs --from-file C:\\Users\\${process.env.USERNAME ?? "<you>"}\\Downloads\\eye-api-lightsail_accessKeys.csv`,
+      2,
+    );
+  }
   const txt = readFileSync(fromFile, "utf8");
-  const mm = txt.match(/^\s*AWS_ACCESS_KEY_ID\s*=\s*(\S+)\s*$/m);
-  const ss = txt.match(/^\s*AWS_SECRET_ACCESS_KEY\s*=\s*(\S+)\s*$/m);
-  if (!mm || !ss) fail("the file must contain AWS_ACCESS_KEY_ID=... and AWS_SECRET_ACCESS_KEY=... lines.");
-  creds = { AccessKeyId: mm[1], SecretAccessKey: ss[1] };
+  // Accept either a two-line keys.env or the AWS console "accessKeys.csv"
+  // export, so the console flow can point --from-file straight at the download.
+  const isCsv = /^\s*[^,\n]*,|access key/i.test(txt.slice(0, 120)) && /^\s*Access key/i.test(txt.split(/\r?\n/)[0] ?? "");
+  const mm = isCsv
+    ? txt.match(/^\s*(AKIA[^\s,]+)\s*,(\S+)\s*$/mi)
+    : null;
+  const envKey = txt.match(/^\s*AWS_ACCESS_KEY_ID\s*=\s*(\S+)\s*$/m);
+  const envSecret = txt.match(/^\s*AWS_SECRET_ACCESS_KEY\s*=\s*(\S+)\s*$/m);
+  const keyId = mm?.[1] ?? envKey?.[1];
+  const secret = mm?.[2] ?? envSecret?.[1];
+  if (!keyId || !secret) {
+    fail(`could not read a key pair from ${fromFile}.\nExpected the console accessKeys.csv (columns: Access key ID,Secret access key) or a keys.env with:\n    AWS_ACCESS_KEY_ID=...\n    AWS_SECRET_ACCESS_KEY=...\nDebug hint: first line of the file begins with: ${JSON.stringify(txt.split(/\r?\n/)[0]?.slice(0, 40))}`);
+  }
+  creds = { AccessKeyId: keyId, SecretAccessKey: secret };
   console.log(`using credentials from ${fromFile} (values withheld, id ${creds.AccessKeyId.slice(0, 6)}****)`);
 } else {
   // Path A - create everything.
